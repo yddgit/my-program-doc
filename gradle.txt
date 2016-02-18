@@ -1,0 +1,65 @@
+Gradle笔记
+
+基本概念
+
+ - 构建
+ - 项目：构建产物（如jar包）或实施产物（将应用程序部署到生产环境），一个项目包含一个或多个任务
+ - 任务：不可分的最小工作单元，执行构建工作
+ - Build ---1..*---Project---1..*---Task
+
+配置文件
+
+ - Gradle构建脚本（build.gradle）指定了一个项目和它的任务
+ - Gradle属性文件（gradle.properties）用来配置构建属性
+ - Gradle设置文件（gradle.settings）对于只有一个项目的构建而言是可选的，如果我们的构建中包
+   含多于一个项目，那么它就是必须的，因为它描述了哪一个项目参与构建。每个多项目的构建都必须
+   在项目结构的根目录中加入一个设置文件
+ 
+
+//构建Java项目
+apply plugin: 'java'
+
+  gradle build //构建代码并打包
+  gradle clean //删除构建产物
+  gradle assembly //编译Java文件，但不运行检查代码质量等命令
+  gradle check //进行代码质量检查
+  gradle javadoc //生成Javadoc
+
+//修改Eclipse项目的结构.classpath
+apply plugin: 'eclipse'
+
+  gradle eclipse //修改Eclipse项目的结构.classpath
+
+//构建war包
+apply plugin: 'war'
+
+  gradle war //构建war包
+
+//指定source目录
+sourceSets {
+    main {
+        java.srcDir "$projectDir/src/main/java"
+    }
+    test {
+        java.srcDir "$projectDir/src/test/java"
+    }
+}
+
+//添加依赖，将junit-4.12.jar和hamcrest-core-1.3.jar复制到工程的lib目录下即可
+repositories {
+    flatDir(dirs: "$projectDir/lib") //相当于指定一个本地仓库
+}
+dependencies {
+    compile ':junit:4.12'
+    compile ':hamcrest-core:1.3'
+}
+
+//自定义Copy任务
+task copySource(type: Copy) {
+    from 'src/main/java'
+    into 'build/sources'
+	include '**/*.java' //对Copy的文件进行过滤
+	exclude '**/*.xml'
+}
+
+  gradle copySource

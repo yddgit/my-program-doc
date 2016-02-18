@@ -1,0 +1,297 @@
+﻿JavaScript简介
+
+JavaScript符合ECMAScript-262标准
+相对弊端:
+1. 复杂的文档对象模型(DOM)
+2. 不一致的浏览器实现
+3. 缺乏便捷的开发调试工具.
+
+JavaScript实现
+
+1. ECMAScript: JavaScript标准规范
+描述了该语言的语法和基本对象.
+2. BOM: 浏览器对象模型, 如alert()方法
+描述了与浏览器进行交互的方法和接口
+3. DOM: 文档对象模型
+描述了处理网页内容的方法和接口.
+
+ECMAScript
+
+ECMAScript是一种由ECMA国际通过ECMA-262标准化的脚本程序设计语言.
+ECMAScript描述了以下内容:
+语法-类型-语句-关键字-保留字-运算符-对象
+ECMAScript仅仅是一个描述,定义了脚本语言的所有属性/方法/对象.
+
+BOM浏览器对象模型
+
+BOM是Browser Object Model的缩写,简称浏览器对象模型
+BOM提供了独立于内容与浏览器窗口进行交互的对象
+BOM由一系列对象组成, 是访问/控制/修改客户端(浏览器)的属性的方法
+BOM没有统一的标准
+BOM的顶层是window对象
+
+DOM文档对象模型
+
+DOM是Document Object Model的简写, 即文档对象模型
+DOM是由一系列对象组成, 是访问/检索/修改XHTML文档内容与结构的标准方法.
+DOM是跨平台与跨语言的.[一个公共文档定义标准]
+DOM用于XHTML/XML文档的应用程序接口(API)
+DOM提供一种结构化的文档描述方式, 从而使用HTML内容使用结构化的方式显示.
+DOM标准是由W3C制定与维护的http://www.w3.org/DOM/
+DOM的顶层是document对象
+
+DOM Level 1 是W3C于1998年10月提出的, 它由两个模块组成, 即DOM Core
+和DOM HTML. DOM Core提供了基于XML的文档的结构图, 以便访问和操作文
+档的任意部分; DOM HTML添加了一些HTML专用的对象用方法, 从而扩展了
+DOM Core.
+
+DOM并不是JavaScript语言专有的, 许多其他语言都实现了它, 只不过web
+浏览器中的DOM已经用ECMAScript实现了.
+
+DOM Level 1 只是一个目标, 即规划文档的结构, DOM Level 2 的目标就
+广泛多了. 对原始的DOM的扩展添加了对鼠标和用户界面事件(DHTML对此有
+丰富的支持)/范围/遍历(重复执行DOM文档的方法)的支持, 并通过对象接
+口添加了对CSS(层叠样式表)的支持. 由Level 1引入的原始DOM Core也加
+入了对XML命名空间的支持.
+
+DOM Level 2 引入了几种DOM新模块, 用于处理新的接口类型
+--DOM视图-描述跟踪文档的各种视图(即CSS样式化之前和CSS样式化之后的
+文档
+--DOM事件-描述事件的接口
+--DOM样式-描述处理基于CSS样式的接口
+--DOM遍历和范围-描述遍历和操作文档树的接口
+
+DOM Level 3引入了以统一的方式载入和保持文档的方法(包含在新模块
+DOM Load and Save)以及验证文档(DOM Validation)的方法, 从而进一步
+扩展了DOM. 在Level 3中, DOM Core被扩展为支持所有的XML 1.0特性,包括XML Infoset/XPath/XML Base.
+
+
+JavaScript基础
+
+1. 声明变量不用var时, 则变量为全局变量
+2. 数据类型及常量
+---Number(数字类型)
+   (1)整型常量(10进制\8进制\16进制)
+      十六进制以0x或0X开头, 例如: 0x8a
+      八进制必须以0开头, 例如: 0123
+      十进制的第一位不能是0(数字0除外), 例如: 123
+   (2)实型常量
+      12.32, 193.98, 5E7, 4e5等
+      特殊数值: NaN, Infinity(无穷大), isNaN(), isFinite()
+---Boolean(布尔值): true和false
+---String字符串
+   "a book of JavaScript", 'abc', "a", ""
+   字符串中的特殊字符，需要以反斜杠(\)后跟一个普通字符来表示,
+   例如: \r, \n, \t, \b, \', \ ", \\xxx
+---null常量
+---undefined常量
+---在逻辑运算中, 0, "", false, null, undefined, NaN均表示false
+---逻辑运算符
+   (1)&&
+   逻辑与,当左右两边操作数都为true时,返回值为true,否则返回false.
+   (2)||
+   逻辑或, 当左右两边操作数都为false时, 返回其中第一个不为false
+   的值或者最后一个值
+   function t(e) {
+     e = e||new Object(); //在未传参数的状态下保证代码健壮性
+     if(e.name != "ydd") {
+       alert(e);
+     }
+   }
+   t();
+   (3)!
+   逻辑非, 当操作数为true时, 返回值为false, 否则返回true
+
+&& 真就取后面的值, 假为false
+|| 真就取第一个真的值, 假为false
+
+&&和||都是串联逻辑语句的表达式，且都是从左到右进行判断。
+
+&&的话, 碰到第一个为假的语句就结束判断并返回false(即其后的语句都不会被执行),
+如果所有语句皆为真(注意像字符串或非零数字等都视为真)则返回最后一个语句的值.
+||的话, 碰到第一个为真的语句就结束判断并返回该语句的值(同样其后的语句都不会
+被执行), 如果所有语句皆为假则返回false.这里返回的语句的"值"指的是, 如果这是
+个逻辑语句则返回true/false,如果是字符串之类的话直接返回内容.
+
+1. 如何定义一个类:
+function Persion(name) {
+  this.name = name;
+}
+
+2. 一切都是对象,包括类(函数)也是一种对象
+
+3. 使用类,创建对象
+var obj = new Object();
+obj.name="name";
+var p = new Person("张三");
+
+4. 封装
+function Person(name) {
+  var y=10; // 封装(私有变量)
+  this.name = name;
+}
+var p = new Person(); //y不再被使用,由垃圾回收器回收
+
+5. 闭包,函数里嵌套函数
+function Person(name) {
+  var y=10; // 封装(私有变量)
+  this.name = name;
+  //如下即为一个闭包
+  this.sayHello=function() {
+    y++;
+    alert(this.name + "," + y);
+  }
+}
+var p = new Person(); //y不会被垃圾回收器回收
+p.sayHello();
+
+6. 作用域scope(上下文)
+function sayHello() {
+  alert(this.v);
+}
+sayHello(); // 函数中的this指向window
+var v1 = {v:"this is v1"};
+alert(v1.v); //访问属性v
+alert(v1["v"]); //使用类似于数组的方式访问属性v
+
+// 所有的函数都有call,apply这两个方法, 还有一个属性prototype
+sayHello.call(v1,param1,param2,...,paramn); //执行函数,指定作用域为v1
+sayHello.apply(v1,[params]) //功能同call方法,只是参数传递方式不同
+
+7. 扩展javascript类,使用prototype
+Number.prototype.add = function(v) {
+  return this + v;
+}
+var d = 6;
+d.add(8).add(9); // d=6+8+9
+
+// 扩展自己的类
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.sayHello = function() {
+  alert(this.name);
+}
+var p = new Person("zhangsan");
+p.sayHello();
+
+8. 继承
+function classA(name) {
+  this.name = name;
+  this.sayHello = function() {
+    alert(this.name);
+  }
+}
+
+// classB继承classA
+// 方法1
+function classB(name) {
+  this.tempMethod=classA;
+  this.tempMethod(name);
+}
+// 方法2
+function classB(name) {
+  classA.call(this, name);
+}
+// 方法3
+function classB(name) {
+  classA.apply(this, [name]);
+}
+
+var b = new classB("lisi");
+b.sayHello();
+
+9. 可变参数arguments
+function sum() {
+  var s = 0;
+  for(var i=0; i<arguments.length; i++) {
+    s+=arguments[i];
+  }
+  return s;
+}
+
+alert(sum(1,4,5));
+alert(sum(12,15,19,21,51));
+
+10.|| 返回第一个不为false/""/0/null等代表逻辑非的值
+function doSomething(e) {
+  e = e||window.event;
+}
+
+11.面向对象的打字游戏
+(1)引入包
+(2)定义类
+   游戏场景类CharacterGame
+   游戏中的道具(角色),只有一个,可以移动的字符Character
+
+11.Ext原理
+//Ext组件,Component
+var panel = new Ext.Panel ({
+  title:"panel1",
+  width:600,
+  height:400,
+  html:"<h1>This is a panel</h1>"
+});
+
+//渲染,生成组件对应的html dom节点,并追加到页面中
+panel.render("p");
+
+//实现一个功能,让页面上的某一个元素,隐藏或者关闭
+Ext.get(id).toggle(true);
+//以上get方法返回一个Ext.Element类的一个实例
+
+//Element对象常用方法
+Ext.get(id).addClass();
+Ext.get(id).hasClass();
+Ext.get(id).removeClass();
+Ext.get(id).load("getData.jsp");
+Ext.get(id).mask();
+Ext.get(id).update("some content!");
+
+//实现一个自己的Element类,并加入一个toggle方法
+kmust={};
+kmust.get=function(id) {
+  return new kmust.Element(id);
+}
+kmust.Element=function(id) {
+  this.dom = document.getElementById(id);
+}
+kmust.Element.prototype.toggle = function() {
+  this.dom.style.display = (this.dom.style.display == "none" ? "" : "none");
+}
+
+//Element没有具体外观
+//控件则是有具体外观的
+var panel = new Ext.Panel({
+  id:"p1",
+  title:"panel1",
+  width:400,
+  height:300,
+  html:"This is a panel."
+});
+panel.render("panel");
+
+//得到Component对应的Element
+panel.el.mask();
+
+DOM-->Element-->Component
+
+DOM文档对象模型(W3C规范定义)
+Ext.Element是对DOM节点的封装,解决跨浏览器问题,提供实用方法
+Component提供一个组件及控件库体系,控件是比较具体的东西,如:菜单/工具栏/窗口...
+
+渲染后每一个组件都会封装一个Element
+panel.render("panel");
+panel.el // 获得Element对象
+panel.el.mask();
+
+pe.el.dom // 访问DOM节点
+
+Ext类中提供获取Element/DOM/Component对象的相关方法
+get(Mixed el):Element
+getBody():Ext.Element
+Ext.getCmp():Ext.Component
+Ext.getDoc():Ext.Element
+Ext.getDom():HTMLElement
+
+//每天一剂Ext良药
