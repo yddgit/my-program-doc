@@ -1,0 +1,375 @@
+﻿1.Logcat 显示日志,是一个命令行工具，位于system/bin目录中
+# logcat [options] [filterspecs]
+
+2.Emulator Control仿真器控制
+Incoming Numbers: 123456 模拟电话和短信
+
+3.adb、mksdcard命令行工具
+adb Android Debug Bridge
+进入模拟器的终端环境：adb shell
+
+使用adb连接目标系统终端的方式如下所示：
+> adb shell
+使用adb安装应用程序的方法为：
+> adb install XXX.apk
+使用adb在主机和目标机之间传送文件的方法为：
+> adb push {host_path}   {target_path}
+> adb pull {target_path} {host_path}
+mksdcard是用来建立SD卡映像的工具，用来建立一个Fat32格式的磁盘映像，其使用方法如下所示：
+mksdcard [-l label] <size> <file>
+mksdcard的参数-l用于指定磁盘映像的标签，size用于指定磁盘映像的大小，其后面可以跟K、M、G等参数，file是磁盘映像的文件名称，这个文件也就是在仿真器运行过程中指定的文件。
+mksdcard的一个使用的示例如下所示：
+> mksdcard 128M sdcard.img
+这表示建立了一个大小为128M，名称为sdcard.img的Fat32磁盘映像文件。
+
+4.Device工具
+Heap/Threads/Kill Thread/截屏
+
+5.XML Attributes
+android:icon
+android:label
+
+android:inputType 输入文本的类型
+android:inputType="none"--输入普通字符
+android:inputType="text"--输入普通字符
+android:inputType="textCapCharacters"--输入普通字符
+android:inputType="textCapWords"--单词首字母大小
+android:inputType="textCapSentences"--仅第一个字母大小
+android:inputType="textAutoCorrect"--前两个自动完成
+android:inputType="textAutoComplete"--前两个自动完成
+android:inputType="textMultiLine"--多行输入
+android:inputType="textImeMultiLine"--输入法多行（不一定支持）
+android:inputType="textNoSuggestions"--不提示
+android:inputType="textUri"--URI格式
+android:inputType="textEmailAddress"--电子邮件地址格式
+android:inputType="textEmailSubject"--邮件主题格式
+android:inputType="textShortMessage"--短消息格式
+android:inputType="textLongMessage"--长消息格式
+android:inputType="textPersonName"--人名格式
+android:inputType="textPostalAddress"--邮政格式
+android:inputType="textPassword"--密码格式
+android:inputType="textVisiblePassword"--密码可见格式
+android:inputType="textWebEditText"--作为网页表单的文本格式
+android:inputType="textFilter"--文本筛选格式
+android:inputType="textPhonetic"--拼音输入格式
+android:inputType="number"--数字格式
+android:inputType="numberSigned"--有符号数字格式
+android:inputType="numberDecimal"--可以带小数点的浮点格式
+android:inputType="phone"--拨号键盘
+android:inputType="datetime"
+android:inputType="date"--日期键盘
+android:inputType="time"--时间键盘
+
+6.gen目录：生成的资源文件的ID
+
+7.bin编译后的.class和.dex(在Dalvik虚拟机上运行的Java的字节码文件)
+
+8.apk解压后的目录结构
+HelloActivity.apk/
+|-- AndroidManifest.xml （经过aapt处理的工程描述文件）
+|-- META-INF
+| |-- CERT.RSA
+| |-- CERT.SF
+| `-- MANIFEST.MF
+|-- classes.dex （Dalvik的字节码）
+|-- res
+| `-- layout
+| `-- hello_activity.xml （经过aapt处理的布局文件）
+`-- resources.arsc
+
+9.Android中的标准资源文件
+strings.xml
+colors.xml
+styles.xml
+
+10.Android应用程序的组成：
+活动（Activity）
+广播接收器（BroadcastReceiver）
+服务（Service）
+内容提供者（Content Provider）
+
+11.Android进程类型
+前台进程：正在做事的进程,考虑移到前台
+可见进程：可见但无活动的进程，不能kill
+服务进程：后台运行的进程，除非内存不足，否则一直运行
+后台进程：执行完Activity生命周期可随时回收资源
+空进程：无任何活动，当下次应用程序需要运行时不需要重新创建进程，提高启动速度
+
+12.组件生命周期
+Activity生命周期（图）
+Service生命周期（图）
+BroadcastReceiver生命周期：只有一个回调方法onReceive(),广播消息到达时，调用此方法，只在单次运行时处于活动状态
+
+13.应用程序文件
+AndroidManifest.xml工程描述文件
+Java代码文件
+资源:图片、数据文件、layout/string/color/style、.class、.dex
+
+14.使用am命令启动应用
+# am start -n {包名}/{包名}.活动名
+示例：# am start -n com.android.settings/com.android.settings.Settings
+
+使用mime type方式启动程序
+# am start -a android.intent.action.VIEW -d file:///a.mp3 -t audio/*
+# am start -a android.intent.action.VIEW -d file:///b.mp4 -t video/*
+# am start -a android.intent.action.VIEW -d file:///c.jpg -t image/*
+这里使用的是am -a参数，表示执行一个动作，后面的audio/*、video/*和image/*表示数据mime类型，Android将自动找到支持相应数据mime类型的程序来打开对应的音乐、视频和图片文件。
+
+15.在Activity中添加事件控制
+
+方法一：
+一、获得控件引用
+TextView text = (TextView) findViewById(R.id.text1); //需要在布局文件中添加android:id属性
+二、添加事件处理
+button1.setOnClickListener(new OnClickListener() {
+  public void onClick(View v) {
+    text.setBackgroundColor(Color.RED);
+  }
+});
+
+方法二：
+一.让Activity直接实现OnClickListener接口，然后在onClick方法中使用switch语句根据控件ID来进行不同的代码操作
+二.将控件都置为Activity的成员变量，可以在整个类中进行操作
+三.所有OnClickListener都设置为this
+
+方法三：
+一.将每个控件的listener用内部类来实现
+二.控件可设置为成员，也可临时获取
+三.控件各自独立在接口方法中处理相关操作
+
+注：
+void setOnClickListener(View.OnClickListener l);
+void setOnFocusChangeListener(View.OnFocusChangeListener l);
+void setOnKeyListener(View.OnKeyListener l);
+void setOnLongClickListener(View.OnLongClickListener l);
+void setOnTouchListener(View.OnTouchListener l);
+
+16.键盘响应事件
+使用onKeyDown()函数来获得按键的事件，同类的还有onKeyUp()函数
+其参数int keyCode是按键码，KeyEvent event表示按键事件消息
+
+KeyEvent包含以下接口
+final int getAction() // 获得按键的动作
+final int getFlags() // 获得标志
+final int getKeyCode() // 获得按键码
+final int getRepeatCount() // 获得重复的信息
+final int getScanCode() // 获得扫描码
+
+17.运动事件处理
+public boolean onTouchEvent(MotionEvent event)
+public boolean onTrackballEvent(MotionEvent event)
+event对象中包含了当前动作Action及其坐标，2.0后支持多点触控，可获得触点数目和每个点的坐标
+
+18.Activity之间的跳转
+方式一：
+ A: newIntent
+ setClass(Context this, Class<?> cls)
+ startActivity(intent)
+ finish()
+ B: To do nothing
+方式二：
+ A: newIntent(Context this, Class<?> cls)
+ startActivityForResult(intent, GET_CODE)
+
+ B: setResult(RESULT_OK, (new Intent()).setAction("Corky!"))
+
+ A: onActivityResult(requestCode，resultCode, intent)
+ Depends on Codes intent.getAction()
+
+19.菜单的使用
+重载Activity中的两个方法：
+public boolean onCreateOptionsMenu(Menu menu)
+public boolean onOptionsItemSelected(MenuItem item)
+
+添加菜单项：
+android.view.Menu
+abstract MenuItem add(int groupId, int itemId, int order, CharSequence title)
+abstract MenuItem add(int groupId, int itemId, int order, int titleRes)
+
+20.对话框
+new AlertDialog.Builder(self)
+ .setIcon().setTitle().setMessage()
+ .setItems()/setSingleChoiceItems()/setMultiChoiceItems()/setView()
+ .setPositiveButton()
+ .setNeutralButton()
+ .setNegativeButton()
+ .show();
+
+21.Android分辨率
+ - 屏幕尺寸，按照屏幕的对角线进行测量。为简单起见，Android把所有的屏幕大小分为四种尺寸：小，普通，大，超大(分别对应：small, normal, large, and extra large)
+ - 应用程序可以通过使用限定的资源来为指定的长宽比提供屏幕布局资源
+ - 应用程序不直接使用分辨率
+ - Android把所有的屏幕分辨率也分为四种尺寸：小，普通，大，超大(分别对应：small, normal, large, and extra large).应用程序可以为这四种尺寸分别提供不同的资源-平台将透明的对资源进行缩放以适配指定的屏幕分辨率
+ - dip: device independent pixels(设备独立像素). 不同设备有不同的显示效果,这个和设备硬件有关，一般我们为了支持WVGA、HVGA和QVGA 推荐使用这个，不依赖像素。
+ - dp: dip是一样的
+ - px: pixels(像素). 不同设备显示效果相同，一般我们HVGA代表320x480像素，这个用的比较多。
+ - pt: point，是一个标准的长度单位，1pt＝1/72英寸，用于印刷业，非常简单易用；
+ - sp: scaled pixels(放大像素). 主要用于字体显示best for textsize。
+ - in（英寸）：长度单位。 
+ - mm（毫米）：长度单位。
+ - px = dip * density / 160，则当屏幕密度为160时，px = dip
+ - 模拟器分辨率收集 
+1QVGA = 320 * 240;  
+WQVGA = 320 * 480;  
+WQVGA2 = 400 * 240;  
+WQVGA3 = 432 * 240;  
+HVGA = 480 * 320;  
+VGA = 640 * 480;  
+WVGA = 800 * 480;  
+WVGA2 = 768 * 480;  
+FWVGA = 854 * 480;  
+DVGA = 960 * 640;  
+PAL = 576 * 520;  
+NTSC = 486 * 440;  
+SVGA = 800 * 600;  
+WSVGA = 1024 * 576;  
+XGA = 1024 * 768;  
+XGAPLUS = 1152 * 864;  
+HD720 = 1280 * 720;  
+WXGA = 1280 * 768;  
+WXGA2 = 1280 * 800;  
+WXGA3 = 1280 * 854;  
+SXGA = 1280 * 1024;  
+WXGA4 = 1366 * 768;  
+SXGAMINUS = 1280 * 960;  
+SXGAPLUS = 1400 * 1050;  
+WXGAPLUS = 1440 * 900;  
+HD900 = 1600 * 900;  
+WSXGA = 1600 * 1024;  
+WSXGAPLUS = 1680 * 1050;  
+UXGA = 1600 * 1200;  
+HD1080 = 1920 * 1080;  
+QWXGA = 2048 * 1152;  
+WUXGA = 1920 * 1200;  
+TXGA = 1920 * 1400;  
+QXGA = 2048 * 1536;  
+WQHD = 2560 * 1440;  
+WQXGA = 2560 * 1600;  
+QSXGA = 2560 * 2048;  
+QSXGAPLUS = 2800 * 2100;  
+WQSXGA = 3200 * 2048;  
+QUXGA = 3200 * 2400;  
+QFHD = 3840 * 2160;  
+WQUXGA = 3840 * 2400;  
+HD4K = 4096 * 2304;  
+HXGA = 4096 * 3072;  
+WHXGA = 5120 * 3200;  
+HSXGA = 5120 * 4096;  
+WHSXGA = 6400 * 4096;  
+HUXGA = 6400 * 4800;  
+SHV = 7680 * 4320;  
+WHUXGA = 7680 * 4800; 
+
+22.动画
+
+关于动画的实现，Android提供了Animation，在Android SDK介绍了2种Animation模式： 
+ - Tween Animation：通过对场景里的对象不断做图像变换(平移、缩放、旋转)产生动画效果，即是一种渐变动画；
+ - Frame Animation：顺序播放事先做好的图像，是一种画面转换动画。
+
+在XML文件中：
+alpha 渐变透明度动画效果 
+scale 渐变尺寸伸缩动画效果 
+translate 画面转换位置移动动画效果 
+rotate 画面转移旋转动画效果
+
+使用AnimationUtils类的静态方法loadAnimation()来加载XML中的动画XML文件
+
+<set android:shareInterpolator="false" xmlns:android="http://schemas.android.com/apk/res/android">
+   <scale
+          android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+          android:fromXScale="1.0"
+          android:toXScale="1.4"
+          android:fromYScale="1.0"
+          android:toYScale="0.6"
+          android:pivotX="50%"
+          android:pivotY="50%"
+          android:fillAfter="false"
+          android:duration="700" />
+   <set android:interpolator="@android:anim/decelerate_interpolator">
+      <scale
+             android:fromXScale="1.4" 
+             android:toXScale="0.0"
+             android:fromYScale="0.6"
+             android:toYScale="0.0" 
+             android:pivotX="50%" 
+             android:pivotY="50%" 
+             android:startOffset="700"
+             android:duration="400" 
+             android:fillBefore="false" />
+      <rotate 
+             android:fromDegrees="0" 
+             android:toDegrees="-45"
+             android:toYScale="0.0" 
+             android:pivotX="50%" 
+             android:pivotY="50%"
+             android:startOffset="700"
+             android:duration="400" />
+   </set>
+</set>
+
+interpolator定义一个动画的变化率
+AccelerateDecelerateInterpolator 在动画开始与介绍的地方速率改变比较慢，在中间的时候加速 
+AccelerateInterpolator 在动画开始的地方速率改变比较慢，然后开始加速 
+CycleInterpolator 动画循环播放特定的次数，速率改变沿着正弦曲线 
+DecelerateInterpolator 在动画开始的地方速率改变比较慢，然后开始减速 
+LinearInterpolator 在动画的以均匀的速率改变 
+
+23.SQLite的使用：
+.help
+.backup ?DB? FILE      Backup DB (default "main") to FILE
+.bail on|off           Stop after hitting an error.  Default OFF
+.clone NEWDB           Clone data into NEWDB from the existing database
+.databases             List names and files of attached databases
+.dump ?TABLE? ...      Dump the database in an SQL text format
+                         If TABLE specified, only dump tables matching
+                         LIKE pattern TABLE.
+.echo on|off           Turn command echo on or off
+.eqp on|off            Enable or disable automatic EXPLAIN QUERY PLAN
+.exit                  Exit this program
+.explain ?on|off?      Turn output mode suitable for EXPLAIN on or off.
+                         With no args, it turns EXPLAIN on.
+.fullschema            Show schema and the content of sqlite_stat tables
+.headers on|off        Turn display of headers on or off
+.help                  Show this message
+.import FILE TABLE     Import data from FILE into TABLE
+.indices ?TABLE?       Show names of all indices
+                         If TABLE specified, only show indices for tables
+                         matching LIKE pattern TABLE.
+.log FILE|off          Turn logging on or off.  FILE can be stderr/stdout
+.mode MODE ?TABLE?     Set output mode where MODE is one of:
+                         csv      Comma-separated values
+                         column   Left-aligned columns.  (See .width)
+                         html     HTML <table> code
+                         insert   SQL insert statements for TABLE
+                         line     One value per line
+                         list     Values delimited by .separator string
+                         tabs     Tab-separated values
+                         tcl      TCL list elements
+.nullvalue STRING      Use STRING in place of NULL values
+.once FILENAME         Output for the next SQL command only to FILENAME
+.open ?FILENAME?       Close existing database and reopen FILENAME
+.output ?FILENAME?     Send output to FILENAME or stdout
+.print STRING...       Print literal STRING
+.prompt MAIN CONTINUE  Replace the standard prompts
+.quit                  Exit this program
+.read FILENAME         Execute SQL in FILENAME
+.restore ?DB? FILE     Restore content of DB (default "main") from FILE
+.save FILE             Write in-memory database into FILE
+.schema ?TABLE?        Show the CREATE statements
+                         If TABLE specified, only show tables matching
+                         LIKE pattern TABLE.
+.separator STRING ?NL? Change separator used by output mode and .import
+                         NL is the end-of-line mark for CSV
+.shell CMD ARGS...     Run CMD ARGS... in a system shell
+.show                  Show the current values for various settings
+.stats on|off          Turn stats on or off
+.system CMD ARGS...    Run CMD ARGS... in a system shell
+.tables ?TABLE?        List names of tables
+                         If TABLE specified, only list tables matching
+                         LIKE pattern TABLE.
+.timeout MS            Try opening locked tables for MS milliseconds
+.timer on|off          Turn SQL timer on or off
+.trace FILE|off        Output each SQL statement as it is run
+.vfsname ?AUX?         Print the name of the VFS stack
+.width NUM1 NUM2 ...   Set column widths for "column" mode
+                         Negative values right-justify

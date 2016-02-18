@@ -1,0 +1,86 @@
+﻿
+Linux top 命令使用：
+
+例： top -M #show memory summary in megabytes not kilobytes
+
+第一行：
+top - 12:28:27 up  1:19,  2 users,  load average: 0.03, 0.12, 0.08
+12:28:27                       - 当前系统时间
+1:19                           - 系统已经运行了1小时19分钟（在这期间没有重启过）
+2 users                        - 当前有2个用户登录系统
+load average: 0.03, 0.12, 0.08 - load average后面的三个数分别是1分钟、5分钟、15分钟的负载情况
+
+第二行：
+Tasks:  92 total,   1 running,  91 sleeping,   0 stopped,   0 zombie
+共有183个进程，其中处于运行中的有1个，91个在休眠（sleep），stoped状态的有0个，zombie状态（僵尸）的有0个
+
+第三行： CPU状态
+Cpu(s):  0.6%us,  0.3%sy,  0.0%ni, 99.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.1%st
+0.6%us  - 用户空间占用CPU的百分比。
+0.3%sy  - 内核空间占用CPU的百分比。
+0.0%ni  - 改变过优先级的进程占用CPU的百分比
+99.0%id - 空闲CPU百分比
+0.0%wa  - IO等待占用CPU的百分比
+0.0%hi  - 硬中断（Hardware IRQ）占用CPU的百分比
+0.0%si  - 软中断（Software Interrupts）占用CPU的百分比
+
+第四行： 内存状态
+Mem:  1839.797M total, 1811.160M used,   28.637M free,   21.285M buffers
+1839.797M total - 物理内存总量（1839.797M）
+1811.160M used  - 使用中的内存总量（1811.160M）
+28.637M free    - 空闲内存总量（28.637M）
+21.285M buffers - 缓存的内存量 （21.285M）
+
+第五行： Swap交换分区
+Swap: 2047.992M total,    0.000k used, 2047.992M free, 1344.176M cached
+2047.992M total  - 交换区总量（2047.992M）
+0.000k used      - 使用的交换区总量（0.000k）
+2047.992M free   - 空闲交换区总量（2047.992M）
+1344.176M cached - 缓冲的交换区总量（1344.176M）
+
+第六行是空行
+
+第七行以下： 各进程（任务）的状态监控
+PID     - 进程id
+USER    - 进程所有者
+PR      - 进程优先级
+NI      - nice值。负值表示高优先级，正值表示低优先级
+VIRT    - 进程使用的虚拟内存总量，单位kb。VIRT=SWAP+RES
+RES     - 进程使用的、未被换出的物理内存大小，单位kb。RES=CODE+DATA
+SHR     - 共享内存大小，单位kb
+S       - 进程状态。D=不可中断的睡眠状态 R=运行 S=睡眠 T=跟踪/停止 Z=僵尸进程
+%CPU    - 上次更新到现在的CPU时间占用百分比
+%MEM    - 进程使用的物理内存百分比
+TIME+   - 进程使用的CPU时间总计，单位1/100秒
+COMMAND - 进程名称（命令名/命令行）
+
+实际的程序可用内存 = 第四行free + (第四行buffers + 第五行cached)
+程序已用内存 = 第四行used – (第四行buffers + 第五行cached) 
+
+常用交互命令：
+l 切换显示平均负载和启动时间信息
+m 切换显示内存信息
+t 切换显示进程和CPU状态信息
+c 切换显示命令名称和完整命令行
+M 根据驻留内存大小进行排序
+P 根据CPU使用百分比大小进行排序。
+T 根据时间/累计时间进行排序
+b 打开/关闭加亮效果
+y 关闭或打开运行态进程的加亮效果
+x 打开/关闭排序列的加亮效果
+shift + > 向右改变排序列
+shift + < 向左改变排序列
+f 编排基本视图中的显示字段
+
+top命令小技巧：
+1、 输入大写P，则结果按CPU占用降序排序。
+2、 输入大写M，结果按内存占用降序排序。
+3、 按数字1则可以显示所有CPU核心的负载情况。
+4、 top -d 5 # 每隔5秒刷新一次，默认1秒
+5、 top -p 4360,4358 # 监控指定进程
+6、 top -U johndoe # U为真实/有效/保存/文件系统用户名。
+7、 top -u 500 # u为有效用户标识
+8、 top -bn 1 # 显示所有进程信息，top -n 1 只显示一屏信息，供管道调用
+9、 top -M # show memory summary in megabytes not kilobytes
+10、top -p 25097 -n 1 -b # -b避免输出控制字符，管道调用出现乱码
+11、top翻页： top -bn1 | less

@@ -1,0 +1,34 @@
+#给LVM管理的Linux磁盘在线扩容
+
+#查看硬盘，确认新磁盘的路径
+fdisk -l
+#如：/dev/xvdb
+
+#查看物理卷
+pvdisplay
+#直接使用新磁盘/dev/xvdb创建物理卷
+pvcreate /dev/xvdb
+#确认物理卷创建成功
+pvdisplay
+
+#查看卷组
+vgdisplay
+#将创建好的物理卷/dev/xvdb添加到卷组VolGroup
+vgextend VolGroup /dev/xvdb
+#确认物理卷添加成功
+vgdisplay
+
+#查看逻辑卷，确定要扩容的逻辑卷
+lvdisplay
+#扩展逻辑卷/dev/VolGroup/lv_root
+lvextend -L +9.99GB /dev/VolGroup/lv_root
+#或使用卷组的所有剩余空间来扩展逻辑卷/dev/VolGroup/lv_root
+lvextend -l +100%FREE /dev/VolGroup/lv_root
+#确认逻辑卷扩展成功
+lvdisplay
+
+#在线更新文件系统
+resize2fs -p /dev/VolGroup/lv_root
+
+#查看扩展结果
+df -lh
