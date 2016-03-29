@@ -19,17 +19,21 @@ CentOS 7 New Features
 
 3. `ss <--> netstat`
 
-       ss -ant
-       ss -antp
-       ss -antp|column -t
+   ```
+   ss -ant
+   ss -antp
+   ss -antp|column -t
+   ```
 
 4. 网络配置文件:
 
-       /etc/sysconfig/network（全局设置，默认为空）
-       /etc/hostname（用nmtui修改hostname后，主机名保存在这里）
-       /etc/resolv.conf（保存DNS设置，不需要手工改，nmtui里面设置的DNS会出现在这里）
-       /etc/sysconfig/network-scripts/（连接配置信息 ifcfg 文件）
-       /etc/NetworkManager/system-connections/（VPN、移动宽带、PPPoE连接）
+   ```
+   /etc/sysconfig/network（全局设置，默认为空）
+   /etc/hostname（用nmtui修改hostname后，主机名保存在这里）
+   /etc/resolv.conf（保存DNS设置，不需要手工改，nmtui里面设置的DNS会出现在这里）
+   /etc/sysconfig/network-scripts/（连接配置信息 ifcfg 文件）
+   /etc/NetworkManager/system-connections/（VPN、移动宽带、PPPoE连接）
+   ```
 
 5. `nmtui`（通过文本用户界面管理网络）
 
@@ -53,54 +57,74 @@ CentOS 7 New Features
 
    无论使用nmtui编辑连接或是直接修改ifcfg文件，都需要重新加载配置文件并重新up连接
 
-       nmcli con reload 或 nmcli con load /etc/sysconfig/network-scripts/ifcfg-eth1-1
-       nmcli con up eth1-1
+   ```
+   nmcli con reload 或 nmcli con load /etc/sysconfig/network-scripts/ifcfg-eth1-1
+   nmcli con up eth1-1
+   ```
 
 7. `systemctl`
 
    使用systemctl来启动/停止/重启服务
 
-       systemctl start httpd.service
-       systemctl stop httpd.service
-       systemctl restart httpd.service
-       systemctl try-restart httpd.service
+   ```
+   systemctl start httpd.service
+   systemctl stop httpd.service
+   systemctl restart httpd.service
+   systemctl try-restart httpd.service
+   ```
 
    重新加载配置文件
 
-       systemctl reload httpd.service
+   ```
+   systemctl reload httpd.service
+   ```
 
    检查服务状态
 
-       systemctl status httpd.service
+   ```
+   systemctl status httpd.service
+   ```
 
    使用启用/禁用服务来控制开机启动
 
-       systemctl enable httpd.service
-       systemctl disable httpd.service
-       systemctl is-enabled httpd.service（检查单元是否配置为自动启动）
+   ```
+   systemctl enable httpd.service
+   systemctl disable httpd.service
+   systemctl is-enabled httpd.service（检查单元是否配置为自动启动）
+   ```
 
    输出激活的单元
 
-       systemctl
-       systemctl list-units
+   ```
+   systemctl
+   systemctl list-units
+   ```
 
    查看所有被激活的服务
 
-       systemctl list-units -t service
+   ```
+   systemctl list-units -t service
+   ```
 
    输出运行失败的单元
 
-       systemctl --failed
+   ```
+   systemctl --failed
+   ```
 
    查看所有已安装服务
 
-       systemctl list-unit-files
+   ```
+   systemctl list-unit-files
+   ```
 
    所有可用的单元文件存放在/usr/lib/systemd/system/和/etc/systemd/system/目录（后者优先级更高）
 
    重新载入systemd，扫描新的或有变动的单元
 
-       systemctl daemon-reload
+   ```
+   systemctl daemon-reload
+   ```
 
    电源管理（安装polkit后才可使用电源管理）
 
@@ -116,48 +140,70 @@ CentOS 7 New Features
 
    列出所有目标
 
-       systemctl list-units --type=target
+   ```
+   systemctl list-units --type=target
+   ```
 
    修改当前目标
 
-       systemctl isolate graphical.target
+   ```
+   systemctl isolate graphical.target
+   ```
 
    列出默认目标
 
-       systemctl get-default
+   ```
+   systemctl get-default
+   ```
 
    改变默认目标
 
-       systemctl set-default graphical.target
+   ```
+   systemctl set-default graphical.target
+   ```
 
    读取日志
 
-       journalctl
+   ```
+   journalctl
+   ```
 
    查看所有引导日志
 
-       journalctl -b
+   ```
+   journalctl -b
+   ```
 
    即时显示引导日志
 
-       journalctl -f
+   ```
+   journalctl -f
+   ```
 
    查看特定服务的日志
 
-       journalctl /usr/sbin/dnsmasq
+   ```
+   journalctl /usr/sbin/dnsmasq
+   ```
 
    查看主机名及其他信息
 
-       hostnamectl
+   ```
+   hostnamectl
+   ```
 
    查看系统引导用时
 
-       systemd-analyze
-       systemd-analyze time
+   ```
+   systemd-analyze
+   systemd-analyze time
+   ```
 
    以进程初始化所占用时间排序打印出所有正在运行的单元列表
 
-       systemd-analyze blame
+   ```
+   systemd-analyze blame
+   ```
 
 8. 防火墙firewalld
 
@@ -167,38 +213,52 @@ CentOS 7 New Features
 
    显示状态：`firewall-cmd --state`
 
-   查看区域信息:`firewall-cmd --get-active-zones`
+   查看区域信息：`firewall-cmd --get-active-zones`
 
    查看指定接口所属区域：`firewall-cmd --get-zone-of-interface=eth0`
 
    更新防火墙规则：
 
-       firewall-cmd --reload （动态添加规则）
-       firewall-cmd --complete-reload （需要断开连接）
+   ```
+   firewall-cmd --reload （动态添加规则）
+   firewall-cmd --complete-reload （需要断开连接）
+   ```
 
    将接口添加到区域，默认接口都在public
 
-       firewall-cmd --zone=public --add-interface=eth0（永久生效再加上--permanent然后reload防火墙）
+   ```
+   firewall-cmd --zone=public --add-interface=eth0（永久生效再加上--permanent然后reload防火墙）
+   ```
 
    设置默认接口区域
 
-       firewall-cmd --set-default-zone=public（立即生效无需重启）
+   ```
+   firewall-cmd --set-default-zone=public（立即生效无需重启）
+   ```
 
    打开端口，查看所有打开的端口：
 
-       firewall-cmd --zone=dmz --list-ports
+   ```
+   firewall-cmd --zone=dmz --list-ports
+   ```
 
    加入一个端口到区域：
 
-       firewall-cmd --zone=dmz --add-port=8080/tcp（若要永久生效再加上--permanent然后reload防火墙）
+   ```
+   firewall-cmd --zone=dmz --add-port=8080/tcp（若要永久生效再加上--permanent然后reload防火墙）
+   ```
 
    打开一个服务，类似于将端口可视化，服务需要在配置文件中添加，/etc/firewalld目录下有services文件夹
 
-       firewall-cmd --zone=work --add-service=smtp
+   ```
+   firewall-cmd --zone=work --add-service=smtp
+   ```
 
    移除服务
 
-       firewall-cmd --zone=work --remove-service=smtp
+   ```
+   firewall-cmd --zone=work --remove-service=smtp
+   ```
 
 *****
 
