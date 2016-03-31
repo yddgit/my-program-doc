@@ -118,7 +118,7 @@ CentOS 7 New Features
    systemctl list-unit-files
    ```
 
-   所有可用的单元文件存放在/usr/lib/systemd/system/和/etc/systemd/system/目录（后者优先级更高）
+   所有可用的单元文件存放在`/usr/lib/systemd/system/`和`/etc/systemd/system/`目录（后者优先级更高）
 
    重新载入systemd，扫描新的或有变动的单元
 
