@@ -64,6 +64,27 @@ git config --global alias.last 'log -1'
 git init --bare sample.git
 git clone git@hostname:/srv/sample.git
 
+使用ssh连接git仓库时，可能针对不同的仓库需要使用不同的密钥，此时需要做如下配置：
+ - 在~/.ssh/目录下创建配置文件config，内容如下
+   Host <host-a>
+     HostName <hostname/ip_addr>
+     HostkeyAlgorithms +ssh-dss
+     User <ssh_user_name>
+     Port <port>
+     IdentityFile </path/to/git_id_rsa1>
+   Host <host-b>
+     HostName <hostname/ip_addr>
+     HostkeyAlgorithms +ssh-dss
+     User <ssh_user_name>
+     Port <port>
+     IdentityFile </path/to/git_id_rsa2>
+ - 在shell中键入如下命令进入ssh-agent
+   ssh-agent bash --login -i
+ - 使用如下命令添加加密的密钥，命令行会提示输入Enter pass phrase，输入对应的密钥密码即可
+   ssh-add /path/to/git_id_rsa1
+   ssh-add /path/to/git_id_rsa2
+ - 至此，在当前shell中即可使用git命令进行pull和push，无须验证
+
 -------------------------------------------------
 
 1.Git是一种分布式的文件管理器
