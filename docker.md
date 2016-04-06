@@ -297,9 +297,9 @@ https://docs.docker.com/engine/articles/systemd/
 
     *__Note__：使用`attach`命令有时候并不方便。当多个窗口同时`attach`到同一个容器的时候，所有窗口都会同步显示。当某个窗口因命令阻塞时,其他窗口也无法执行操作了。*
 
- 7. 保存和加载镜像（`save`、`load`）
+ 7. 保存和加载**镜像**（`save`、`load`），导入和导出**容器**（`export`、`import`）
 
-    当需要把一台机器上的镜像迁移到另一台机器的时候，需要保存镜像与加载镜像。
+    当需要把一台机器上的镜像迁移到另一台机器的时候，需要保存镜像与加载**镜像**。
 
     ```
     # 保存镜像到一个tar包（-o, --output="" Write to an file）
@@ -314,6 +314,21 @@ https://docs.docker.com/engine/articles/systemd/
     # 使用scp将image1.tar拷到主机B上，然后：
     docker load < /home/image1.tar
     ```
+
+    同时也可以将**容器**直接打包导出和导入
+
+    ```
+    # 如果要导出本地某个容器，可以使用docker export命令，导出容器快照到本地文件
+    docker export container-id > export-file-name.tar
+
+    # 使用docker import从容器快照文件中再导入为镜像
+    cat export-file-name.tar | docker import - repository:tag
+
+    # 也可以通过指定URL或者某个目录来导入
+    docker import http://example.com/example-image.tgz repository:tag
+    ```
+
+    **注意**：用户既可以使用`docker load`来导入**镜像**存储文件到本地镜像库，也可以使用`docker import`来导入一个**容器**快照到本地镜像库。这两者的区别在于**容器**快照文件将丢弃所有的历史记录和元数据信息（即仅保存容器当时的快照状态），而**镜像**存储文件将保存完整记录，体积也要大。此外，从容器快照文件导入时可以重新指定标签等元数据信息。
 
  8. 登录registry server（`login`）
 
@@ -333,14 +348,14 @@ https://docs.docker.com/engine/articles/systemd/
 
     Dockerfile中每一条指令都创建镜像的一层
 
-    * 使用#来注释
-    * FROM指令告诉Docker使用哪个镜像作为基础
+    * 使用`#`来注释
+    * `FROM`指令告诉Docker使用哪个镜像作为基础
     * 接着是维护者的信息
-    * RUN开头的指令会在创建中运行，比如安装一个软件包
+    * `RUN`开头的指令会在创建中运行，比如安装一个软件包
     * __一个镜像不能超过127层__
-    * 使用ADD命令复制本地文件到镜像
-    * 使用EXPOSE命令来向外部开放端口
-    * 使用CMD命令来描述容器启动后运行的程序等
+    * 使用`ADD`命令复制本地文件到镜像
+    * 使用`EXPOSE`命令来向外部开放端口
+    * 使用`CMD`命令来描述容器启动后运行的程序等
 
     示例Dockerfile的内容如下：
 
@@ -465,13 +480,13 @@ INSTRUCTION argument
 
 *指令不区分大小写。但是命名约定为全部大写。*
 
-所有Dockerfile都必须以FROM命令开始。FROM命令会指定镜像基于哪个基础镜像创建，接下来的命令也会基于这个基础镜像。FROM命令可以多次使用，表示会创建多个镜像。如：`FROM ubuntu` 指令告诉我们，新的镜像将基于Ubuntu的镜像来构建。
+所有Dockerfile都必须以`FROM`命令开始。`FROM`命令会指定镜像基于哪个基础镜像创建，接下来的命令也会基于这个基础镜像。`FROM`命令可以多次使用，表示会创建多个镜像。如：`FROM ubuntu` 指令告诉我们，新的镜像将基于Ubuntu的镜像来构建。
 
 ```
 FROM image-name
 ```
 
-紧接着FROM命令，Dockerfile还提供了一些其它的命令以实现自动化。在文本文件或Dockerfile文件中这些命令的顺序就是它们被执行的顺序。
+紧接着`FROM`命令，Dockerfile还提供了一些其它的命令以实现自动化。在文本文件或Dockerfile文件中这些命令的顺序就是它们被执行的顺序。
 
  1. `MAINTAINER`设置该镜像的作者。
 
