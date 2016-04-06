@@ -222,6 +222,22 @@ https://docs.docker.com/engine/articles/systemd/
 
     # 在容器中安装新的程序（以ping程序为例：docker run learn/tutorial apt-get install -y ping）
     docker run image-name apt-get install -y app-name
+
+    # --name 为容器命名
+    docker run -it --name container-name image-name /bin/bash
+
+    # --cidfile 在运行docker时如有自动化的要求，那么可以要求Docker将container-id输出到你指定的文件中（PIDfile）。这种行为就类似于有些应用程序将自身PID输出到文件中，方便后续脚本操作。
+    # --privileged 使用该参数，container内的root拥有真正的root权限。否则，container内的root只是外部的一个普通用户权限。privileged启动的容器，可以看到很多host上的设备，并且可以执行mount。甚至允许你在docker容器中启动docker容器。
+    # --rm 在container结束时自动清理其所产生的数据
+    # -e 设定任意的环境变量，如：-e "name=value"
+    # -h 指定hostname
+    # -P 在host中随机从49153 和65535之间查找一个未被占用的端口绑定到container，可以使用docker port来查找这个随机绑定端口
+    # -p 指定端口映射，语法：-p ip:hostPort:containerPort | ip::containerPort | hostPort:containerPort | containerPort
+
+    # 例：启动服务
+    docker run -it --name container-name -h hostname -v /home/docker/html:/var/www/html -p 80:80 --privileged images:tag command
+    # 对于已经启动的容器，可以用如下命令登录
+    docker exec -it --privileged container-name/container-id /bin/bash
     ```
 
     *__Note__：在执行`apt-get`命令的时候，要带上`-y`参数。如果不指定`-y`参数的话，`apt-get`命令会进入交互模式，需要用户输入命令来进行确认，但在docker环境中是无法响应这种交互的。`apt-get`命令执行完毕之后，容器就会停止，但对容器的改动不会丢失。*
