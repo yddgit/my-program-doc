@@ -234,10 +234,15 @@ https://docs.docker.com/engine/articles/systemd/
     # -P 在host中随机从49153 和65535之间查找一个未被占用的端口绑定到container，可以使用docker port来查找这个随机绑定端口
     # -p 指定端口映射，语法：-p ip:hostPort:containerPort | ip::containerPort | hostPort:containerPort | containerPort
 
-    # 例：启动服务
-    docker run -it --name container-name -h hostname -v /home/docker/html:/var/www/html -p 80:80 --privileged images:tag command
+    # 例：启动服务（command可以为/usr/sbin/init或/bin/bash）
+    docker run -it -d --name container-name -h hostname -v /home/docker/html:/var/www/html -p ip:80:80 --privileged images:tag command
     # 对于已经启动的容器，可以用如下命令登录
     docker exec -it --privileged container-name/container-id /bin/bash
+    # 如何安装了util-linux 2.23+版本，也可使用nsenter连接登录容器
+    # 获取容器PID
+    docker inspect --format "{{ .State.Pid }}" <container-id>
+    # 登录容器
+    nsenter --target $PID --mount --uts --ipc --net --pid
     ```
 
     *__Note__：在执行`apt-get`命令的时候，要带上`-y`参数。如果不指定`-y`参数的话，`apt-get`命令会进入交互模式，需要用户输入命令来进行确认，但在docker环境中是无法响应这种交互的。`apt-get`命令执行完毕之后，容器就会停止，但对容器的改动不会丢失。*
