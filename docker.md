@@ -10,32 +10,32 @@ Required:
 
  1. 使用命令如下命令查看内核版本：
 
-    ```
+    ```bash
     uname -r
     3.10.0-327.3.1.el7.x86_64
     ```
   
  2. 更新系统（可以避免一些已发现的bug）
 
-    ```
+    ```bash
     yum update
     ```
 
  3. 执行安装脚本
 
-    ```
+    ```bash
     curl -sSL https://get.docker.com/ | sh
     ```
 
  4. 启动docker服务
 
-    ```
+    ```bash
     systemctl start docker.service
     ```
 
  5. 查看docker服务运行状态
 
-    ```
+    ```bash
     systemctl status -l docker.service
     ```
 
@@ -47,7 +47,7 @@ Required:
   
     此时需要首先确认已正确安装了如下软件包
   
-    ```
+    ```bash
     yum list installed | grep device-mapper-event-libs
     ```
 
@@ -58,45 +58,45 @@ Required:
 
  1. 创建目录
 
-    ```
+    ```bash
     mkdir /etc/systemd/system/docker.service.d
     ```
 
  2. 创建文件
   
-    ```
+    ```bash
     /etc/systemd/system/docker.service.d/http-proxy.conf
     ```
 
  3. 在http-proxy.conf中写入如下内容
 
-    ```
+    ```bash
     [Service]
     Environment="HTTP_PROXY=http://username:password@hostname:port/" "NO_PROXY=localhost,127.0.0.1"
     ```
 
  4. 使变更生效
 
-    ```
+    ```bash
     systemctl daemon-reload
     ```
 
  5. 确认配置已生效
 
-    ```
+    ```bash
     systemctl show docker --property Environment
     ```
 
  6. 重启docker服务
 
-    ```
+    ```bash
     systemctl restart docker.service
     ```
 
 确认docker安装成功
 -----------------
 
-```
+```bash
 docker run hello-world
 ```
 
@@ -107,19 +107,19 @@ docker是使用root用户运行的，为了避免输入sudo，docker创建了一
 
  1. 新建用户docker，添加到docker用户组
 
-    ```
+    ```bash
     useradd -g docker docker
     ```
   
  2. 将现有用户添加docker用户组
 
-    ```
+    ```bash
     usermod -aG docker username
     ```
   
  3. 使用变更后的用户登录系统，确认可以运行`docker`命令
 
-    ```
+    ```bash
     docker run hello-world
     ```
   
@@ -127,13 +127,13 @@ docker是使用root用户运行的，为了避免输入sudo，docker创建了一
   
     在以下内容
 
-    ```
+    ```bash
     root        ALL=(ALL)       ALL
     ```
 
     之后添加
 
-    ```
+    ```bash
     username    ALL=(ALL)       ALL
     ```
 
@@ -141,7 +141,7 @@ docker是使用root用户运行的，为了避免输入sudo，docker创建了一
 3. 设置docker服务自动启动
 =======================
 
-```
+```bash
 systemctl enable docker.service
 ```
 
@@ -154,13 +154,13 @@ https://docs.docker.com/engine/articles/systemd/
 
  1. 列出docker包的具体名字
 
-    ```
+    ```bash
     yum list installed | grep docker
     ```
   
  2. 删除docker
 
-    ```
+    ```bash
     yum remove docker-engine.x86_64
     ```
 
@@ -168,7 +168,7 @@ https://docs.docker.com/engine/articles/systemd/
   
  3. 清除镜像和容器文件
 
-    ```
+    ```bash
     rm -rf /var/lib/docker
     ```
   
@@ -179,7 +179,7 @@ https://docs.docker.com/engine/articles/systemd/
 
  1. 查看docker信息（`version`、`info`）
 
-    ```
+    ```bash
     # 查看版本
     docker version
 
@@ -189,7 +189,7 @@ https://docs.docker.com/engine/articles/systemd/
 
  2. 对image的操作（`search`、`pull`、`images`、`rmi`、`history`）
 
-    ```
+    ```bash
     # 从 https://index.docker.io/ 检索可用镜像（e.g.: docker search tutorial）
     docker search image-name
 
@@ -213,7 +213,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     docker容器可以理解为在沙盒中运行的进程。这个沙盒包含了该进程运行所必须的资源，包括文件系统、系统类库、shell 环境等等。但这个沙盒默认是不会运行任何程序的。你需要在沙盒中运行一个进程来启动某一个容器。这个进程是该容器的唯一进程，所以当该进程结束的时候，容器也会完全的停止。
 
-    ```
+    ```bash
     # 在容器中运行"echo"命令，输出"hello word"
     docker run image-name echo "hello word"
 
@@ -235,7 +235,7 @@ https://docs.docker.com/engine/articles/systemd/
     # -p 指定端口映射，语法：-p ip:hostPort:containerPort | ip::containerPort | hostPort:containerPort | containerPort
 
     # 例：启动服务（command可以为/usr/sbin/init或/bin/bash）
-    docker run -it -d --name container-name -h hostname -v /home/docker/html:/var/www/html -p ip:80:80 --privileged images:tag command
+    docker run -d --name --privileged container-name -h hostname -v /home/docker/html:/var/www/html -p ip:80:80 images:tag command
     # 对于已经启动的容器，可以用如下命令登录
     docker exec -it --privileged container-name/container-id /bin/bash
     # 如何安装了util-linux 2.23+版本，也可使用nsenter连接登录容器
@@ -249,7 +249,7 @@ https://docs.docker.com/engine/articles/systemd/
 
  4. 查看容器（`ps`、`inspect`）
 
-    ```
+    ```bash
     # 列出当前所有正在运行的container
     docker ps
 
@@ -270,7 +270,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     当你对某一个容器做了修改之后（通过在容器中运行某一个命令），可以把对容器的修改保存下来，这样下次可以从保存后的最新状态运行该容器。
 
-    ```
+    ```bash
     # 保存对容器的修改（-a, --author="" Author; -m, --message="" Commit message）
     # 以上例中安装了ping程序的容器为例：docker commit b3cc1d1e4876 learn/ping
     # container-id不需要完整的id，前3-4位即可
@@ -284,7 +284,7 @@ https://docs.docker.com/engine/articles/systemd/
 
  6. 对容器的操作（`rm`、`stop`、`start`、`kill`、`logs`、`diff`、`top`、`cp`、`restart`、`attach`）
 
-    ```
+    ```bash
     # 删除所有容器
     docker rm `docker ps -a -q`
     
@@ -322,7 +322,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     当需要把一台机器上的镜像迁移到另一台机器的时候，需要保存镜像与加载**镜像**。
 
-    ```
+    ```bash
     # 保存镜像到一个tar包（-o, --output="" Write to an file）
     docker save image-name -o file-path
     
@@ -338,7 +338,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     同时也可以将**容器**直接打包导出和导入
 
-    ```
+    ```bash
     # 如果要导出本地某个容器，可以使用docker export命令，导出容器快照到本地文件
     docker export container-id > export-file-name.tar
 
@@ -353,14 +353,14 @@ https://docs.docker.com/engine/articles/systemd/
 
  8. 登录registry server（`login`）
 
-    ```
+    ```bash
     # 登陆registry server（-e, --email="" Email; -p, --password="" Password; -u, --username="" Username）
     docker login
     ```
 
  9. 发布image（`push`）
 
-    ```
+    ```bash
     # 发布docker镜像
     docker push new-image-name
     ```
@@ -380,7 +380,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     示例Dockerfile的内容如下：
 
-    ```
+    ```dockerfile
     # This is a comment
     FROM learn/ping
     # Maintainer info 
@@ -395,7 +395,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     使用如下命令从Dockerfile创建镜像
 
-    ```
+    ```bash
     # build  
     #   --no-cache=false Do not use cache when building the image  
     #   -q, --quiet=false Suppress the verbose output generated by the containers  
@@ -406,7 +406,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     基于上例中的Dockerfile，执行`docker build -t="learn/apache" ~/apache-docker/`，输出如下内容
 
-    ```
+    ```bash
     Sending build context to Docker daemon 2.048 kB
     Step 1 : FROM learn/ping
      ---> c215e0e4d5a4
@@ -427,7 +427,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     `docker images`命令的输出会多出一条记录
 
-    ```
+    ```bash
     REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
     learn/apache        latest              3f39a12ea7b9        4 minutes ago       139.5 MB
     ```
@@ -436,7 +436,7 @@ https://docs.docker.com/engine/articles/systemd/
 
     通过添加-d参数来实现
 
-    ```
+    ```bash
     docker run -d learn/apache /bin/sh -c "while true; do echo hello world; sleep 1; done"
     ```
 
@@ -446,19 +446,19 @@ https://docs.docker.com/engine/articles/systemd/
 
     在运行容器时使用`-v`来声明Volume，`--name`指定容器名称（如不指定，则会自动生成一个随机数字符串当做UUID），`-h`设定hostname
 
-    ```
+    ```bash
     docker run -it --name container-name -h CONTAINER_HOST -v /data image-name /bin/bash
     ```
 
     上面的命令会将`/data`挂载到容器中，并绕过联合文件系统（Union File System），我们可以在主机上直接操作该目录。任何在该镜像`/data`路径的文件会将被复制到Volume。我们可以使用`docker inspect`命令找到Volume在主机上的存储位置
 
-    ```
+    ```bash
     docker inspect container-name
     ```
 
     *上述命令执行的输出结果中会包含类似如下内容的输出，这说明Docker把在`/var/lib/docker/volumes`下的某个目录挂载到了容器内的`/data`目录下。__注意：如果容器的`/data`目录一开始就不为空，那此时，`/data`目录下的文件在`/var/lib/docker/volumes`下也同样可以看到。__*
 
-    ```    
+    ```json
     "Mounts": [
         {
             "Name": "83d47e38db88062886ccfce0f50a94683017ea70ec7462420fc2b366a5aed547",
@@ -474,13 +474,13 @@ https://docs.docker.com/engine/articles/systemd/
 
     **也可以在Dockerfile中通过使用VOLUME指令来达到相同的目的**
 
-    ```
+    ```dockerfile
     VOLUME /data
     ```
 
     但还有另一件只有`-v`参数能做到而Dockerfile是做不到的事是在容器上挂载指定的主机目录
 
-    ```
+    ```bash
     docker run -it --name container-name -h CONTAINER_HOST -v /home/docker/data:/data image-name /bin/bash
     ```
 
@@ -495,7 +495,7 @@ Docker为我们提供了Dockerfile来解决自动化的问题。Dockerfile包含
 
 Dockerfile支持支持的语法命令
 
-```
+```dockerfile
 INSTRUCTION argument
 ```
 
@@ -503,7 +503,7 @@ INSTRUCTION argument
 
 所有Dockerfile都必须以`FROM`命令开始。`FROM`命令会指定镜像基于哪个基础镜像创建，接下来的命令也会基于这个基础镜像。`FROM`命令可以多次使用，表示会创建多个镜像。如：`FROM ubuntu` 指令告诉我们，新的镜像将基于Ubuntu的镜像来构建。
 
-```
+```dockerfile
 FROM image-name
 ```
 
@@ -511,25 +511,25 @@ FROM image-name
 
  1. `MAINTAINER`设置该镜像的作者。
 
-    ```
+    ```dockerfile
     MAINTAINER author-name
     ```
 
  2. `RUN`在shell或者exec的环境下执行的命令。`RUN`指令会在新创建的镜像上添加新的层面，接下来提交的结果用在Dockerfile的下一条指令中。
 
-    ```
+    ```dockerfile
     RUN command
     ```
 
  3. `ADD`复制文件指令。它有两个参数`source`和`destination`。`destination`是容器内的路径。`source`可以是URL或者是启动配置上下文中的一个文件。
 
-    ```
+    ```dockerfile
     ADD src destination
     ```
 
  4. `CMD`提供了容器默认的执行命令。Dockerfile只允许使用一次`CMD`指令。使用多个`CMD`会抵消之前所有的指令，只有最后一个指令生效。
 
-    ```
+    ```dockerfile
     CMD ["executable","param1","param2"]
     CMD ["param1","param2"]
     CMD command param1 param2
@@ -537,13 +537,13 @@ FROM image-name
 
  5. `EXPOSE`指定容器在运行时监听的端口。
 
-    ```
+    ```dockerfile
     EXPOSE port
     ```
 
  6. `ENTRYPOINT`配置给容器一个可执行的命令，这意味着在每次使用镜像创建容器时一个特定的应用程序可以被设置为默认程序。同时也意味着该镜像每次被调用时仅能运行指定的应用。类似于`CMD`，Docker只允许一个`ENTRYPOINT`，多个`ENTRYPOINT`会抵消之前所有的指令，只执行最后的`ENTRYPOINT`指令。
 
-    ```
+    ```dockerfile
     ENTRYPOINT ["executable", "param1","param2"]
     ENTRYPOINT command param1 param2
     ```
@@ -552,25 +552,25 @@ FROM image-name
 
  7. `WORKDIR`指定`RUN`、`CMD`与`ENTRYPOINT`命令的工作目录。
 
-    ```
+    ```dockerfile
     WORKDIR /path/to/workdir
     ```
 
  8. `ENV`设置环境变量。它们使用键值对，增加运行程序的灵活性。
 
-    ```
+    ```dockerfile
     ENV key value
     ```
 
  9. `USER`镜像正在运行时设置一个UID。
 
-    ```
+    ```dockerfile
     USER uid
     ```
 
  10. `VOLUME`授权访问从容器内到主机上的目录。
 
-    ```
+    ```dockerfile
     VOLUME ["/data"]
     ```
 
@@ -584,6 +584,59 @@ Dockerfile最佳实践
  * 避免在Dockerfile中映射公有端口；
  * `CMD`与`ENTRYPOINT`命令请使用数组语法。
 
-7. Docker搭建本地私有registry
+7. 示例：从已有模板创建CentOS 7的Docker镜像
+=========================================
+
+ 1. 从[OpenVZ](http://openvz.org/Download/template/precreated "OpenVZ")网站上下载一个CentOS 7的模板
+
+    http://download.openvz.org/template/precreated/centos-7-x86_64.tar.gz
+
+ 2. 将下载好的模板文件（）导入Docker，生成Docker镜像
+
+    ```bash
+    # 导入模板
+    cat /path/to/centos-7-x86_64.tar.gz | docker import - centos:7.2
+    # 查看导入后的镜像
+    docker images
+    # 导入成功输出以下信息
+    REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+    centos              7.2                 4b815ab05275        8 seconds ago       589.1 MB
+    ```
+
+ 3. 基于以上镜像容器
+
+    ```bash
+    # 基于centos:7.2镜像启动容器
+    # 容器名：centos-dev
+    # 主机名：centos-dev
+    # 本地/home/docker/data目录映射到容器的/data目录
+    # 本地的/home/docker/html目录映射到容器的/var/www/html目录，
+    # 本地80端口映射到容器的80端口
+    # 初始化执行命令：/usr/sbin/init
+    docker run -d --privileged --name centos-dev -h centos-dev -v /home/docker/data:/data -v /home/docker/html:/var/www/html -p 80:80 centos:7.2 /usr/sbin/init
+    # 查看启动后的容器
+    docker ps -a
+    # 容器启动成功输出以下信息
+    CONTAINER ID    IMAGE          COMMAND           CREATED          STATUS          PORTS                NAMES
+    25554584b4ba    centos:7.2     "/usr/sbin/init"  10 seconds ago   Up 8 seconds    0.0.0.0:80->80/tcp   centos-dev
+    ```
+
+ 4. 登录容器，查看容器相关信息
+
+    ```bash
+    # 登录容器开启一个终端（缺点：容器内命令执行异常时终端信息不能正常输出）
+    docker exec -it --privileged centos-dev /bin/bash
+
+    # 也可使用nsenter登录（缺点：容器内命令执行异常时终端信息不能正常输出）
+    # 取得容器进程的PID：3910
+    docker inspect --format "{{ .State.Pid }}" centos-dev
+    # 使用nsenter登录容器
+    nsenter --target 3910 --mount --uts --ipc --net --pid
+
+    # 直接在宿主机执行命令，操作容器（推荐）
+    docker exec centos-dev ip addr
+    ```
+
+8. Docker搭建本地私有registry
 ============================
 
