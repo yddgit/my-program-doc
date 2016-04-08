@@ -603,7 +603,7 @@ Dockerfile最佳实践
     centos              7.2                 4b815ab05275        8 seconds ago       589.1 MB
     ```
 
- 3. 基于以上镜像容器
+ 3. 基于以上镜像启动容器
 
     ```bash
     # 基于centos:7.2镜像启动容器
