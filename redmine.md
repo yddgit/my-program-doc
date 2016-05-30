@@ -35,6 +35,56 @@
 
 4. 接下来根据提示，输入相应信息，一路Next，直至安装完成
 
+5. 配置phpMyAdmin远程访问
+
+   ```apache
+   # 修改/opt/redmine-3.2.2-0/apps/phpmyadmin/conf/httpd-app.conf，注意[]里的配置
+   <IfVersion < 2.3 >
+       Order allow,deny
+       Allow from [all]
+       Satisfy all
+   </IfVersion>
+   <IfVersion >= 2.3>
+       Require [all granted]
+   </IfVersion>
+   ```
+
+6. 将redmine添加到系统服务
+
+   ```bash
+   # 创建/usr/lib/systemd/system/redmine.service
+   vi /usr/lib/systemd/system/redmine.service
+   ```
+
+   **redmine.service**
+   ```
+   # Systemd unit file for Redmine
+   [Unit]
+   Description=Redmine A Flexible Project Management Web Application
+   After=syslog.target network.target remote-fs.target nss-lookup.target
+
+   [Service]
+   Type=forking
+
+   ExecStart=/opt/redmine-3.2.2-0/ctlscript.sh start
+   ExecStop=/opt/redmine-3.2.2-0/ctlscript.sh stop
+
+   User=root
+   Group=root
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   ```
+   # 重新load服务列表
+   systemctl daemon-reload
+   # 查看redmine服务状态
+   systemctl status redmine
+   # 启动redmine服务
+   systemctl start redmine
+   ```
+
 二. Subversion服务的配置
 -----------------------
 
@@ -130,7 +180,42 @@
 三. GitBucket安装
 -----------------
 
+1. 安装GitBucket服务
 
+2. 为GitBucket配置反向代理
+
+   ```bash
+   # 创建gitbucket仓库的apache配置文件
+   vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/gitbucket.conf
+   ```
+
+   **gitbucket.conf**
+   ```apache
+   ProxyPreserveHost On
+   ProxyPass /gitbucket http://localhost:8080/gitbucket
+   ProxyPassReverse /gitbucket http://localhost:8080/gitbucket
+   ```
+
+   使apache配置生效
+
+   ```bash
+   # 编辑/opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
+   vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
+   ```
+
+   ```apache
+   # 追加如下内容：
+   Include "/opt/redmine-3.2.2-0/apache2/conf/bitnami/gitbucket.conf"
+   ```
+
+   ```apache
+   # 重启apache
+   /opt/redmine-3.2.2-0/ctlscript.sh restart apache
+   ```
+
+3. 使用管理员root（密码：root）登录GitBucket，设置GitBucket的URL
+
+   http://ip.address/gitbucket
 
 四. 在Redmine中创建项目并配置Subversion和Git
 ------------------------------------------
