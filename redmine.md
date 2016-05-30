@@ -90,13 +90,13 @@
      **subversion.conf**
      ```apache
      <Location /svn>
-       DAV svn
-       SVNPath /opt/redmine-3.2.2-0/svnrepo
-       AuthType Basic
-       AuthName "SVN Repo"
-       AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/passwd
-       AuthzSVNAccessFile /opt/redmine-3.2.2-0/svnrepo/conf/authz
-       Require valid-user
+         DAV svn
+         SVNPath /opt/redmine-3.2.2-0/svnrepo
+         AuthType Basic
+         AuthName "SVN Repo"
+         AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/passwd
+         AuthzSVNAccessFile /opt/redmine-3.2.2-0/svnrepo/conf/authz
+         Require valid-user
      </Location>
      ```
 
