@@ -54,68 +54,68 @@
 
    - 为svn仓库创建用户名和密码文件
 
-    ```bash
-    # 创建管理员账号
-    /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/passwd admin *****
-    # 创建其他用户账号（注意没有-c参数）
-    /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd yang ****
-    /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd user ****
-    ```
+     ```bash
+     # 创建管理员账号
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/passwd admin *****
+     # 创建其他用户账号（注意没有-c参数）
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd yang ****
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd user ****
+     ```
 
    - 配置用户权限
 
-    ```bash
-    # 修改/opt/redmine-3.2.2-0/svnrepo/conf/authz
-    vi /opt/redmine-3.2.2-0/svnrepo/conf/authz
-    ```
+     ```bash
+     # 修改/opt/redmine-3.2.2-0/svnrepo/conf/authz
+     vi /opt/redmine-3.2.2-0/svnrepo/conf/authz
+     ```
 
-    **authz**
-    ```
-    [groups]
-    manager = yang,admin
-    users = user
-    [/]
-    admin = rw
-    yang = rw
-    user = r
-    ```
+     **authz**
+     ```
+     [groups]
+     manager = yang,admin
+     users = user
+     [/]
+     admin = rw
+     yang = rw
+     user = r
+     ```
 
    - 创建apache配置文件
 
-    ```bash
-    # 创建svn仓库的apache配置文件
-    vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/subversion.conf
-    ```
+     ```bash
+     # 创建svn仓库的apache配置文件
+     vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/subversion.conf
+     ```
 
-    **subversion.conf**
-    ```apache
-    <Location /svn>
-      DAV svn
-      SVNPath /opt/redmine-3.2.2-0/svnrepo
-      AuthType Basic
-      AuthName "SVN Repo"
-      AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/passwd
-      AuthzSVNAccessFile /opt/redmine-3.2.2-0/svnrepo/conf/authz
-      Require valid-user
-    </Location>
-    ```
+     **subversion.conf**
+     ```apache
+     <Location /svn>
+       DAV svn
+       SVNPath /opt/redmine-3.2.2-0/svnrepo
+       AuthType Basic
+       AuthName "SVN Repo"
+       AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/passwd
+       AuthzSVNAccessFile /opt/redmine-3.2.2-0/svnrepo/conf/authz
+       Require valid-user
+     </Location>
+     ```
 
    - 使apache配置生效
 
-    ```bash
-    # 编辑/opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
-    vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
-    ```
+     ```bash
+     # 编辑/opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
+     vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
+     ```
 
-    ```apache
-    # 追加如下内容：
-    Include "/opt/redmine-3.2.2-0/apache2/conf/bitnami/subversion.conf"
-    ```
+     ```apache
+     # 追加如下内容：
+     Include "/opt/redmine-3.2.2-0/apache2/conf/bitnami/subversion.conf"
+     ```
 
-    ```apache
-    # 重启apache
-    /opt/redmine-3.2.2-0/ctlscript.sh restart apache
-    ```
+     ```apache
+     # 重启apache
+     /opt/redmine-3.2.2-0/ctlscript.sh restart apache
+     ```
 
    - 访问svn并通过http提交
 
@@ -123,9 +123,9 @@
 
      但仍然不能通过http提交文件到svn仓库，可通过如下命令允许http提交
 
-    ```bash
-    chown -R daemon:subversion /opt/redmine-3.2.2-0/svnrepo
-    ```
+     ```bash
+     chown -R daemon:subversion /opt/redmine-3.2.2-0/svnrepo
+     ```
 
 三. GitBucket安装
 -----------------
