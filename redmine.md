@@ -76,7 +76,7 @@
    WantedBy=multi-user.target
    ```
 
-   ```
+   ```bash
    # 重新load服务列表
    systemctl daemon-reload
    # 查看redmine服务状态
