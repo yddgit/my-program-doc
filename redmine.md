@@ -445,5 +445,11 @@
 七、配置防火墙
 -------------
 
-tcp/80
-tcp/29418
+```bash
+# 添加Apache的80端口
+firewall-cmd --zone=public --add-port=80/tcp --permanent
+# 添加GitBucket的29418端口用于SSH方式访问Git仓库
+firewall-cmd --zone=public --add-port=29418/tcp --permanent
+# 动态更新防火墙规则
+firewall-cmd --reload
+```
