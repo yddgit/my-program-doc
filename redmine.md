@@ -429,11 +429,7 @@
 四. 配置Redmine
 ------------------------------------------
 
-1. 更换主题
-
-2. 配置用户名显示方式
-
-3. 修改Apache主页
+1. 修改Apache主页
 
    ```bash
    # 修改/opt/redmine-3.2.2-0/apache2/htdocs/index.html
@@ -455,13 +451,40 @@
    - phpMyAdmin
      + URL：http://ip.address/phpmyadmin/
      + 账号/密码：root/安装Redmine时配置的密码
-     + **!!建议登录phpMyAdmin时语言选择English，这个版本的phpMyAdmin对中文的支持不是很好**
+     + **!! 建议登录phpMyAdmin时语言选择English，这个版本的phpMyAdmin对中文的支持不是很好**
    - Subversion
      + URL：http://ip.address/svn/
      + 账号/密码：配置svn的http访问时配置的用户名和密码，如：admin/xxxxx
    - GitBucket
      + URL：http://ip.address/gitbucket/
      + 账号/密码：root/root
+
+2. 修改Redmine配置
+
+   - 更换主题
+
+     将Redmine默认的主题换成Gitmike主题，下载地址：
+
+     https://github.com/makotokw/redmine-theme-gitmike
+
+     将下载好的主题文件上传到服务器：
+
+     ```bash
+     # 将下载好的文件redmine-theme-gitmike-1.0.7.zip上传到如下目录
+     /opt/redmine-3.2.2-0/apps/redmine/htdocs/public/themes
+     # 解压
+     unzip redmine-theme-gitmike-1.0.7.zip
+     # 修改目录名
+     mv redmine-theme-gitmike-1.0.7 gitmike
+     ```
+
+   - 用管理员登录Redmine，点击 **管理** --> **配置**，修改如下配置：
+     + **一般** --> **主机名称**：ip.address/redmine
+     + **一般** --> **文本格式**：Markdown
+     + **保存**
+     + **显示** --> **主题**：Gitmike
+     + **显示** --> **默认语言**：简体中文
+     + **显示** --> **用户显示格式**：_选择姓在前名在后的格式_
 
 五. 在Redmine中创建项目并配置Subversion和Git
 ------------------------------------------
