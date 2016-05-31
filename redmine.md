@@ -15,6 +15,18 @@
 [3]: https://github.com/gitbucket/gitbucket/releases/tag/3.14 "GitBucket 3.14"
 
 > **注意**：Redmine使用的是Bitnami提供的一站式安装包，无须关心其环境和依赖包的安装配置。Bitnami提供了很多常用服务的安装包，具体可参考这里：https://bitnami.com/stacks
+> 
+> 本文档中指定下载的`Redmine Installer`中包含如下组件：
+> - Redmine 3.2.2
+> - Apache 2.4.20
+> - ImageMagick 6.7.5
+> - MySQL 5.6.30
+> - Subversion 1.8.13
+> - Git 2.7.4
+> - Ruby 2.1.9
+> - Rails 4.2.5.1
+> - RubyGems 1.8.12
+
 
 一. Redmine服务的安装
 --------------------
@@ -33,7 +45,150 @@
    ./bitnami-redmine-3.2.2-0-linux-x64-installer.run --mode text
    ```
 
-4. 接下来根据提示，输入相应信息，一路Next，直至安装完成
+4. 接下来根据提示，进行相关设置，直至安装完成
+
+   - 选择安装语言：5（简体中文）
+
+     ```
+     Language Selection
+
+     Please select the installation language
+     [1] English - English
+     [2] Spanish - Español
+     [3] Japanese - 日本語
+     [4] Korean - 한국어
+     [5] Simplified Chinese - 简体中文
+     [6] Hebrew - עברית
+     [7] German - Deutsch
+     [8] Romanian - Română
+     [9] Russian - Русский
+     Please choose an option [1] : 
+     ```
+
+   - 选择要安装的组件：全部选**Y**
+
+     ```
+     ----------------------------------------------------------------------------
+     欢迎来到 Bitnami Redmine Stack 安装程序。
+
+     ----------------------------------------------------------------------------
+     选择您想要安装的组件，清除您不想安装的组件。当您准备继续时，点击前进。
+
+     Subversion [Y/n] :Y
+
+     PhpMyAdmin [Y/n] :Y
+
+     Redmine : Y (Cannot be edited)
+
+     Git [Y/n] :Y
+
+     上述选择是否正确？ [Y/n]: Y
+     ```
+
+   - 选择安装目录：/opt/redmine-3.2.2-0（默认即可）
+
+     ```
+     ----------------------------------------------------------------------------
+     安装文件夹
+
+     请选择安装Bitnami Redmine Stack的文件夹
+
+     选择一个文件夹 [/opt/redmine-3.2.2-0]:
+     ```
+
+   - 设置管理员账号密码
+
+     ```
+     ----------------------------------------------------------------------------
+     创建管理员帐户
+
+     Bitnami Redmine Stack admin 用户创建
+
+     您的真实姓名 [User Name]: admin
+
+     Email地址 [user@example.com]: admin@admin.com
+
+     登录 [user]: admin
+
+     密码 :
+     请确认密码 :
+     ```
+
+   - 选择缺省数据配置语言：30（中文）
+
+     ```
+     ----------------------------------------------------------------------------
+     缺省数据配置语言
+
+     选择缺省数据配置语言：
+
+     [1] Bosnian
+     [2] 保加利亚语
+     [3] Catalan
+     [4] 捷克语
+     [5] Danish
+     [6] 德语
+     [7] 英语
+     [8] 西班牙
+     [9] 法语
+     [10] Galician
+     [11] 希伯来语
+     [12] Hungarian
+     [13] 意大利语
+     [14] 日语
+     [15] 朝鲜语
+     [16] Lithuanian
+     [17] 荷兰语
+     [18] Norwegian
+     [19] 波兰语
+     [20] 葡萄牙语
+     [21] 罗马尼亚语
+     [22] 俄语
+     [23] Slovak
+     [24] Slovenian
+     [25] 塞尔维亚语
+     [26] 瑞典语
+     [27] Turkish
+     [28] Ukrainian
+     [29] Vietnamese
+     [30] 中文
+     请选择选项 [30] : 30
+     ```
+
+   - 邮件配置：N（暂不设置）
+
+     ```
+     Do you want to configure mail support? [y/N]: N
+     ```
+
+   - 确认开始安装：Y（确认）
+
+     ```
+     ----------------------------------------------------------------------------
+     安装程序已经准备好将 Bitnami Redmine Stack 安装到您的电脑。
+
+     您确定要继续吗？ [Y/n]: Y
+
+     ----------------------------------------------------------------------------
+     正在安装 Bitnami Redmine Stack 至您的电脑中，请稍候。
+
+     正在安装
+     0% ______________ 50% ______________ 100%
+     #########################
+     ```
+
+   - 稍等片刻......安装完成，暂不启动Redmine相关服务
+
+     ```
+     ----------------------------------------------------------------------------
+     安装程序已经将 Bitnami Redmine Stack 安装于您的电脑中。
+
+     启动Redmine应用程序。 [Y/n]: n
+
+     信息: To access the Bitnami Redmine Stack, go to
+     http://127.0.0.1:80 from your browser.
+     按 [Enter] 继续：
+     ```
 
 5. 配置phpMyAdmin远程访问
 
@@ -192,13 +347,13 @@
    - 配置GitBucket数据目录
 
      ```bash
-     # 创建/var/lib/gitbucket目录，并修改目录权限
-     mkdir /var/lib/gitbucket
-     chown -R tomcat:tomcat /var/lib/gitbucket
+     # 创建/opt/redmine-3.2.2-0/gitbucket目录，并修改目录权限
+     mkdir /opt/redmine-3.2.2-0/gitbucket
+     chown -R tomcat:tomcat /opt/redmine-3.2.2-0/gitbucket
      # 编辑tomcat配置文件，添加环境变量GITBUCKET_HOME
      vi /etc/tomcat/tomcat.conf
      # 在tomcat.conf文件最后追加如下内容
-     GITBUCKET_HOME="/var/lib/gitbucket"
+     GITBUCKET_HOME="/opt/redmine-3.2.2-0/gitbucket"
      ```
 
    - 将下载好的gitbucket.war上传到如下目录
