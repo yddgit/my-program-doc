@@ -417,6 +417,8 @@
 
    登录成功后，访问：http://ip.address/gitbucket/admin/system
 
+   设置如下内容：
+
    - Base URL：http://ip.address/gitbucket
    - Default option to create a new repository：**Private**
    - Anonymous access：**Deny**
@@ -424,7 +426,8 @@
    - 勾选：Enable SSH access to git repository
      + SSH Host：ip.address
      + SSH Port：29418
-   - Apply changes
+
+   设置完成后 Apply changes
 
 四. 配置Redmine
 ------------------------------------------
@@ -478,21 +481,13 @@
      mv redmine-theme-gitmike-1.0.7 gitmike
      ```
 
-   - 用管理员登录Redmine，点击 **管理** --> **配置**，修改如下配置：
-
-     + **一般**
-
-       **主机名称**：ip.address/redmine
-
-       **文本格式**：Markdown
-
-     + **显示**
-
-       **主题**：Gitmike
-
-       **默认语言**：简体中文
-
-       **用户显示格式**：_选择姓在前名在后的格式_
+   - 用管理员登录Redmine，点击 **管理** > **配置**，修改如下配置：
+     + **一般** > **主机名称**：ip.address/redmine
+     + **一般** > **文本格式**：Markdown
+     + **显示** > **主题**：Gitmike
+     + **显示** > **默认语言**：简体中文
+     + **显示** > **用户显示格式**：_选择姓在前名在后的格式_
+     + **认证** > **允许自注册**：禁用
 
 五. 在Redmine中创建项目并配置Subversion和Git
 ------------------------------------------
