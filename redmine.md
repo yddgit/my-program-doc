@@ -494,10 +494,13 @@
 
 下面在Redmine中创建一个示例项目，假设该项目的基本信息如下：
 
-- 项目名称：示例项目
-- 项目标识：demo
-- 项目文档管理使用Subversion
-- 项目代码管理使用Git
+> 项目名称：示例项目
+>
+> 项目标识：demo
+>
+> 项目文档管理使用Subversion
+>
+> 项目代码管理使用Git
 
 
 1. 首先登录Redmine，**项目** > **新建项目**
@@ -524,7 +527,7 @@
 
    - 登录GitBucket，点击页面右上角的 **+**，选择 **New repository**
      + **Repository name**：demo
-     + **Description (optional): **：Demo
+     + **Description \(optional\)**：Demo
      + 勾选项目类型为：**Private**
      + 勾选：**Initialize this repository with a README**
 
@@ -546,12 +549,12 @@
 
      点击 **创建**，即完成了Git和Redmine的集成，此时在示例项目的主页点击 **版本库** 即可看到关联的Git仓库
 
-     可以直接在Redmine页面上查看相关文档提交历史，如：\#a95cfa58 Initial commit
+     可以直接在Redmine页面上查看相关代码提交历史，如：\#a95cfa58 Initial commit
 
 4. 配置Redmine集成远程Git仓库
 
    上述Git仓库集成，较为简单，是因为Git仓库和Redmine部署在同一台服务器，如果要配置远程Git仓库到Redmine，方法则略有差异。
-   原理上是首先在本地指定路径创建远程Git仓库的一个镜像，然后将这个镜像的本地路径配置到Redmine中
+   原理上是首先在本地指定路径创建远程Git仓库的一个镜像，然后将这个本地路径配置到Redmine中
 
    首先为本地用户生成ssh-key
 
@@ -589,22 +592,22 @@
 
    然后将本地用户的~/.ssh/id_rsa.pub文件的内容添加到远程Git仓库的ssh-key列表里（或追加到其操作系统用户的~/.ssh/authorized_keys文件里）
 
-   然后使用如下命令创建本地镜像仓库
+   使用如下命令创建本地镜像仓库
 
    ```bash
    git clone --mirror git@hostname:repo_name /path/to/local/repo
    ```
 
-   然后将/path/to/local/repo（绝对路径）添加到Redmine中即可，同时还需要添加一个定时任务，定时拉取远程Git仓库的更新
+   将/path/to/local/repo（绝对路径）添加到Redmine中即可，同时还需要添加一个定时任务，定时拉取远程Git仓库的更新
 
    ```bash
    # 配置定时任务
-   crontab -e -u redmine
+   crontab -e -u root
    # 定时任务每5分钟执行一次
    */5 * * * * cd /path/to/local/repo && git fetch --all
    ```
 
-   也可以通过修改/etc/crontab文件来添加定时任务，不过这里需要指定执行定时任务脚本的用户
+   也可以通过修改/etc/crontab文件来添加定时任务，不过这里需要指定执行定时任务的用户
 
    ```bash
    # 修改/etc/crontab
@@ -615,7 +618,7 @@
 
 5. 配置SSH访问Git仓库
 
-   - 在Repository主页复制Git仓库的ssh链接，即可
+   - 在Repository主页复制Git仓库的ssh链接
 
      ```bash
      ssh://root@ip.address:29418/root/demo.git
