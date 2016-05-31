@@ -411,9 +411,9 @@
 
 3. 使用管理员登录GitBucket，设置GitBucket
 
-   > GitBucket主页：http://ip.address/gitbucket
-   >
-   > 账号/密码：`root/root`
+   GitBucket主页：http://ip.address/gitbucket
+
+   账号/密码：`root/root`
 
    登录成功后，访问：http://ip.address/gitbucket/admin/system
 
