@@ -419,13 +419,13 @@
 
    设置如下内容：
 
-   - Base URL：http://ip.address/gitbucket
-   - Default option to create a new repository：**Private**
-   - Anonymous access：**Deny**
-   - 去选：Use Gravatar for Profile-Images
-   - 勾选：Enable SSH access to git repository
-     + SSH Host：ip.address
-     + SSH Port：29418
+   - **Base URL**：http://ip.address/gitbucket
+   - **Default option to create a new repository**：**Private**
+   - **Anonymous access**：**Deny**
+   - 去选：**Use Gravatar for Profile-Images**
+   - 勾选：**Enable SSH access to git repository**
+     + **SSH Host**：ip.address
+     + **SSH Port**：29418
 
    设置完成后 Apply changes
 
