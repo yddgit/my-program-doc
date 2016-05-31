@@ -183,6 +183,46 @@
 
 1. 安装GitBucket服务
 
+   - 安装Tomcat
+
+     ```bash
+     yum install tomcat tomcatjss tomcat-webapps tomcat-javadoc tomcat-docs-webapp tomcat-admin-webapps
+     ```
+
+   - 配置GitBucket数据目录
+
+     ```bash
+     # 创建/var/lib/gitbucket目录，并修改目录权限
+     mkdir /var/lib/gitbucket
+     chown -R tomcat:tomcat /var/lib/gitbucket
+     # 编辑tomcat配置文件，添加环境变量GITBUCKET_HOME
+     vi /etc/tomcat/tomcat.conf
+     # 在tomcat.conf文件最后追加如下内容
+     GITBUCKET_HOME="/var/lib/gitbucket"
+     ```
+
+   - 将下载好的gitbucket.war上传到如下目录
+
+     ```bash
+     /var/lib/tomcat/webapps/
+     ```
+
+     ```bash
+     # 修改文件权限
+     chown tomcat:tomcat /var/lib/tomcat/webapps/gitbucket.war
+     ```
+
+   - 启动tomcat服务
+
+     ```bash
+     # 重新load后台服务
+     systemctl daemon-reload
+     # 查看tomcat服务状态
+     systemctl status tomcat
+     # 启动tomcat服务
+     systemctl start tomcat
+     ```
+
 2. 为GitBucket配置反向代理
 
    ```bash
