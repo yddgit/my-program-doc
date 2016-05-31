@@ -415,7 +415,7 @@
    >
    > 账号/密码：`root/root`
 
-   登录成功后，访问：http://192.168.56.10/gitbucket/admin/system
+   登录成功后，访问：http://ip.address/gitbucket/admin/system
 
    - Base URL：http://ip.address/gitbucket
    - Default option to create a new repository：**Private**
