@@ -261,10 +261,10 @@
 
      ```bash
      # 创建管理员账号
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/passwd admin password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd admin password
      # 创建其他用户账号（注意没有-c参数）
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd yang password
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd user password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd yang password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd user password
      ```
 
    - 配置用户权限
@@ -299,7 +299,7 @@
          SVNPath /opt/redmine-3.2.2-0/svnrepo
          AuthType Basic
          AuthName "Subversion Repository"
-         AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/passwd
+         AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd
          AuthzSVNAccessFile /opt/redmine-3.2.2-0/svnrepo/conf/authz
          Require valid-user
      </Location>
