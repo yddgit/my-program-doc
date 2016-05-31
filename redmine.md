@@ -449,7 +449,7 @@
      + URL：http://ip.address/redmine/
      + 账号/密码：安装Redmine时配置的用户名和密码，如：admin/xxxxx
    - phpMyAdmin
-     + URL：http://ip.address/phpmyadmin/
+     + URL：http://ip.address/phpmyadmin/?lang=en
      + 账号/密码：root/安装Redmine时配置的密码
      + **!! 建议登录phpMyAdmin时语言选择English，这个版本的phpMyAdmin对中文的支持不是很好**
    - Subversion
@@ -479,6 +479,7 @@
      ```
 
    - 用管理员登录Redmine，点击 **管理** --> **配置**，修改如下配置：
+
      + **一般**
 
        **主机名称**：ip.address/redmine
@@ -509,8 +510,10 @@
 ```bash
 # 添加Apache的80端口
 firewall-cmd --zone=public --add-port=80/tcp --permanent
-# 添加GitBucket的29418端口用于SSH方式访问Git仓库
+# 添加GitBucket的29418端口（SSH连接）
 firewall-cmd --zone=public --add-port=29418/tcp --permanent
+# 添加Subversion的3690端口
+firewall-cmd --zone=public --add-port=3690/tcp --permanent
 # 动态更新防火墙规则
 firewall-cmd --reload
 ```
