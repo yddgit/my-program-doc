@@ -420,8 +420,8 @@
    设置如下内容：
 
    - **Base URL**：http://ip.address/gitbucket
-   - **Default option to create a new repository**：**Private**
-   - **Anonymous access**：**Deny**
+   - **Default option to create a new repository**：Private
+   - **Anonymous access**：Deny
    - 去选：**Use Gravatar for Profile-Images**
    - 勾选：**Enable SSH access to git repository**
      + **SSH Host**：ip.address
@@ -492,7 +492,134 @@
 五. 在Redmine中创建项目并配置Subversion和Git
 ------------------------------------------
 
+下面在Redmine中创建一个示例项目，假设该项目的基本信息如下：
 
+- 项目名称：示例项目
+- 项目标识：demo
+- 项目文档管理使用Subversion
+- 项目代码管理使用Git
+
+
+1. 首先登录Redmine，**项目** > **新建项目**
+
+   - **名称**：示例项目
+   - **标识**：demo
+
+   点击 **创建**，示例项目创建完成，进入项目配置界面
+
+2. 在上一步的项目配置界面，选择 **版本库** > **新建版本库**，进入新建版本库界面
+
+   - **SCM**：Subversion
+   - **主版本库**：_勾选_
+   - **标识**：doc
+   - **URL**：http://ip.address/svn
+   - **登录名**：admin
+   - **密码**：xxxxx
+
+   点击 **创建**，即完成了Subversion和Redmine的集成，此时在示例项目的主页点击 **版本库** 即可看到关联的Subversion仓库
+
+   可以直接在Redmine页面上查看相关文档提交历史，如：\#1 create trunk, branches, tags
+
+3. 在GitBucket上创建示例Git仓库，并集成到Redmine
+
+   - 登录GitBucket，点击页面右上角的 **+**，选择 **New repository**
+     + **Repository name**：demo
+     + **Description (optional): **：Demo
+     + 勾选项目类型为：**Private**
+     + 勾选：**Initialize this repository with a README**
+
+     点击 **Create repository**，创建完成
+
+   - 上面创建的Git中央仓库对应到服务器如下路径
+
+     ```
+     /opt/redmine-3.2.2-0/gitbucket/repositories/root/demo.git
+     ```
+
+   - 登录Redmine，在示例项目的配置界面，选择 **版本库** > **新建版本库**，进入新建版本库界面
+
+     + **SCM**：Git
+     + **主版本库**：_勾选_
+     + **标识**：src
+     + **库路径**：/opt/redmine-3.2.2-0/gitbucket/repositories/root/demo.git
+     + **路径编码**：UTF-8
+
+     点击 **创建**，即完成了Git和Redmine的集成，此时在示例项目的主页点击 **版本库** 即可看到关联的Git仓库
+
+     可以直接在Redmine页面上查看相关文档提交历史，如：\#a95cfa58 Initial commit
+
+4. 配置Redmine集成远程Git仓库
+
+   上述Git仓库集成，较为简单，是因为Git仓库和Redmine部署在同一台服务器，如果要配置远程Git仓库到Redmine，方法则略有差异。
+   原理上是首先在本地指定路径创建远程Git仓库的一个镜像，然后将这个镜像的本地路径配置到Redmine中
+
+   首先为本地用户生成ssh-key
+
+   ```bash
+   # 使用如下命令为本地用户生成ssh-key
+   ssh-keygen
+   ```
+
+   > 如下**不要**配置SSH密钥的**passphrase**
+
+   ```
+   [root@localhost ~]# ssh-keygen
+   Generating public/private rsa key pair.
+   Enter file in which to save the key (/root/.ssh/id_rsa):
+   Created directory '/root/.ssh'.
+   Enter passphrase (empty for no passphrase):
+   Enter same passphrase again:
+   Your identification has been saved in /root/.ssh/id_rsa.
+   Your public key has been saved in /root/.ssh/id_rsa.pub.
+   The key fingerprint is:
+   e4:c0:f7:66:d4:9c:92:c3:ea:bd:e6:31:0f:57:bc:7f root@localhost.localdomain
+   The key's randomart image is:
+   +--[ RSA 2048]----+
+   |                 |
+   |     .   . + .   |
+   |      o o * +    |
+   |       = + o .   |
+   |        S +   o  |
+   |       . +   . . |
+   |        . = . .  |
+   |          .B   .E|
+   |         oo .   o|
+   +-----------------+
+   ```
+
+   然后将本地用户的~/.ssh/id_rsa.pub文件的内容添加到远程Git仓库的ssh-key列表里（或追加到其操作系统用户的~/.ssh/authorized_keys文件里）
+
+   然后使用如下命令创建本地镜像仓库
+
+   ```bash
+   git clone --mirror git@hostname:repo_name /path/to/local/repo
+   ```
+
+   然后将/path/to/local/repo（绝对路径）添加到Redmine中即可，同时还需要添加一个定时任务，定时拉取远程Git仓库的更新
+
+   ```bash
+   # 配置定时任务
+   crontab -e -u redmine
+   # 定时任务每5分钟执行一次
+   */5 * * * * cd /path/to/local/repo && git fetch --all
+   ```
+
+   也可以通过修改/etc/crontab文件来添加定时任务，不过这里需要指定执行定时任务脚本的用户
+
+   ```bash
+   # 修改/etc/crontab
+   vi /etc/crontab
+   # 定时任务每5分钟执行一次
+   */5 * * * * root cd /path/to/local/repo && git fetch --all
+   ```
+
+5. 配置SSH访问Git仓库
+
+   - 在Repository主页复制Git仓库的ssh链接，即可
+
+     ```bash
+     ssh://root@ip.address:29418/root/demo.git
+     ```
 
 六. Redmine的邮件配置
 --------------------
