@@ -464,9 +464,9 @@
 
 2. 修改Redmine配置
 
-   - 更换主题
+   - 添加Redmine主题
 
-     将Redmine默认的主题换成Gitmike主题，下载地址：
+     这里选择Gitmike主题，下载地址：
 
      https://github.com/makotokw/redmine-theme-gitmike
 
