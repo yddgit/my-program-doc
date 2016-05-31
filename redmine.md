@@ -21,16 +21,16 @@
 
 1. 将下载好的Redmine安装包（`bitnami-redmine-3.2.2-0-linux-x64-installer.run`）上传到服务器
 
-2. 用root用户登录，执行如命令为安装包赋予可执行权限：
+2. 执行如下命令为安装包赋予可执行权限：
 
    ```bash
-   chmod 755 bitnami-redmine-3.2.2-0-linux-installer.run
+   chmod u+x bitnami-redmine-3.2.2-0-linux-x64-installer.run
    ```
 
 3. 执行如下命令开始安装：
 
    ```bash
-   ./bitnami-redmine-3.2.2-0-linux-installer.run --mode text
+   ./bitnami-redmine-3.2.2-0-linux-x64-installer.run --mode text
    ```
 
 4. 接下来根据提示，输入相应信息，一路Next，直至安装完成
@@ -38,14 +38,14 @@
 5. 配置phpMyAdmin远程访问
 
    ```apache
-   # 修改/opt/redmine-3.2.2-0/apps/phpmyadmin/conf/httpd-app.conf，注意[]里的配置
+   # 修改/opt/redmine-3.2.2-0/apps/phpmyadmin/conf/httpd-app.conf，注意Allow from all和Require all granted的配置
    <IfVersion < 2.3 >
        Order allow,deny
-       Allow from [all]
+       Allow from all
        Satisfy all
    </IfVersion>
    <IfVersion >= 2.3>
-       Require [all granted]
+       Require all granted
    </IfVersion>
    ```
 
@@ -77,7 +77,7 @@
    ```
 
    ```bash
-   # 重新load服务列表
+   # 重新load后台服务
    systemctl daemon-reload
    # 查看redmine服务状态
    systemctl status redmine
@@ -91,25 +91,25 @@
 1. 使用如下命令创建svn仓库
 
    ```bash
-   # 在/svn目录下创建一个svn的repository,之所以/svn下创建，是为了方便通过svn://ip.address/svn访问svn仓库
+   # 在/opt/redmine-3.2.2-0/svnrepo目录下创建一个svn的repository
    /opt/redmine-3.2.2-0/subversion/bin/svnadmin create /opt/redmine-3.2.2-0/svnrepo
-   # 创建指向/opt/redmine-3.2.2-0/svnrepo的符号链接
+   # 创建指向/opt/redmine-3.2.2-0/svnrepo的符号链接/svn，方便通过svn://ip.address/svn访问svn仓库
    ln -s /opt/redmine-3.2.2-0/svnrepo /svn
    # 重启subversion服务
    /opt/redmine-3.2.2-0/ctlscript.sh restart subversion
    # 此时可以通过svn://ip.address/svn访问刚刚创建的svn仓库
    ```
 
-2. 配置svn仓库的http访问（使用Apache HTTP Server）
+2. 配置svn的http访问（使用Apache HTTP Server）
 
    - 为svn仓库创建用户名和密码文件
 
      ```bash
      # 创建管理员账号
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/passwd admin *****
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/passwd admin password
      # 创建其他用户账号（注意没有-c参数）
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd yang ****
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd user ****
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd yang password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/passwd user password
      ```
 
    - 配置用户权限
@@ -133,7 +133,7 @@
    - 创建apache配置文件
 
      ```bash
-     # 创建svn仓库的apache配置文件
+     # 创建svn的apache配置文件
      vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/subversion.conf
      ```
 
@@ -143,7 +143,7 @@
          DAV svn
          SVNPath /opt/redmine-3.2.2-0/svnrepo
          AuthType Basic
-         AuthName "SVN Repo"
+         AuthName "Subversion Repository"
          AuthUserFile /opt/redmine-3.2.2-0/svnrepo/conf/passwd
          AuthzSVNAccessFile /opt/redmine-3.2.2-0/svnrepo/conf/authz
          Require valid-user
@@ -167,7 +167,7 @@
      /opt/redmine-3.2.2-0/ctlscript.sh restart apache
      ```
 
-   - 访问svn并通过http提交
+   - 配置svn通过http提交
 
      现在可以通过http方式访问svn服务：http://ip.address/svn
 
@@ -175,6 +175,7 @@
 
      ```bash
      chown -R daemon:subversion /opt/redmine-3.2.2-0/svnrepo
+     chown -R daemon:subversion /svn
      ```
 
 三. GitBucket安装
@@ -185,7 +186,7 @@
 2. 为GitBucket配置反向代理
 
    ```bash
-   # 创建gitbucket仓库的apache配置文件
+   # 创建gitbucket的apache配置文件
    vi /opt/redmine-3.2.2-0/apache2/conf/bitnami/gitbucket.conf
    ```
 
@@ -213,7 +214,7 @@
    /opt/redmine-3.2.2-0/ctlscript.sh restart apache
    ```
 
-3. 使用管理员root（密码：root）登录GitBucket，设置GitBucket的URL
+3. 使用管理员（`root/root`）登录GitBucket，设置GitBucket的URL
 
    http://ip.address/gitbucket
 
