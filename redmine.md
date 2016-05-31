@@ -429,8 +429,39 @@
 四. 配置Redmine
 ------------------------------------------
 
+1. 更换主题
 
+2. 配置用户名显示方式
 
+3. 修改Apache主页
+
+   ```bash
+   # 修改/opt/redmine-3.2.2-0/apache2/htdocs/index.html
+   vi /opt/redmine-3.2.2-0/apache2/htdocs/index.html
+   ```
+
+   在index.html的22行和23行之间，添加如下内容
+   ```html
+   <h1><a id="bitnami-link" href="phpmyadmin/?lang=en" target="_blank">Access phpMyAdmin</a></h1>
+   <h1><a id="bitnami-link" href="svn/" target="_blank">Access Subversion</a></h1>
+   <h1><a id="bitnami-link" href="gitbucket/" target="_blank">Access GitBucket</a></h1>
+   ```
+
+   以下是各个服务的URL和账号密码：
+
+   - Redmine
+     + URL：http://ip.address/redmine/
+     + 账号/密码：安装Redmine时配置的用户名和密码，如：admin/xxxxx
+   - phpMyAdmin
+     + URL：http://ip.address/phpmyadmin/
+     + 账号/密码：root/安装Redmine时配置的密码
+     + **!!建议登录phpMyAdmin时语言选择English，这个版本的phpMyAdmin对中文的支持不是很好**
+   - Subversion
+     + URL：http://ip.address/svn/
+     + 账号/密码：配置svn的http访问时配置的用户名和密码，如：admin/xxxxx
+   - GitBucket
+     + URL：http://ip.address/gitbucket/
+     + 账号/密码：root/root
 
 五. 在Redmine中创建项目并配置Subversion和Git
 ------------------------------------------
