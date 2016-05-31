@@ -62,7 +62,7 @@
 
    - 将Jenkins用户的~/.ssh/id_rsa.pub的内容添加到git用户的~/.ssh/authorized_keys文件中
 
-   - 在Jenkins中添加Credentials：首页 > \[左侧\]Credentials > \[右侧\]Global credentials-->\[左侧\]Add 
+   - 在Jenkins中添加Credentials：首页 > \[左侧\]Credentials > \[右侧\]Global credentials > \[左侧\]Add 
 
       + Kind：SSH Username with private key
       + Scope：Global
