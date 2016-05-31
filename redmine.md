@@ -261,10 +261,10 @@
 
      ```bash
      # 创建管理员账号
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd admin password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bcm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd admin admin-password
      # 创建其他用户账号（注意没有-c参数）
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd yang password
-     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd user password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd yang yang-password
+     /opt/redmine-3.2.2-0/apache2/bin/htpasswd -bm /opt/redmine-3.2.2-0/svnrepo/conf/http-passwd user user-password
      ```
 
    - 配置用户权限
@@ -409,15 +409,41 @@
    /opt/redmine-3.2.2-0/ctlscript.sh restart apache
    ```
 
-3. 使用管理员（`root/root`）登录GitBucket，设置GitBucket的URL
+3. 使用管理员登录GitBucket，设置GitBucket
 
-   http://ip.address/gitbucket
+   > GitBucket主页：http://ip.address/gitbucket
+   >
+   > 账号/密码：`root/root`
 
-四. 在Redmine中创建项目并配置Subversion和Git
+   登录成功后，访问：http://192.168.56.10/gitbucket/admin/system
+
+   - Base URL：http://ip.address/gitbucket
+   - Default option to create a new repository：**Private**
+   - Anonymous access：**Deny**
+   - 去选：Use Gravatar for Profile-Images
+   - 勾选：Enable SSH access to git repository
+     + SSH Host：ip.address
+     + SSH Port：29418
+   - Apply changes
+
+四. 配置Redmine
 ------------------------------------------
 
 
 
-五. Redmine的邮件配置
+
+五. 在Redmine中创建项目并配置Subversion和Git
+------------------------------------------
+
+
+
+六. Redmine的邮件配置
 --------------------
 
+
+
+七、配置防火墙
+-------------
+
+tcp/80
+tcp/29418
