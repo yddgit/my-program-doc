@@ -125,6 +125,16 @@ Here is an example of AppleScript:
 		$copy; 2004 Foo Corporation
 	</div>
 
+GitHub code blocks:
+
+```bash
+echo "Hello World"
+```
+
+GitHub Syntax highlighting:
+
+Linguist: https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
+
 #Separater（分隔符）
 
 * * *

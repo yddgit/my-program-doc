@@ -85,6 +85,28 @@ git clone git@hostname:/srv/sample.git
    ssh-add /path/to/git_id_rsa2
  - 至此，在当前shell中即可使用git命令进行pull和push，无须验证
 
+SourceTree使用ssh方式克隆Git仓库里，有时会无反应，或提示：
+
+  git -c diff.mnemonicprefix=false -c core.quotepath=false fetch origin
+
+  The server's host key is not cached in the registry. You have no guarantee that the server is the computer you think it is.
+
+  The server's rsa2 key fingerprint is:
+  ssh-rsa 2048 9f:a7:a4:00:e4:f1:7a:bc:aa:c1:d3:ea:1e:d7:4d:79
+
+  If you trust this host, enter "y" to add the key to PuTTY's cache and carry on connecting.
+
+  If you want to carry on connecting just once, without adding the key to the cache, enter "n".
+
+  If you do not trust this host, press Return to abandon the connection.
+
+此问题多出现在SourceTree 1.8以上，可通过如下方式将远程主机添加到known_hosts里，即可正常连接：
+
+在命令行下找到SourceTree安装目录里的PuTTy工具，例如
+  "C:\Program Files (x86)\Atlassian\SourceTree\tools\putty\plink.exe"（注意路径包含空格时要加引号）
+然后运行命令
+  plink.exe root@192.168.1.2 -P port（根据自己的Git仓库URL自行更改），遇到确认服务器公钥时，输入"y"即可。
+
 -------------------------------------------------
 
 1.Git是一种分布式的文件管理器
