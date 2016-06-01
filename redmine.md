@@ -611,7 +611,7 @@
      /opt/redmine-3.2.2-0/ssh-keys/demo_git_id_rsa.pub
      ```
 
-   - 登录GitBucket，将上一步生成的demo\_git\_id\_rsa.pub文件的内容添加到GitBucket用户的SSH Keys列表里
+   - 登录GitBucket，将上一步生成的 **demo\_git\_id\_rsa.pub** 文件的内容添加到GitBucket用户的SSH Keys列表里
 
      \[ 页面右上角 \] > Account settings > SSH Keys
 
@@ -624,7 +624,7 @@
      ssh://root@ip.address:29418/root/demo.git
      ```
 
-   - 可以将生成的SSH密钥文件demo\_git\_id\_rsa上传到示例项目的wiki页面供开发者下载使用
+   - 可以将生成的SSH密钥文件 **demo\_git\_id\_rsa** 上传到示例项目的wiki页面供开发者下载使用
 
      ```markdown
      示例项目Git仓库基本信息
@@ -632,11 +632,11 @@
 
      | 项目 | 值 |
      |------|----|
-     | git clone URL | ssh://root@192.168.56.10:29418/root/demo.git |
+     | git clone URL | ssh://root@ip.address:29418/root/demo.git |
      | SSH密钥 | attachment:demo_git_id_rsa |
      | SSH密钥密码 | ffkh95dhImlY |
 
-     > 推荐使用 [**SourceTree**][1] 之类的Git客户端工具clone、pull和push代码
+     > 推荐使用 **SourceTree** 之类的Git客户端工具clone、pull和push代码
      > SourceTree下载地址：https://www.sourcetreeapp.com/download/
      ```
 
