@@ -667,7 +667,38 @@
 六. Redmine的邮件配置
 --------------------
 
+1. 以126邮箱为例，修改如下文件
 
+   ```bash
+   vi /opt/redmine-3.2.2-0/apps/redmine/htdocs/config/configuration.yml
+   ```
+
+   在文件最后的production部分添加如下配置
+
+   ```yml
+   # specific configuration options for production environment
+   # that overrides the default ones
+   production:
+       delivery_method: :smtp
+       smtp_settings:
+         address: smtp.126.com
+         port: 25
+         ssl: false
+         domain: 126.com
+         authentication: :login
+         user_name: xxxxxx@126.com
+         password: xxxxxx
+   ```
+
+   > 注意：将 **user_name** 和 **password** 替换为可用的126邮箱地址
+
+2. 修改Redmine配置
+
+   **管理** > **配置** > **邮件通知**
+   - **邮件发件人地址**：_上一步配置的**user\_name**_
+   - **邮件签名**：_末尾的URL修改为http://ip.address/redmine/my/account_
+
+   至此，Redmine中添加或更新问题时都会通过以上配置的126邮箱发送邮件给相关用户
 
 七. 配置防火墙
 -------------
