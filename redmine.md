@@ -676,18 +676,15 @@
    在文件最后的production部分添加如下配置
 
    ```yml
-   # specific configuration options for production environment
-   # that overrides the default ones
-   production:
-       delivery_method: :smtp
-       smtp_settings:
-         address: smtp.126.com
-         port: 25
-         ssl: false
-         domain: 126.com
-         authentication: :login
-         user_name: xxxxxx@126.com
-         password: xxxxxx
+   delivery_method: :smtp
+   smtp_settings:
+     address: smtp.126.com
+     port: 25
+     ssl: false
+     domain: 126.com
+     authentication: :login
+     user_name: xxxxxx@126.com
+     password: xxxxxx
    ```
 
    > 注意：将 **user_name** 和 **password** 替换为可用的126邮箱地址
