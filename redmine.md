@@ -613,7 +613,7 @@
 
    - 登录GitBucket，将上一步生成的 **demo\_git\_id\_rsa.pub** 文件的内容添加到GitBucket用户的SSH Keys列表里
 
-     \[ 页面右上角 \] > Account settings > SSH Keys
+     \[页面右上角\] > Account settings > SSH Keys
 
      + **Title**：demo
      + **Key**：_demo\_git\_id\_rsa.pub文件的内容_
