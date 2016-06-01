@@ -13,6 +13,13 @@
 [1]: http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1511.iso "CentOS-7-x86_64-DVD-1511.iso"
 [2]: https://bitnami.com/stack/redmine/installer "Redmine 3.2.2-0 (64-bit) for Linux"
 [3]: https://github.com/gitbucket/gitbucket/releases/tag/3.14 "GitBucket 3.14"
+[4]: #一-redmine服务的安装 "Redmine服务的安装"
+[5]: #二-subversion服务的配置 "Subversion服务的配置"
+[6]: #三-gitbucket安装 "GitBucket安装"
+[7]: #四-配置redmine "配置Redmine"
+[8]: #五-在redmine中创建项目并配置subversion和git "在Redmine中创建项目并配置Subversion和Git"
+[9]: #六-redmine的邮件配置 "Redmine的邮件配置"
+[10]: #七-配置防火墙 "配置防火墙"
 
 > **注意**：Redmine使用的是Bitnami提供的一站式安装包，无须关心其环境和依赖包的安装配置。Bitnami提供了很多常用服务的安装包，具体可参考这里：https://bitnami.com/stacks
 > 
@@ -28,6 +35,24 @@
 > - RubyGems 1.8.12
 >
 > 以下内容，服务器的IP地址均用**ip.address**代替，具体操作时要根据实际情况进行替换
+
+目录
+====
+
+一. [Redmine服务的安装][4]
+-------------------------
+二. [Subversion服务的配置][5]
+----------------------------
+三. [GitBucket安装][6]
+----------------------
+四. [配置Redmine][7]
+--------------------
+五. [在Redmine中创建项目并配置Subversion和Git][8]
+-----------------------------------------------
+六. [Redmine的邮件配置][9]
+-------------------------
+七. [配置防火墙][10]
+-------------------
 
 
 一. Redmine服务的安装
@@ -645,7 +670,7 @@
 
 
 
-七、配置防火墙
+七. 配置防火墙
 -------------
 
 ```bash
