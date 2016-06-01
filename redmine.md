@@ -26,6 +26,8 @@
 > - Ruby 2.1.9
 > - Rails 4.2.5.1
 > - RubyGems 1.8.12
+>
+> 以下内容，服务器的IP地址均用**ip.address**代替，具体操作时要根据实际情况进行替换
 
 
 一. Redmine服务的安装
@@ -65,7 +67,7 @@
      Please choose an option [1] : 
      ```
 
-   - 选择要安装的组件：全部选**Y**
+   - 选择要安装的组件：全部选 **Y**
 
      ```
      ----------------------------------------------------------------------------
@@ -155,13 +157,13 @@
      请选择选项 [30] : 30
      ```
 
-   - 邮件配置：N（暂不设置）
+   - 邮件配置：**N**（暂不设置）
 
      ```
      Do you want to configure mail support? [y/N]: N
      ```
 
-   - 确认开始安装：Y（确认）
+   - 确认开始安装：**Y**（确认）
 
      ```
      ----------------------------------------------------------------------------
@@ -305,7 +307,7 @@
      </Location>
      ```
 
-   - 使apache配置生效
+   - 重启apache使配置生效
 
      ```bash
      # 编辑/opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
@@ -392,7 +394,7 @@
    ProxyPassReverse /gitbucket http://localhost:8080/gitbucket
    ```
 
-   使apache配置生效
+3. 重启apache使配置生效
 
    ```bash
    # 编辑/opt/redmine-3.2.2-0/apache2/conf/bitnami/bitnami.conf
@@ -409,7 +411,7 @@
    /opt/redmine-3.2.2-0/ctlscript.sh restart apache
    ```
 
-3. 使用管理员登录GitBucket，设置GitBucket
+4. 使用管理员登录GitBucket，设置GitBucket
 
    GitBucket主页：http://ip.address/gitbucket
 
@@ -453,7 +455,7 @@
      + 账号/密码：安装Redmine时配置的用户名和密码，如：admin/xxxxx
    - phpMyAdmin
      + URL：http://ip.address/phpmyadmin/?lang=en
-     + 账号/密码：root/安装Redmine时配置的密码
+     + 账号/密码：root/xxxxx（密码是安装Redmine时配置的密码）
      + **!! 建议登录phpMyAdmin时语言选择English，这个版本的phpMyAdmin对中文的支持不是很好**
    - Subversion
      + URL：http://ip.address/svn/
@@ -466,7 +468,7 @@
 
    - 添加Redmine主题
 
-     这里选择Gitmike主题，下载地址：
+     这里选择Gitmike主题：
 
      https://github.com/makotokw/redmine-theme-gitmike
 
@@ -556,65 +558,41 @@
    上述Git仓库集成，较为简单，是因为Git仓库和Redmine部署在同一台服务器，如果要配置远程Git仓库到Redmine，方法则略有差异。
    原理上是首先在本地指定路径创建远程Git仓库的一个镜像，然后将这个本地路径配置到Redmine中
 
-   首先为本地用户生成ssh-key
+   - 首先为本地用户生成ssh-key
 
-   ```bash
-   # 使用如下命令为本地用户生成ssh-key
-   ssh-keygen
-   ```
+     ```bash
+     # 使用如下命令为本地用户生成ssh-key
+     ssh-keygen
+     ```
 
-   > 如下**不要**配置SSH密钥的**passphrase**
+     > 注意：**不要**配置SSH密钥的**passphrase**
 
-   ```
-   [root@localhost ~]# ssh-keygen
-   Generating public/private rsa key pair.
-   Enter file in which to save the key (/root/.ssh/id_rsa):
-   Created directory '/root/.ssh'.
-   Enter passphrase (empty for no passphrase):
-   Enter same passphrase again:
-   Your identification has been saved in /root/.ssh/id_rsa.
-   Your public key has been saved in /root/.ssh/id_rsa.pub.
-   The key fingerprint is:
-   e4:c0:f7:66:d4:9c:92:c3:ea:bd:e6:31:0f:57:bc:7f root@localhost.localdomain
-   The key's randomart image is:
-   +--[ RSA 2048]----+
-   |                 |
-   |     .   . + .   |
-   |      o o * +    |
-   |       = + o .   |
-   |        S +   o  |
-   |       . +   . . |
-   |        . = . .  |
-   |          .B   .E|
-   |         oo .   o|
-   +-----------------+
-   ```
+   - 将本地用户的~/.ssh/id_rsa.pub文件的内容添加到远程Git仓库的ssh-key列表里（或追加到其操作系统用户的~/.ssh/authorized_keys文件里）
 
-   然后将本地用户的~/.ssh/id_rsa.pub文件的内容添加到远程Git仓库的ssh-key列表里（或追加到其操作系统用户的~/.ssh/authorized_keys文件里）
+   - 创建本地镜像仓库
 
-   使用如下命令创建本地镜像仓库
+     ```bash
+     # 创建本地镜像仓库（注意--mirror参数）
+     git clone --mirror git@hostname:repo_name /path/to/local/repo
+     ```
 
-   ```bash
-   git clone --mirror git@hostname:repo_name /path/to/local/repo
-   ```
+   - 将/path/to/local/repo（绝对路径）添加到Redmine中即可，同时还需要添加一个定时任务，定时拉取远程Git仓库的更新
 
-   将/path/to/local/repo（绝对路径）添加到Redmine中即可，同时还需要添加一个定时任务，定时拉取远程Git仓库的更新
+     ```bash
+     # 配置定时任务
+     crontab -e -u root
+     # 定时任务每5分钟执行一次
+     */5 * * * * cd /path/to/local/repo && git fetch --all
+     ```
 
-   ```bash
-   # 配置定时任务
-   crontab -e -u root
-   # 定时任务每5分钟执行一次
-   */5 * * * * cd /path/to/local/repo && git fetch --all
-   ```
+   - 也可以通过修改/etc/crontab文件来添加定时任务，不过这里需要指定执行定时任务的用户
 
-   也可以通过修改/etc/crontab文件来添加定时任务，不过这里需要指定执行定时任务的用户
-
-   ```bash
-   # 修改/etc/crontab
-   vi /etc/crontab
-   # 定时任务每5分钟执行一次
-   */5 * * * * root cd /path/to/local/repo && git fetch --all
-   ```
+     ```bash
+     # 修改/etc/crontab
+     vi /etc/crontab
+     # 定时任务每5分钟执行一次
+     */5 * * * * root cd /path/to/local/repo && git fetch --all
+     ```
 
 5. 配置SSH访问Git仓库
 
