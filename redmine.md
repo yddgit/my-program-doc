@@ -692,8 +692,8 @@
 2. 修改Redmine配置
 
    **管理** > **配置** > **邮件通知**
-   - **邮件发件人地址**：_上一步配置的**user\_name**_
-   - **邮件签名**：_末尾的URL修改为http://ip.address/redmine/my/account_
+   - **邮件发件人地址**：_上一步配置的 **user\_name**_
+   - **邮件签名**：_末尾的URL修改为 http://ip.address/redmine/my/account_
 
    至此，Redmine中添加或更新问题时都会通过以上配置的126邮箱发送邮件给相关用户
 
