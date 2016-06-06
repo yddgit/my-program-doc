@@ -64,6 +64,8 @@ git config --global alias.last 'log -1'
 git init --bare sample.git
 git clone git@hostname:/srv/sample.git
 
+-------------------------------------------------
+
 使用ssh连接git仓库时，可能针对不同的仓库需要使用不同的密钥，此时需要做如下配置：
  - 在~/.ssh/目录下创建配置文件config，内容如下
    Host <host-a>
@@ -85,19 +87,16 @@ git clone git@hostname:/srv/sample.git
    ssh-add /path/to/git_id_rsa2
  - 至此，在当前shell中即可使用git命令进行pull和push，无须验证
 
+-------------------------------------------------
+
 SourceTree使用ssh方式克隆Git仓库里，有时会无反应，或提示：
 
   git -c diff.mnemonicprefix=false -c core.quotepath=false fetch origin
-
   The server's host key is not cached in the registry. You have no guarantee that the server is the computer you think it is.
-
   The server's rsa2 key fingerprint is:
   ssh-rsa 2048 9f:a7:a4:00:e4:f1:7a:bc:aa:c1:d3:ea:1e:d7:4d:79
-
   If you trust this host, enter "y" to add the key to PuTTY's cache and carry on connecting.
-
   If you want to carry on connecting just once, without adding the key to the cache, enter "n".
-
   If you do not trust this host, press Return to abandon the connection.
 
 此问题多出现在SourceTree 1.8以上，可通过如下方式将远程主机添加到known_hosts里，即可正常连接：
@@ -106,6 +105,11 @@ SourceTree使用ssh方式克隆Git仓库里，有时会无反应，或提示：
   "C:\Program Files (x86)\Atlassian\SourceTree\tools\putty\plink.exe"（注意路径包含空格时要加引号）
 然后运行命令
   plink.exe root@192.168.1.2 -P port（根据自己的Git仓库URL自行更改），遇到确认服务器公钥时，输入"y"即可。
+
+以上问题还有另外的解决办法，就是修改SourceTree使用其内嵌的Git，不要使用系统安装的Git，参见：
+https://confluence.atlassian.com/sourcetreekb/trust-a-server-s-host-key-when-no-button-is-available-to-trust-it-788731545.html
+
+  工具 > 选项 > Git > 使用内嵌的Git
 
 -------------------------------------------------
 
