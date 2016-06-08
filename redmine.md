@@ -20,6 +20,7 @@
 [8]: #五-在redmine中创建项目并配置subversion和git "在Redmine中创建项目并配置Subversion和Git"
 [9]: #六-redmine的邮件配置 "Redmine的邮件配置"
 [10]: #七-配置防火墙 "配置防火墙"
+[11]: #八-redmine中的文本格式 "Redmine中的文本格式"
 
 > **注意**：Redmine使用的是Bitnami提供的一站式安装包，无须关心其环境和依赖包的安装配置。Bitnami提供了很多常用服务的安装包，具体可参考这里：https://bitnami.com/stacks
 > 
@@ -53,6 +54,7 @@
 
 七. [配置防火墙][10]
 
+八. [Redmine中的文本格式][11]
 
 一. Redmine服务的安装
 --------------------
@@ -710,3 +712,92 @@ firewall-cmd --zone=public --add-port=3690/tcp --permanent
 # 动态更新防火墙规则
 firewall-cmd --reload
 ```
+
+八. Redmine中的文本格式（**Markdown**）
+----------------------
+
+1. 引用当前页面的图片附件
+
+   ```markdown
+   ![](image.png)
+   ```
+
+2. 引用当前页面的附件
+
+   ```
+   attachment:file.zip
+   ```
+
+3. 引用Wiki、问题、版本、版本库里的文件
+
+   ```
+   [[Wiki页面]]
+   引用问题12：Issue #12
+   引用问题12的第2条评论：Issue #12-2
+   引用doc版本库的版本43：Revision doc|r43
+   引用src版本库的提交f30e：commit:src|f30e13e43
+   引用版本库src里的某个文件：source:src|some/file
+   ```
+   
+4. 加粗、斜体、删除线、行内代码、多行代码
+
+   ```markdown
+   **加粗**
+
+   *斜体*
+
+   ~~删除线~~
+
+   `行内代码`
+
+   ~~~
+   多行代码
+   ~~~
+   ```
+
+5. 无序列表项
+
+   ```markdown
+   * 项目1
+     + 项目1-1
+       - 项目1-1-1
+   ```
+
+6. 有序列表项
+
+   ```markdown
+   1. 项目1
+   2. 项目2
+   3. 项目3
+   ```
+
+7. 标题
+
+   ```markdown
+   #一级标题
+   ##二级标题
+   ###三级标题
+   ```
+
+8. 链接地址
+
+   ```markdown
+   http://www.example.com
+   [Example](http://www.example.com)
+   ```
+
+9. 表格
+
+   ```markdown
+   |表头1|表头2|
+   |----|-----|
+   |项目1|值1 |
+   |项目2|值2 |
+   ```
+
+10. 引用
+
+   ```markdown
+   > 引用其他的文本内容
+   > 可以用这种格式书写
+   ```
