@@ -20,7 +20,7 @@
 [8]: #五-在redmine中创建项目并配置subversion和git "在Redmine中创建项目并配置Subversion和Git"
 [9]: #六-redmine的邮件配置 "Redmine的邮件配置"
 [10]: #七-配置防火墙 "配置防火墙"
-[11]: #八-redmine中的文本格式markdown "Redmine中的文本格式（**Markdown**）"
+[11]: #八-redmine中的文本格式markdown "Redmine中的文本格式（Markdown）"
 
 > **注意**：Redmine使用的是Bitnami提供的一站式安装包，无须关心其环境和依赖包的安装配置。Bitnami提供了很多常用服务的安装包，具体可参考这里：https://bitnami.com/stacks
 > 
