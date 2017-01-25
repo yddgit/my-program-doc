@@ -106,4 +106,26 @@ Buffer缓冲区实际上是一个容器，一个连续数组。Channel提供从�
 
 SocketChannel
 
+打开SocketChannel
+SocketChannel socketChannel = SocketChannel.open();
+socketChannel.connect(new InetSocketAddress("127.0.0.1", 8080));
+
+关闭SocketChannel
+socketChannel.close();
+
+读取数据
+String data = "some data will be writted";
+buffer.clear();
+buffer.put(data.getBytes());
+buffer.flip();
+while(buffer.hasRemaining()) {
+	System.out.println(buffer);
+	socketChannel.write(buffer);
+}
+
+注意SocketChannel.write()方法的调用是在一个while循环中的。write()方法无法保证能写多少字节到
+SocketChannel。所以，我们重复调用write()直到Buffer没有要写的字节为止。非阻塞模式下，read()方法
+在尚未读取到任何数据时可能就返回了，所以需要关注它的int返回值，它会告诉你读取了多少字节。
+
+--------------
 
