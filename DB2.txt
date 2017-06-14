@@ -1,0 +1,189 @@
+DB2涵盖：实例、数据库和相关的配置文件。
+
+==============
+
+实例：应用程序运行和创建数据库所必须的独立环境。
+数据库：在任一实例中都可以创建多个数据库。数据库是诸如表，视图，索引等对象的集合。
+
+注意：
+1. 由于实例间是相互独立的，因此，几个不同实例内可以创建同名数据库。
+2. 与实例类似，数据库之间也是相对独立的单元，所以，一个数据库内的对象和另一个数据库内的对象毫无关系。
+
+==============
+
+Linux安装DB2
+1. 安装数据库软件，不创建实例
+db2setup -f sysreq
+2. 创建实例前要创建以下用户和组
+groupadd db2iadm1
+groupadd db2fsdm1
+useradd -d /home/db2inst1 -m -g db2iadm1 db2inst1
+useradd -d /home/db2fenc1 -m -g db2fsdm1 db2fenc1
+passwd db2inst1
+passwd db2fenc1
+3. 用root用户执行以命令创建实例
+/opt/ibm/db2/V11.1/instance/db2icrt -u db2fenc1 db2inst1
+4. 用db2inst1用户登录创建数据库
+
+Linux卸载DB2
+1. 用db2inst1用户登录停止实例db2inst1
+db2stop force
+db2 terminate
+2. 用root用户删除实例db2inst1
+/opt/ibm/db2/V11.1/instance/db2idrop db2inst1
+3. 用root用户删除卸载数据库
+/opt/ibm/db2/V11.1/install/db2_deinstall -a
+
+==============
+
+set db2instance=<INS_NAME>  切换当前实例
+db2start                    启动当前实例
+db2stop                     停止当前实例
+db2stop force               强制停止当前实例
+db2icrt <INS_NAME>          创建一个新的实例
+db2idrop                    删除一个实例
+db2ilist                    显示系统您当前的所有实例清单
+db2 get instance            显示当前运行的实例
+
+==============
+
+db2 create database <DB_NAME>                      在当前运行实例中创建一个新的数据库
+db2 list db directory                              显示所有已创建的数据库
+db2 drop database                                  删除一个数据库
+db2 connect to <DB_NAME> user <USER> using <PASS>  连接数据库
+db2 create table/create view/create index          创建表，视图，和索引的SQL语句
+
+e.g.: create database [YANG]
+create database YANG automatic storage yes on 'D:' dbpath on 'D:'
+alias YANG pagesize 32 k  with 'YANG' ;
+
+e.g.: create database [mydb1] in instance [myinst]
+db2 list db directory
+set db2instance=myinst
+db2 create database mydb1
+set db2instance=db2
+
+==============
+
+表空间。可以把表空间看成是处于逻辑表和物理资源之间的逻辑层。
+
+当一个数据库创建完成，默认会创建三个表空间和两个对象：
+1. SYSCATSPACE：SYSCATSPACE表空间包含目录表（Catalog）。它包含不可更改和不可删除的系统信息，否则数据库无法正常工作。
+2. TEMPSPACE1：当DB2实现一些类似排序等需要额外空间的操作时，就会用到表空间TEMPSPACE1。
+3. USERSPACE1：如果创建一个表的时候没有指定空间，系统通常会使用USERSPACE1来存储您的数据库表。
+4. IBMDEFAULTBP缓冲池：缓冲池是数据库使用的高速缓冲存储器。
+5. 日志文件：日志文件用于恢复操作。可以把日志文件看成是一个在"autosave"操作产生的临时文件。
+
+==============
+
+create tablespace 创建表空间
+
+==============
+
+DB2配置
+
+一个 DB2 服务器可以在四个不同层面上加以配置：
+
+1. 环境变量：在服务器的操作系统层设置，DB2INSTANCE是其中一个主要的环境变量，显示了当前活动的实例。
+2. 数据库管理器配置文件(dbm cfg)：影响对应的实例及其数据库，很多参数都是动态的，立即生效，但是有一些参数的修改需要重启实例。
+3. 数据库配置文件(db cfg)：数据库配置变量在数据库层设置。
+4. DB2 概要文件注册表：DB2概要文件注册表则在操作系统层或实例层设置，包含了与平台相关的全局（影响所有实例）或者实例层次（只影响某个实例）的参数。
+
+==============
+
+db2 get dbm cfg                                                       查看dbm cfg的信息
+db2 update dbm cfg using <parameter_name> <value>                     更新dbm cfg的参数信息
+db2 get db cfg for <database_name>                                    查看指定数据库的db cfg信息
+db2 update db cfg for <database_name> using <parameter_name> <value>  更新db cfg参数的值
+db2set –all                                                           列表显示当前设置的所有DB2概要文件注册表变量
+db2set –lr                                                            列表显示所有DB2概要文件注册表变量
+db2set <parameter>=<value>                                            把一个参数设置为指定值
+
+常用的DB2注册变量
+DB2COMM          指定数据库管理器启动后的通讯管理器。
+DB2_EXTSECURITY  Windows操作系统上，通过锁住DB2系统文件来阻止无权限用户对DB2的访问
+DB2_COPY_NAME    存储当前使用的DB2副本的名称。
+
+注意：
+要转换到不同的DB2副本，请运行installpath\bin\db2envars.bat命令进行转换。DB2_COPY_NAME变量不能被用于这种转换副本的目的。
+
+e.g.:
+若想用TCPIP协议实现通讯，可以将DB2COMM注册变量用命令设置为TCPIP：db2set db2comm=tcpip
+
+==============
+
+DB2连接远程数据库
+
+CATALOG TCPIP NODE <node_name> REMOTE <ip_addr> server <port> remote_instance <inst_name>
+CATALOG DB <remote_db_name> AS <local_alias> AT NODE <node_name>
+
+==============
+
+DB2 Load 工具
+
+Load具有几个不同阶段
+分析-->装入-->构建-->删除-->索引复制
+
+可以使用如下命令监视Load操作的进度
+list utilities
+Load完数据后如遇SQLSTATE=57016，表空间处理备份暂挂状态，因为表不活动，所以不能对其进行访问
+set integrity for <table_name> immediate checked
+
+--Load步骤
+CALL SYSPROC.ADMIN_CMD('LOAD FROM export.dat OF IXF INSERT INTO TABLE_NAME');
+SET INTEGRITY FOR TABLE_NAME IMMEDIATE CHECKED;
+CALL SYSPROC.ADMIN_CMD('REORG TABLE TABLE_NAME');
+CALL SYSPROC.ADMIN_CMD('RUNSTATS ON TABLE TABLE_NAME');
+
+==============
+
+DROP SCHEMA DB2INST1 RESTRICT;
+
+启动分层查询
+
+db2set DB2_COMPATIBILITY_VECTOR=08
+db2stop
+db2start
+
+GRANT ACCESSCTRL ON DATABASE TO USER DB2ADMIN;
+GRANT SECADM ON DATABASE TO USER DB2ADMIN;
+GRANT DBADM ON DATABASE TO USER DB2ADMIN;
+GRANT LOAD ON DATABASE TO USER DB2ADMIN;
+GRANT DATAACCESS ON DATABASE TO USER DB2ADMIN;
+
+==============
+
+数据库的事务日志已满。SQLCODE=-964, SQLSTATE=57011, DRIVER=3.63.108
+
+--日志文件大小
+db2 update db cfg for <db_name> using LOGFILSIZ 10240
+--主日志
+db2 update db cfg for <db_name> using LOGPRIMARY 50
+--辅助日志
+db2 update db cfg for <db_name> using LOGSECOND 20
+--查看活动连接
+db2 list application
+--关掉所有活动连接
+db2 force application all
+
+==============
+
+Alter表时报错：表"DB2INST1.TABLE_NAME"所处的状态对该操作无效。原因码："23"。SQLSTATE=55019
+
+重构表即可解决：REORG TABLE TABLE_NAME
+
+==============
+
+导出指定数据库的DDL语句
+db2look -d <db_name> -e -o <sql_script_name.sql> -i <db_user> -w <db_pass>
+
+==============
+
+备份还原数据库
+
+db2 backup database <db_name> with 2 buffers buffer 1024 parallelism 1 without prompting
+db2 restore db <db_name> from /path/to/backup taken at <timestamp> with 2 buffers buffer 1024 parallelism 1 without prompting
+db2 restore db <db_name> from /path/to/backup taken at <timestamp> into <db_name> with 2 buffers buffer 1024 parallelism 1 without prompting
+
+升级DB2后，需要使用如下命令手动升级数据库
+db2 upgrade database <db_name> user <db_admin> using <password>

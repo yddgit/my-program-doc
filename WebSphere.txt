@@ -1,0 +1,48 @@
+WebSphere v8.5使用Installation Manager来安装所有组件
+
+常用命令：
+
+/opt/IBM/InstallationManager/eclipse/launcher      启动InstallationManager
+/opt/IBM/WebSphere/AppServer/                      WebSphere安装路径
+/opt/IBM/WebSphere/AppServer/profiles/             概要文件所在目录
+/opt/IBM/WebSphere/AppServer/bin
+  /ProfileManagement/wct.sh                        启动WebSphere Customization ToolBox
+  manageprofiles.sh -listProfiles                  显示所有概要文件
+  manageprofiles.sh -delete -profileName AppSrv01  删除概要文件AppSrv01
+  manageprofiles.sh -deleteAll                     删除所有概要文件
+  startServer.sh server1 -profileName AppSrv01     启动概要文件上的服务器server1
+  stopServer.sh server1 -profileName AppSrv01      停止概要文件上的服务器server1
+
+集群管理：
+
+创建集群管理概要文件Dmgr01后
+1. 默认创建的服务器名为dmgr，可以由以下文件内容确认
+/opt/IBM/WebSphereNetworkDeployment/AppServer/profiles/Dmgr01/config/cells/localhostCell01/nodes/localhostManager01/serverindex.xml
+其中serverEntries结点的属性serverName="dmgr"声明服务器名
+2. 服务器相关端口信息可在以下文件中查看
+/opt/IBM/WebSphere/AppServer/profiles/Dmgr01/logs/AboutThisProfile.txt
+
+将节点联合到dmgr（以下8879是dmgr对应的soap连接端口）
+/opt/IBM/WebSphere/AppServer/profiles/Dmgr01/bin
+  startServer.sh dmgr -profileName Dmgr01                        启动集群管理服务器
+/opt/IBM/WebSphere/AppServer/profiles/AppSrv01/bin
+  addNode.sh localhost 8879 -username wasadmin -password 123456  将AppSrv01所在结点localhostNode01关联到单元localhostCell01
+/opt/IBM/WebSphere/AppServer/profiles/AppSrv02/bin
+  addNode.sh localhost 8879 -username wasadmin -password 123456  同上
+
+重启结点服务nodeagent（按顺序）
+/opt/IBM/WebSphere/AppServer/profiles/AppSrv01/bin
+  stopNode.sh -username wasadmin -password 123456     停止nodeagent
+/opt/IBM/WebSphere/AppServer/profiles/AppSrv01/bin
+  stopNode.sh -username wasadmin -password 123456     停止nodeagent
+/opt/IBM/WebSphere/AppServer/profiles/Dmgr01/bin
+  stopManager.sh -username wasadmin -password 123456  停止Deploy Management
+/opt/IBM/WebSphere/AppServer/profiles/Dmgr01/bin
+  startManager.sh                                     启动Deploy Management
+/opt/IBM/WebSphere/AppServer/profiles/AppSrv01/bin
+  startNode.sh                                        启动nodeagent
+/opt/IBM/WebSphere/AppServer/profiles/AppSrv01/bin
+  startNode.sh                                        启动nodeagent
+
+IBM WebSphere 产品到期：
+删除/opt/IBM/WebSphere/AppServer/properties/was.license
