@@ -1,0 +1,104 @@
+DB2创建数据库
+
+要求：
+1.数据库存储自动扩展
+2.开启数据库归档
+3.索引和数据表空间分开
+4.应用不使用实例用户访问数据库
+以下：
+1.数据目录：/appdb/data
+2.归档目录：/archlog
+
+一、用[root]用户安装数据库软件
+
+1.创建数据库安装目录
+  mkdir /appdb
+2.创建数据库归档目录
+  mkdir /archlog
+3.安装数据库软件目录：/appdb/DB2/V10.5
+  dasusr1:dasadm1
+  db2inst1:db2iadm1/dasadm1
+  db2fenc1:db2fadm1
+4.创建数据库用户并设置密码与用户名相同
+  useradd -g db2iadm1 -d /home/appdb -m appdb
+  passwd appdb
+5.修改/home/appdb/.bashrc, 在文件最后添加如下代码(可从/home/db2inst1/.bashrc中复制)：
+  # The following three lines have been added by UDB DB2.
+  if [ -f /home/db2inst1/sqllib/db2profile ]; then
+      . /home/db2inst1/sqllib/db2profile
+  fi
+6.创建数据目录并修改目录权限
+  mkdir /appdb/data
+  chown db2inst1:db2iadm1 /appdb
+  chown db2inst1:db2iadm1 /appdb/data
+  chown db2inst1:db2iadm1 /archlog
+
+二、用[db2inst1]实例用户创建数据库
+
+1.查看已有的数据库
+  db2 list db directory
+2.创建数据库
+  db2 "create db <db_name> automatic storage yes on /appdb/data alias <db_name> using codeset utf-8 territory CN pagesize 32 K"
+  查看创建好的数据库
+  db2 list db directory
+3.创建表空间
+  db2 connect to <db_name>
+  创建数据表空间和索引表空间
+  db2 "create tablespace appdb_data managed by automatic storage"
+  db2 "create tablespace appdb_index managed by automatic storage"
+  查看表空间信息
+  db2pd -d <db_name> -tables
+4.修改缓冲区大小
+  db2 alter bufferpool IBMDEFAULTBP immediate size 10000
+  查看缓冲区
+  db2 "select * from syscat.bufferpools"
+5.给数据库用户授权
+  db2 grant dbadm on database to user appdb
+6.修改实例配置
+  db2set DB2_COMPATIBILITY_VECTOR=08
+  查看配置
+  db2set -all
+7.修改数据库配置
+  db2 update db cfg using LOCKTIMEOUT 60
+  db2 update db cfg using TRACKMOD ON
+  db2 update db cfg using LOGFILSIZ 10240
+  db2 update db cfg using LOGPRIMARY 50
+  db2 update db cfg using LOGSECOND 30
+  db2 update db cfg using REC_HIS_RETENTN 2
+  db2 update db cfg using AUTO_DEL_REC_OBJ ON
+  db2 update db cfg using NUM_DB_BACKUPS 1
+  db2 update db cfg using LOGARCHMETH1 DISK:/archlog
+  db2 update db cfg using AUTO_DB_BACKUP ON
+  db2stop force
+  db2start
+
+  此时不能登录数据库, 会报如下错误
+  SQL1116N  A connection to or activation of database "<db_name>" failed because the 
+  database is in BACKUP PENDING state.  SQLSTATE=57019
+  需要先备份数据库(此备份之后可以删除)
+  db2 backup db <db_name> to /appdb
+
+  查看归档日志(查看/archlog里是否有归档的数据库文件)
+  db2 archive log for db <db_name>
+  登录并检查数据库配置是否修改成功
+  db2 connect to <db_name>
+  db2 get db cfg for <db_name> | more
+
+三、此时应用程序即可使用appdb用户连接数据库
+
+四、建表语句指定表空间
+
+1.在空的数据库上启动一次应用创建表
+2.导出建表语句
+  db2look -d <db_name> -e -o <db_name>.sql -i appdb -w appdb
+3.修改建表语句
+  - 删除前面的语句
+  [CONNECT TO <db_name> USER appdb;]
+  [CREATE SCHEMA "APPDB   ";]
+  - 删除最后的语句
+  [CONNECT RESET;]
+  [TERMINATE;]
+  - 将所有对象的["APPDB   ".]前缀删除
+  - 将所有建表语句中的[IN "USERSPACE1"]替换为[IN "APPDB_DATA" INDEX IN "APPDB_INDEX"]
+  - 删除所有的[SET NLS_STRING_UNITS = 'SYSTEM';]语句
+4.使用appdb用户登录数据库, 用修改之后的建表语句重新建表
