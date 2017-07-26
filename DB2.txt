@@ -117,6 +117,10 @@ DB2连接远程数据库
 CATALOG TCPIP NODE <node_name> REMOTE <ip_addr> server <port> remote_instance <inst_name>
 CATALOG DB <remote_db_name> AS <local_alias> AT NODE <node_name>
 
+db2 list node directory
+db2 uncatalog node <node_name>
+db2 uncatalog database <db_name>
+
 ==============
 
 DB2 Load 工具
