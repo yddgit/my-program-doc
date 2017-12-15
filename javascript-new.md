@@ -655,3 +655,28 @@
   console.log('count = ' + count); // 3
   ```
 
+* map/reduce
+
+  ```javascript
+  'use strict';
+
+  function pow(x) {
+    return x * x;
+  }
+
+  var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  // 把函数f(x)=x^2作用在数组的每个元素上
+  arr.map(pow); // [1, 4, 9, 16, 25, 36, 49, 64, 81]
+  // 把数组的所有元素转为字符串
+  arr.map(String); // ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+  ```
+
+  Array的reduce()把一个函数作用到这个Array上，这个函数必须接收两个参数，reduce把结果继续和序列的下一个元素做累积计算
+
+  ```javascript
+  // 求和
+  var arr = [1, 3, 5, 7, 9];
+  arr.reduce(function(x, y) {
+    return x + y;
+  }); // 25
+  ```
