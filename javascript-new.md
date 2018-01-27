@@ -189,7 +189,7 @@
   xiaohong.age; // undefined，访问不存在的属性返回undefined
   'name' in xiaohong; // true，检测对象是否拥有某一属性用in操作符
   'grade' in xiaohong; // false
-  'toString' in xiaohong; // true，操作符in判断的属性可能是对象继承得到的
+  'toString' in xiaohong; // true，操作符in判断的属性可以是对象继承得到的
   xiaohong.hasOwnProperty('name'); // true，判断属性是对象本身拥有而不是继承得到的，可以用hasOwnProperty()方法
   xiaohong.hasOwnProperty('toString'); // false
   ```
@@ -679,4 +679,288 @@
   arr.reduce(function(x, y) {
     return x + y;
   }); // 25
+
+  // string转int
+  function string2int(s) {
+    return s.split("").map(function(val) {
+      return '0123456789'.indexOf(val);
+    }).reduce(function(x, y) {
+      return x * 10 + y;
+    });
+  }
+  ```
+
+* filter
+
+  filter用于把Array的某些元素过滤掉，然后返回剩下的元素。Array的filter接收一个函数做为参数，然后把传入的函数依次作用于每个元素，然后根据返回值是`true`还是`false`决定保留还是丢弃该元素
+
+  ```javascript
+  // 删除偶数，保留奇数
+  var arr = [1,2,3,4,5,6,7,8,9,10];
+  var r = arr.filter(function(x) {
+    return x % 2 !== 0;
+  });
+
+  // 数组去重
+  var
+    r,
+    arr = ['apple', 'strawberry', 'banana', 'pear', 'apple', 'orange', 'orange', 'strawberry'];
+  r = arr.filter(function(element, index, self) {
+    // indexOf总是返回第一个元素的位置
+    return self.indexOf(element) === index;
+  });
+
+  // 筛选质数
+  function get_primes(arr) {
+    return arr.filter(function(val){
+      if(val === 1) {
+        return false;
+      }
+      var i, half = val/2;
+      for(i=2; i<=half; i++) {
+        if(val % i === 0) break;
+      }
+      return i > half;
+    });
+  }
+  get_primes([1,2,3,4,5,6,7,8,9,10]);
+  ```
+
+* sort
+
+  Array的sort()方法是用于排序的，默认把所有元素先转换为String再排序
+
+  ```javascript
+  [10, 20, 1, 2].sort(); // [1, 10, 2, 20]
+  ```
+
+  sort()方法可以接收一个比较函数来实现自定义排序。**注意：sort()方法会直接对Array进行修改，返回的结果仍是当前Array**
+
+  ```javascript
+  // 数组排序
+  var arr = [10, 20, 1, 2];
+  arr.sort(function(x, y) {
+    if(x < y) {
+      return -1;
+    }
+    if(x > y) {
+      return 1;
+    }
+    return 0;
+  });
+
+  // 忽略大小写的排序
+  var arr = ['Google', 'apple', 'Microsoft'];
+  arr.sort(function(s1, s2) {
+    x1 = s1.toUpperCase();
+    x2 = s2.toUpperCase();
+    if(x1 < x2) {
+      return -1;
+    }
+    if(x1 > x2) {
+      return 1;
+    }
+    return 0;
+  });
+  ```
+
+* 闭包
+
+  高阶函数除了可以接受函数作为参数外，还可以把函数作为结果返回。
+
+  ```javascript
+  // 返回求和函数
+  function lazy_sum(arr) {
+    var sum = function() {
+      return arr.reduce(function(x, y) {
+        return x + y;
+      });
+    }
+    return sum;
+  }
+  // 调用lazy_sum()时，返回的并不是求和结果，而是求和函数
+  var f = lazy_sum([1, 2, 3, 4, 5]); // function sum()
+  f(); // 15
+  // 调用lazy_sum()时，每次调用都会返回一个新的函数
+  var f1 = lazy_sum([1, 2, 3, 4, 5]);
+  var f2 = lazy_sum([1, 2, 3, 4, 5]);
+  f1 === f2; // false
+  ```
+
+  注意到返回的函数在其内部引用了局部变量arr，所以，当一个函数返回了一个函数后，其内部的局部变量还被新函数引用，因此，闭包用起来简单，实现起来不容易。另外，返回的函数并没有立刻执行，而是直到调用了f()才执行。
+
+  ```javascript
+  // 如下，每次循环都创建一个函数，然后将3个函数添加到一个数组中返回
+  function count() {
+    var arr = [];
+    for(var i=1; i<=3; i++) {
+      arr.push(function() {
+        return i * i;
+      });
+    }
+    return arr;
+  }
+  var results = count();
+  var f1 = results[0];
+  var f2 = results[1];
+  var f3 = results[2];
+  // f1()、f2()、f3()结果应该是1、4、9，但实际是：
+  f1(); // 16
+  f2(); // 16
+  f3(); // 16
+  // 原因就在于返回的函数引用了变量i，但并非立刻执行，等到3个函数都返回时，它们所引用的变量i已经变成了4，因此最终结果为16
+  ```
+
+  返回闭包时牢记一点：**返回函数不要引用任何循环变量，或者后续会发生变化的变量**
+
+  如果一定要引用循环变量，就再创建一个函数，用该函数的参数绑定循环变量当前的值，无论该循环变量后续如何更改，已绑定到函数参数的值不变
+
+  ```javascript
+  function count() {
+    var arr = [];
+    for(var i=1; i<=3; i++) {
+      arr.push(
+        // 创建一个匿名函数并立刻执行
+        (function(n){
+          return function() {
+            return n * n;
+          }
+        })(i)
+      );
+    }
+    return arr;
+  }
+  var results = count();
+  var f1 = results[0];
+  var f2 = results[1];
+  var f3 = results[2];
+  f1(); // 1
+  f2(); // 4
+  f3(); // 9
+  ```
+
+  闭包的作用：在Java或C++里，可以用private修饰一个成员变量，实现在对象内部封装一个私有变量。对于没有class机制，只有函数的语言里，借助闭包同样可以封装一个私有变量。
+
+  ```javascript
+  'use strict';
+  // 创建一个计数器
+  // 返回的对象中，实现了一个闭包，该闭包携带了局部变量x，并且，从外部代码根本无法访问到变量x。闭包就是携带状态的函数，并且它的状态可以完全对外隐藏起来
+  function create_counter(initial) {
+    var x = initial || 0;
+    return {
+      inc: function() {
+        x += 1;
+        return x;
+      }
+    }
+  }
+  // 使用
+  var c1 = create_counter();
+  c1.inc(); // 1
+  c1.inc(); // 2
+  c1.inc(); // 3
+  var c2 = create_counter(10);
+  c2.inc(); // 11
+  c2.inc(); // 12
+  c2.inc(); // 13
+  ```
+
+  闭包还可以把多参数的函数变成单参数的函数，如：计算x^y可以用Math.pow(x, y)，不过考虑到经常计算x^2或x^3，可以利用闭包创建新的函数pow2和pow3
+
+  ```javascript
+  'use strict';
+
+  function make_pow(n) {
+    return function(x) {
+      return Math.pow(x, n);
+    }
+  }
+  // 创建两个新函数
+  var pow2 = make_pow(2);
+  var pow3 = make_pow(3);
+  console.log(pow2(7)); // 49
+  console.log(pow3(5)); // 125
+  ```
+
+* 箭头函数（**ES6**规范）
+
+  ES6标准新增了一种新的函数：Arrow Function（箭头函数）
+
+  ```javascript
+  // 箭头函数的定义用的就是一个箭头
+  x => x * x
+  // 上面的箭头函数相当于
+  function (x) {
+    return x * x;
+  }
+  // 箭头函数相当于匿名函数，并且简化了函数定义。还有一种包含多条语句
+  x => {
+    if(x > 0) {
+      return x * x;
+    } else {
+      return - x * x;
+    }
+  }
+
+  // 如果参数不是一个，就需要用括号()括起来
+  
+  // 两个参数
+  (x, y) => x * x + y * y;
+  // 无参数
+  () => 3.14
+  // 可变参数
+  (x, y, ...rest) => {
+    var i, sum = x + y;
+    for(i=0; i<rest.length; i++) {
+      sum += rest[i];
+    }
+    return sum;
+  }
+  // 如果要返回一个对象，就要注意，如果是单表达式，如下写法会报错
+  x => { foo: x } // SyntaxError
+  // 因为函数体的{ ... }有语法冲突，所以要改为
+  x => ({ foo: x }) // ok
+  ```
+
+  箭头函数中的`this`
+
+  箭头函数看上去是匿名函数的一种简写，但实际上，两者有明显区别：箭头函数内部的`this`是词法作用域，由上下文确定
+
+  ```javascript
+  // 回顾前面的例子，由于JavaScript函数对this绑定的错误处理，下面的代码无法得到预期结果
+  var obj = {
+    birth: 1990,
+    getAge: function() {
+      var b = this.birth; // 1990
+      var fn = function() {
+        return new Date().getFullYear() - this.birth; // this指向window或undefined
+      };
+      return fn();
+    }
+  };
+
+  // 箭头函数完全修复了this的指向，this总是指向词法作用域，也就是外层调用者obj
+  var obj = {
+    birth: 1990,
+    getAge: function() {
+      var b = this.birth; // 1990
+      var fn = () => new Date().getFullYear() - this.birth; // this指向obj对象
+      return fn();
+    }
+  };
+  obj.getAge();
+
+  // 使用箭头函数，以前的这种hack写法就不再需要了
+  var that = this;
+
+  // 由于this在箭头函数中已经按照词法作用域绑定了，所以用call()或apply()调用箭头函数时，无法对this进行绑定，即传入的第一个参数被忽略
+  var obj = {
+    birth: 1990,
+    getAge: function(year) {
+      var b = this.birth; // 1990
+      var fn = (y) => y - this.birth; // this.birth仍是1990
+      return fn.call({birth:2000}, year);
+    }
+  };
+  obj.getAge(2015); // 25
   ```
