@@ -1,4 +1,4 @@
-﻿
+
 Linux top 命令使用：
 
 例： top -M #show memory summary in megabytes not kilobytes

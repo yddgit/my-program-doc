@@ -1,4 +1,4 @@
-﻿git config --global user.name "yang.dongdong"
+git config --global user.name "yang.dongdong"
 git config --global user.email "dongdong@yang.com"
 git init
 git add readme.txt

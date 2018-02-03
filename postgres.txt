@@ -1,4 +1,4 @@
-﻿PostgreSQL学习笔记
+PostgreSQL学习笔记
 
 1. psql命令的使用
 
