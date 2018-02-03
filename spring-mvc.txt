@@ -1,0 +1,57 @@
+Spring MVC
+
+由DispatcherServlet来过滤分发请求(web.xml)
+
+/WEB-INF/[servlet-name]-servlet.xml
+
+1. HandlerMapping
+完成Request-->Controller的映射
+--使用mappings属性指定URL路径与Controller之间的映射关系
+org.springframework.web.servlet.handler.SimpleUrlHandlerMapping
+--根据Controller的类名来映射URL(全小写): index.action-->IndexController
+org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping
+--在Controller的bean的name属性中指定URL
+org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping
+
+2. Controller
+完成业务处理及Action-->View的映射
+--直接实现或继承Controller/AbstractController
+org.springframework.web.servlet.mvc.Controller
+org.springframework.web.servlet.mvc.AbstractController
+--能够封闭表单参数的CommandController
+org.springframework.web.servlet.mvc.AbstractCommandController
+org.springframework.web.servlet.mvc.SimpleFormController
+--直接的页面跳转, 无需实现Controller, 使用参数指定viewName
+org.springframework.web.servlet.mvc.ParameterizableViewController
+--直接的页面跳转, 无需实现Controller, 使用URL映射viewName
+org.springframework.web.servlet.mvc.UrlFilenameViewController
+--一个控制器中处理多个请求(类似Struts2中的Action)
+org.springframework.web.servlet.mvc.multiaction.MultiActionController
+  --方法
+    public
+	(ModelAndView | Map | String | void)
+    actionName(HttpServletRequest request, HttpServletResponse response,
+	[,HttpSession] [,AnyObject]
+	);
+  --具体调用的方法使用MethodNameResolver决定
+    org.springframework.web.servlet.mvc.multiaction.InternalPathMethodNameResolver
+    org.springframework.web.servlet.mvc.multiaction.ParameterMethodNameResolver
+    org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver
+
+3. View
+完成ViewResolver-->View的映射
+
+org.springframework.web.servlet.view.UrlBasedViewResolver
+viewClass--org.springframework.web.servlet.view.JstlView
+prefix--/WEB-INF/jsp/
+suffix--.jsp
+
+org.springframework.web.servlet.view.InternalResourceViewResolver
+prefix--/WEB-INF/jsp/
+suffix--.jsp
+
+redirect:xxx.action
+
+XmlViewResolver
+视图链
+JstlView/ExcelView/自定义View/JasperReport/PDF/Excel

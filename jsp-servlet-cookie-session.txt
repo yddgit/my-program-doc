@@ -1,0 +1,334 @@
+1. Servlet
+
+在response中填写信息输出到浏览器
+PrintWriter out = response.getWriter();
+out.println("<html><head><title></title></head><body><a href="www.baidu.com"></a></body></html>");
+
+用Enumeration获取所有参数
+Enumeration paramNames = req.getParameterNames();
+while (paramNames.hasMoreElements()) {
+  String paramName = (String)paramNames.nextElement();
+  String[] paramValues = req.getParameterValues(paramName);
+}
+
+用Map获取所有参数
+Map<String, String[]> paramMap = request.getParameterMap();
+Set<Map.Entry<String, String[]>> entries = paramMap.entrySet(); 
+for(Iterator<Map.Entry<String, String[]>> it = entries.iterator(); it.hasNext(); ) {
+  Map.Entry<String, String[]> entry = it.next();
+  String paramName = entry.getKey();
+  String[] paramValues = entry.getValue();
+}
+
+Servlet生命周期
+public class TestLifeCycleServlet extends HttpServlet {
+  public TestLifeCycleServlet() {
+    System.out.println("Constructor!");
+  }
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                                         throws ServletException, IOException {
+    System.out.println("doGet");
+  }
+  public void init(ServletConfig config) throws ServletException {
+    System.out.println("init");
+  }
+  public void destroy() {
+    System.out.println("destroy");
+  }
+}
+
+response设置头信息
+resp.setContentType("text/html");
+
+转发
+HttpServletRequest(相对路径)
+RequestDispatcher rd = req.getRequestDispatcher("xxx.jsp");
+ServletContext(绝对路径)
+RequestDispatcher rd = this.getServletContext().getRequestDispatcher("/xxx.jsp");
+//转发, 浏览器地址栏的url不改变
+rd.forward(request, response)
+
+
+2. Cookies
+
+
+设置Cookie
+  --服务器可以向客户端写内容
+  --只能是文本内容
+  --客户端可以阻止服务器写入
+  --只能拿自己webapp写入的东西
+  --Cookie分为两种
+    第一种：属于窗口/子窗口（放在内存中的）
+    第二种：属于文本(有生命周期的）
+  --一个servlet/jsp设置的cookies能够被同一个路径下面
+    或者子路径下面的servlet/jsp读到 (路径 = URL)(路径 != 真实文件路径)
+
+// Default maxAge is -1, indicating cookie
+// applies only to current browsing session.
+Cookie cookie = new Cookie("Session-Cookie-" + i, "Cookie-Value-S" + i);
+response.addCookie(cookie);
+
+cookie = new Cookie("Persistent-Cookie-" + i, "Cookie-Value-P" + i);
+// Cookie is valid for an hour, regardless of whether
+// user quits browser, reboots computer, or whatever.
+cookie.setMaxAge(3600);//1 hour
+response.addCookie(cookie);
+
+获得Cookie
+Cookie[] cookies = req.getCookies();
+if(cookies != null) {
+  Cookie cookie;
+  for(int i=0; i<cookies.length; i++) {
+    cookie = cookies[i];
+    out.println("<tr>\n" +
+                   "   <td>" + cookie.getName() + "</td>\n" +
+                   "   <td>" + cookie.getValue() + "</td>\n" );
+  }
+}
+
+
+3. Session
+
+
+与Cookie最大的区别是Session是存储在服务器端的与客户端浏览器一一对应的唯一标识，有两种实现方式：
+(1)使用Cookie来存储SessionID；(2)如果Cookie不支持，则使用重写URL的方法，就是将一些额外数据追加到表示会话的每个URL末尾，服务器在该标识符与其存储的有关的该会话的数据之间建立关联。
+规则：如果浏览器支持Cookie，创建Session时会把SessionID保存在Cookie里；
+      如果不支持Cookie，必须自己编程使用URL重写的方式实现Session；
+      response.encodeURL()//转码; URL后面加入SessionID
+        out.println("<a href=" 
+        + response.encodeURL("SessionInfoServlet") 
+        + ">refresh</a>");
+      Session不象Cookie拥有路径访问的问题
+      同一个application下的servlet/jsp可以共享同一个Session(同一个客户端窗口)
+
+Session方法：
+isNew();
+getId();
+getCreationTime();
+getLastAccessedTime();
+getRequestedSessionId();
+isRequestedSessionIdFromCookie();
+isRequestedSessionIdFromURL();
+isRequestedSessionIdValid();
+
+Session过期配置web.xml(30分钟)
+<session-config>
+   <session-timeout>30</session-timeout>
+</session-config>
+
+HttpSession session = req.getSession(true);
+Integer accessCount = (Integer)session.getAttribute("accessCount");
+session.setAttribute("accessCount", accessCount);
+
+
+4. application
+
+
+用于保存整个WebApplication的生命周期内都可以访问的数据
+在API中表现为ServletContext
+通过HttpServlet和方法拿到
+通过ServletContext的get/setAttribute方法取得/设置相关属性
+
+ServletContext application = this.getServletContext();
+Integer accessCount = (Integer)application.getAttribute("accessCount");
+application.setAttribute("accessCount", accessCount);
+
+
+5. JSP--Declaration(声明)
+<%!  %>
+例: <%!
+         int i;//会做为JSP转换的Servlet的成员变量
+         public void setName() { ...... } //会做为JSP转换为Servlet的成员方法
+     %>
+    <%  int i;//只做为_jspService()方法的局部变量  %>
+    <%  public void setName() { ...... } //是错误的,方法里面不能再有方法  %>
+
+
+6. JSP--Directive(编译指令)相当于在编辑译期间的命令
+
+
+格式：<%@Directive 属性="属性值" %>
+常用：page/include/taglib
+
+Directive--page
+指明与JSP Container的沟通方式
+
+<%@ page language="script language"
+         extends="className"
+         import="importList"
+         buffer="none|kb size"  --none表示不缓冲, 默认8K
+         session="true|false"  --是否可以使用session, 默认true
+         autoFlush="true|false"  --缓冲器是否自动清除, 默认true
+         isThreadSafe="true|false"
+         info="infoText"  --任何字符
+         errorPage="errorPageUrl"  --常用
+         isErrorPage="true|false"  --常用
+         contentType="contentTypeInfo"
+%>
+
+Directive--include
+将指定的JSP程序或者HTML文件包含进来
+
+<@include file="fileURL" %>
+
+JSP Engine会JSP程序的转换时期先把file属性设定的文件包含进来，然后开始执行转换及编译工作
+限制：不能向fileURL中传递参数，如：不能xxx.jsp?user=aaa
+
+
+7. JSP--Action(动作指令)在运行期间的命令
+
+
+[ jsp:include ]
+用于动态包含JSP程序或者HTML文件等,除非这个指令会被执行到,否则它是不会被Tomcat等JSP Engine编译
+
+<jsp:include page="URLSpec" flush="true"/>
+<jsp:include page="URLSpec" flush="true">
+  <jsp:param name="paramName" value="paramValue"/>//参数
+</jsp:include>
+
+和编译指令include的区别
+--include编译指令是在JSP程序的转换时期就将file属性所指定的程序内容嵌入,然后再
+编译执行;而include指令在转换时期是不会被编译的,只有在客户端请求时期如果被执
+行到才会被动态的编译载入
+--include编译指令不能带参数, 而<jsp:include>可以带参数
+
+
+[ jsp:forward ]
+用于将一个JSP的内容传送到page所指定的JSP程序或者Servlet中处理(URL)
+
+<jsp:forward page="URLSpec" flush="true"/>
+<jsp:forward page="URLSpec">
+  <jsp:param name="paramName" vlaue="paramValue"/>//参数
+</jsp:forward>
+
+forward的页面和forward到的页面用的是同一个request
+与此相对应的是response.sendRedirect("URL");
+<jsp:forward>使用同一个request
+response.sendRedirect是不同request
+
+
+[ jsp:useBean ]不能使用裸体类
+通过jsp:useBean, 可以在JSP中使用定义好的Bean
+Bean的基本要素:
+必须要有一个不带参数的构造器. 在JSP元素创建Bean时会调用空构造器
+Bean类应该没有任何公共实例变量, 也就是说, 不允许直接访问实例变量,变量名首字母必须小写
+通过getter/setter方法来读/写变量的值, 并且将对应的变量首字母改成大写
+
+<jsp:useBean id="beanName" scope="page | request | session | application"
+       class="package.BeanClass" type="typeName"/>
+
+id: 对象实例名称
+scope: Bean作用范围, 默认为page, 对整个JSP页面有效
+class: Bean类全名称
+beanName: Bean的名称
+type: Bean实例类型, 可以是本类, 或其父类, 或实现的接口, 默认为本类
+      把new出来的对象当成什么类型来用(一般用于父类引用指向子类对象的情况)
+scope: page(默认)局部变量, request范围内有效, session范围内有效, ServletContext=application
+  page: 仅涵盖使用JavaBean的页面
+  request: 有效范围仅限于使用JavaBean的请求
+  session: 有效范围在用户整个连接过程中(整个会话阶段均有效)
+  application: 有效范围涵盖整个应用程序, 也就是对整个网站均有效
+
+<jsp:useBean id="beanName" class="package.BeanClass">
+  <jsp:setProperty name="beanName" property="propertyName" value="value"/>
+  <jsp:getProperty name="beanName" property="propertyName"/>
+</jsp:useBean>
+
+<jsp:setProperty
+     name="beanName"
+     property="propertyName" | property="*"
+     value="propertyValue" | param="paramName"
+/>
+相当于beanName.setPropertyName(value)方法调用setXXX()
+
+<jsp:getProperty name="beanName" property="propertyName"/>
+相当于beanName.getPropertyName()方法调用getXXX()
+
+jsp:useBean建立表单参数和Bean属性之间的关联
+
+--通过param指定表单元素的名称, 通过property指定对应的Bean属性名称,
+由此建立这两个变量的关联
+param="paramName"相当于value="<%=request.getParameter("paramName")%>"
+
+--通过*来设置所有属性和输入参数之间的关联
+!!前提是前一个页面访问时传来的参数和Bean的Property完全匹配
+<jsp:useBean id="hello" class="bean.HelloBean" scope="request">
+  <jsp:setProperty name="hello" property="*"/>
+</jsp:useBean>
+
+在建立Bean属性和表单参数之间的对应关系时,服务器会将对应的参数自动
+转换成和属性类型匹配的类型
+
+Math.floor(cost * 100) / 100.0;
+
+[ jsp:plugin(嵌入Applet小程序) ]
+
+
+8. JSP常用的内置对象和常用方法
+
+
+out.println("xxx");//向客户端输出各种类型数据
+out.newLine();//输出一个换行符
+out.close();//关闭输出流
+out.flush();//输出缓冲区里的数据
+out.clearBuffer();//清除缓冲区里的数据,同时把数据输出到客户端
+out.clear();//清除缓冲区里的数据,但不把数据输出到客户端
+out.getBufferSize();//返回缓冲区的大小
+
+request.getParameter("xxx");
+request.getMethod();//返回客户端向服务器传送数据的方法
+//返回客户端传送给服务器端的所有参数名字,结果是一个枚举类型数据(Enumeration)
+request.getParameterNames();
+request.getParameterValues(String name);//获得指定参数的所有值
+request.getRequestURI();//获得发出请求字符串的客户端地址
+request.getRemoteAddr();//获取客户端的IP地址
+request.getRemoteHost();//获取客户端机器的名称
+request.getServerName();//获取服务器的名字
+request.getServletName();//客户端所请求的脚本文件路径
+request.getServerPort();//获取服务器端的端口
+
+response.sendRedirect("xxx");
+response.addCookie(Cookie cookie);//添加一个Cookie对象,用于在客户端保存特定信息
+//添加HTTP头信息,该Header信息将发送到客户端
+response.addHeader(String name, String value);
+response.containsHeader(String name);//判断指定名字的HTTP文件头是否存在
+response.sendError(int);//向客户端发送错误的信息(参数表示HTTP的错误码)
+response.setContentType(String contentType);//设置MIME类型与编码方式
+
+session.setAttribute(String name, Object value);
+session.getAttribute(Stirng name);
+session.isNew();
+session.getId();
+session.getCreationTime();
+session.getLastAccessedTime();
+session.getRequestedSessionId();
+session.isRequestedSessionIdFromCookie();
+session.isRequestedSessionIdFromURL();
+session.isRequestedSessionIdValid();
+
+application.setAttribute(String name, Object value);
+application.getAttribute(Stirng name);
+
+
+9. Servlet forward到JSP
+
+
+getServletConfig().getServletContext().
+getRequestDispatcher("/servlet_jsp/ServletUseJsp.jsp").forward(req, resp);
+
+
+10. JSP Taglib
+
+
+(1)建立一个自定义的, 可以运用于JSP文件中的标签, 形如：
+   <mytag:helloworld></mytag:helloworld>或<mytag:helloworld/>
+   用于在网页上输入字符串"HelloWorld"
+(2)步骤
+   - 编写标签实现类
+     - 从javax.servlet.jsp.tagext,SimpleTagSupport类继承
+	 - 重写doTag方法, 实现在网页上的输出
+   - 在WEB-INF目录下, 或WEB-INF子目录下建立helloworld.tld文件, 即自定义标签的说明文件
+   - 建立TestTag.jsp文件进行测试
+   - 注意: 标签处理类必须置于包中, 不能是裸体类
+           不需要象JSP1.2中修改web.xml
+

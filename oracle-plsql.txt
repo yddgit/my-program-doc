@@ -1,0 +1,581 @@
+四块
+1. （可选）声明各种变量和游标
+2. begin
+3. exception
+4. end
+
+一个HelloWorld程序: (要先执行: set serveroutput on)
+begin
+  dbms_output.put_line('HelloWorld!');
+end;
+/
+
+简单的PL/SQL程序
+declare
+  v_name varchar2(20);
+begin
+  v_name := 'myname';
+  dbms_output.put_line(v_name);
+end;
+/
+
+语句块的组成
+declare
+  v_num number := 0;
+begin
+  v_num := 2/v_num;
+  dbms_output.put_line(v_num);
+exception
+  when others then
+    dbms_output.put_line('error');
+end;
+/
+
+变量声明规则
+1. 变量名不能使用保留字，如from、select等
+2. 第一个字符必须是字母
+3. 变量名最多包含30个字符
+4. 不要与数据库的表或者列同名
+5. 每一行只能声明一个变量
+
+常用变量类型
+1. binary_integer：整数，主要用来计数而不是用来表示字段类型
+2. number：数字类型
+3. char：定长字符串
+4. varchar2：变长字符串
+5. date：日期
+6. long：长字符串，最长2GB
+7. boolean：布尔类型，可以取值为true、false和null值
+
+变量声明
+
+declare
+  v_temp number(1);
+  v_count binary_integer := 0;
+  v_sal number(7,2) := 4000.00;
+  v_date date := sysdate;
+  v_pi  constant number(3,2) := 3.14;//constant常量
+  v_valid  boolean := false;
+  v_name varchar2(20) not null := 'MyName';//非空限制
+begin
+  dbms_output.put_line('v_temp value:' || v_temp);//不能打印布尔类型变量
+end;
+/
+
+变量声明，使用%type属性
+
+declare
+  v_empno number(4);
+  v_empno2 emp.empno%type;//类型会随emp.empno的类型变化而变化
+  v_empno3 v_empno2%type;
+begin
+  dbms_output.put_line('Test');
+end;
+/
+
+Table（数组）变量类型
+
+declare
+  type type_table_emp_empno is table of emp.empno%type index by binary_integer;//定义新类型
+    v_empnos type_table_emp_empno;
+begin
+  v_empnos(0) := 7369;
+  v_empnos(1) := 7893;
+  v_empnos(-1) := 9999;
+  dbms_output.put_line(v_empnos(-1));
+end;
+/
+
+Record（结构体）变量类型
+
+declare
+  type type_record_dept is record
+   (
+     deptno dept.deptno%type,
+     dname dept.dname%type,
+     loc dept.loc%type
+   );
+   v_temp type_record_dept;
+begin
+  v_temp.deptno := 50;
+  v_temp.dname := 'aaaa';
+  v_temp.loc := 'BJ';
+  dbms_output.put_line(v_temp.deptno || ' ' || v_temp.dname);
+end;
+/
+
+使用%rowtype声明record变量
+declare
+  v_temp dept%rowtype;
+begin
+  v_temp.deptno := 50;//对应于dept的字段名
+  v_temp.dname := 'aaaa';
+  v_temp.loc := 'BJ';
+  dbms_output.put_line(v_temp.deptno || ' ' || v_temp.dname);
+end;
+/
+
+SQL语句的运用
+
+示例1 select
+declare
+  v_ename emp.ename%type;
+  v_sal emp.sal%type;
+begin
+  select ename, sal into v_ename, v_sal from emp where empno = 7369;//必须且只能返回一条记录
+  dbms_output.put_line(v_ename || ' ' || v_sal);
+end;
+/
+示例2 select
+declare
+  v_emp emp%rowtype;
+begin
+  select * into v_emp from emp where empno = 7369;
+  dbms_output.put_line(v_emp.ename);
+end;
+/
+示例3 insert
+declare
+  v_deptno dept.deptno%type := 50;
+  v_dname dept.dname%type := 'aaaa';
+  v_loc dept.loc%type := 'BJ';
+begin
+  insert into dept2 values (v_deptno, v_dname, v_loc);
+  commit;//使操作生效
+end;
+/
+示例4 计数
+declare
+  v_deptno emp2.deptno%type := 10;
+  v_count number;
+begin
+  --update emp2 set sal = sal/2 where deptno = v_deptno;
+  --select deptno into v_deptno from emp2 where empno = 7369;
+  select count(*) into v_count from emp2;
+  dbms_output.put_line(sql%rowcount || '条记录被影响');//刚刚执行的SQL语句影响到多少条记录
+end;
+/
+示例 DDL
+begin
+  execute immediate 'create table T (nnn varchar2(20) default ''aaa'')';
+end;
+
+if语句
+
+--取出7369的薪水,如果<1200则输出'low',如果<2000则输出'middle',否则'high'
+declare
+  v_sal emp.sal%type;
+begin
+  select sal into v_sal from emp where empno = 7369;
+  if (v_sal < 1200) then
+    dbms_output.put_line('low');
+  elsif(v_sal <2000) then
+    dbms_output.put_line('middle');
+  else
+    dbms_output.put_line('high');
+  end if;
+end;
+/
+--分析下列程序的功能
+declare
+  v_sal emp.sal%type;
+begin
+  select sal into v_sal from emp2 where empno = 7839;
+  if (v_sal < 2500) then
+    update emp2 set sal = sal * 2 where empno = 7839;
+    commit;
+  elsif(v_sal > 2500) then
+    update emp2 set sal = sal / 2 where empno = 7839;
+    commit;
+  else
+    dbms_output.put_line(v_sal);
+  end if;
+end;
+/
+
+循环--循环体起始于loop,终止于end loop;
+
+--示例1 do while
+declare
+  i binary_integer := 1;
+begin
+  loop
+    dbms_output.put_line(i);
+    i:=i+1;
+    exit when (i >= 11);
+  end loop;
+end;
+/
+
+示例2 while
+declare
+  j binary_integer := 1;
+begin
+  while j<11 loop
+    dbms_output.put_line(j);
+    j:=j+1;
+  end loop;
+end;
+/
+
+示例3 for
+begin
+  for k in 1..10 loop
+    dbms_output.put_line(k);
+  end loop;
+
+  for k in reverse 1..10 loop//从10到1做循环
+    dbms_output.put_line(k);
+  end loop;
+end;
+/
+
+错误处理
+
+示例1 返回记录过多的异常too_many_rows
+declare
+  v_temp number(4);
+begin
+  select empno into v_temp from emp where deptno = 10;
+exception
+  when too_many_rows then
+    dbms_output.put_line('太多记录了');
+  when others then
+    dbms_output.put_line('error');
+end;
+/
+示例2 没有记录返回的异常no_data_found
+declare
+  v_temp number(4);
+begin
+  select empno into v_temp from emp where empno = 2222;
+exception
+  when no_data_found then
+    dbms_output.put_line('没数据');
+end;
+/
+
+create table errorlog
+(
+id number primary key,
+errcode number,
+errmsg varchar2(1024),
+errdate date
+);
+
+create sequence seq_errorlog_id start with 1 increment by 1;
+
+--错误日志记录
+declare
+  v_deptno dept.deptno%type := 10;
+  v_errcode number;
+  v_errmsg varchar2(1024);
+begin
+  delete from dept where deptno = v_deptno;
+  commit;
+exception
+  when others then
+    rollback;
+      v_errcode := SQLCODE;
+      v_errmsg := SQLERRM;
+    insert into errorlog values(seq_errorlog_id.nextval, v_errcode, v_errmsg, sysdate);
+    commit;
+end;
+/
+
+游标
+
+四个属性
+1. isopen
+2. notfound
+3. found
+4. rowcount
+
+示例1 取游标值
+declare
+  cursor c is
+    select * from emp2;
+  v_emp c%rowtype;
+begin
+  open c;
+    fetch c into v_emp;//将游标当前所指记录的值传入v_emp，将自动指向下一条记录
+    dbms_output.put_line(v_emp.ename);
+  close c;
+end;
+/
+示例2 简单循环遍历游标
+declare
+  cursor c is select * from emp;
+  v_emp c%rowtype;
+begin
+  open c;
+  loop --循环内的三句顺序不能颠倒
+    fetch c into v_emp;
+      exit when (c%notfound);
+      dbms_output.put_line(v_emp.ename);
+  end loop;
+close c;
+end;
+/
+示例3 while循环遍历游标
+declare
+  cursor c is select * from emp;
+  v_emp emp%rowtype;
+begin
+  open c;
+  fetch c into v_emp;
+  while(c%found) loop
+    dbms_output.put_line(v_emp.ename);
+    fetch c into v_emp;
+  end loop;
+  close c;
+end;
+/
+示例4 for循环遍历游标,游标自动打开,自动fetch,自动关闭
+declare
+  cursor c is select * from emp;
+begin
+  for v_emp in c loop
+    dbms_output.put_line(v_emp.ename);
+  end loop;
+end;
+/
+
+带参数的游标
+
+declare
+  cursor c(v_deptno emp.deptno%type, v_job emp.job%type)
+  is
+  select ename, sal from emp where deptno = v_deptno and job = v_job;
+  --v_temp c%rowtype;
+begin
+  for v_temp in c(30, 'CLERK') loop
+    dbms_output.put_line(v_temp.ename);
+  end loop;
+end;
+/
+
+可更新的游标
+
+declare
+  cursor c is select * from emp2 for update;
+  --v_temp c%rowtype;
+begin
+  for v_temp in c loop
+    if(v_temp.sal < 2000) then
+      update emp2 set sal = sal*2 where current of c;//更新当前游标所指记录
+    elsif(v_temp.sal = 5000) then
+      delete from emp2 where current of c;
+    end if;
+  end loop;
+  commit;
+end;
+/
+
+存储过程
+create or replace procedure p
+is
+    cursor c is select * from emp2 for update;
+begin
+  for v_emp in c loop
+    if(v_emp.deptno = 10) then
+      update emp2 set sal = sal+10 where current of c;
+    elsif(v_emp.deptno = 20) then
+      update emp2 set sal = sal+20 where current of c;
+    else
+      update emp2 set sal = sal+50 where current of c;
+    end if;
+  end loop;
+  commit;
+end;
+/
+执行方式1
+exec p;
+执行方式2
+begin
+  p;
+end;
+
+带参数的存储过程
+
+1. 先创建一个存储过程
+  --in传入参数只能用、不能赋值，out传出参数可以赋值，in&out即可以用也可赋值，默认为in
+create or replace procedure p
+  (v_a in number, v_b number, v_ret out number, v_temp in out number)
+is
+begin
+  if(v_a > v_b) then
+    v_ret := v_a;
+  else
+    v_ret := v_b;
+  end if;
+  v_temp := v_temp + 1;
+end;
+/
+过程创建时若有编译错误,则执行show error命令找出错误出处并修改
+
+2. 调用存储过程
+declare
+  v_a number := 3;
+  v_b number := 4;
+  v_ret number;--盛放传出参数
+  v_temp number := 5;
+begin
+  p(v_a, v_b, v_ret, v_temp);--调用
+  dbms_output.put_line(v_ret);
+  dbms_output.put_line(v_temp);
+end;
+/
+
+3. 删除过程
+drop procedure p;
+
+函数
+
+1. 创建函数
+create or replace function sal_tax
+  (v_sal number)
+  return number
+is
+begin
+  if(v_sal <2000) then
+    return 0.10;
+  elsif(v_sal < 2750) then
+    return 0.15;
+  else
+    return 0.20;
+  end if;
+end;
+/
+2. 调用函数
+select sal_tax(sal) from emp;
+
+触发器
+
+create table emp2_log
+(
+uname varchar2(20),
+action varchar2(10),
+atime date
+);
+
+1. 创建触发器
+create or replace trigger trig
+  after insert or delete or update on emp2 for each row //before表示操作之前触发
+begin
+  if inserting then
+     insert into emp2_log values(USER, 'insert', sysdate);
+  elsif updating then
+     insert into emp2_log values(USER, 'update', sysdate);
+  elsif deleting then
+     insert into emp2_log values(USER, 'delete', sysdate);
+  end if;
+end;
+/
+
+update emp2 set sal = sal*2 where deptno = 30;
+
+2. 删除触发器
+drop trigger trig;
+
+3. 解决外键约束的问题
+create trigger trig
+  after update on dept2
+  for each row
+begin
+  update emp2 set deptno = :NEW.deptno where deptno = :OLD.deptno;
+end;
+/
+//创建了上面的触发器后，下面一句将会执行，不会出现警告
+update dept2 set deptno = 99 where deptno = 10;
+
+以上方法不推荐使用，会影响数据安全性
+
+树状结构的存储与展示
+
+create table article
+(
+id number primary key,
+cont varchar2(4000),
+pid number,
+isleaf number(1), --0代表非叶子节点，1代表叶子节点
+alevel number(2)
+);
+
+
+insert into article values(1, '蚂蚁大战大象', 0, 0, 0);
+insert into article values(2, '大象被打趴下了', 1, 0, 1);
+insert into article values(3, '蚂蚁也不好过', 2, 1, 2);
+insert into article values(4, '瞎说', 2, 0, 2);
+insert into article values(5, '没有瞎说', 4, 1, 3);
+insert into article values(6, '怎么可能', 1, 0, 1);
+insert into article values(7, '怎么没有可能', 6, 1, 2);
+insert into article values(8, '可能性是很大的', 6, 1, 2);
+insert into article values(9, '大象进医院了', 2, 0, 2);
+insert into article values(10, '护士是蚂蚁', 9, 1, 3);
+
+alevel: 0   1   2   3
+        1蚂蚁大战大象
+        |
+        |---2大象被打趴下了
+        |   |
+        |   |---3蚂蚁也不好过isleaf
+        |   |
+        |   |---4瞎说
+        |   |   |
+        |   |   |---5没有瞎说isleaf
+        |   |
+        |   |---9大象进医院了
+        |       |
+        |       |---10护士是蚂蚁isleaf
+        |
+        |---6怎么可能
+            |
+            |---7怎么没有可能isleaf
+            |
+            |---8可能性是很大的isleaf
+
+
+create or replace procedure p (v_pid article.pid%type, v_level binary_integer) is
+  cursor c is select * from article where pid = v_pid;
+  v_preStr varchar2(1024) := '';
+begin
+  for i in 1..v_level loop
+    v_preStr := v_preStr || '----';
+  end loop;
+
+  for v_article in c loop
+    dbms_output.put_line(v_preStr || v_article.cont);
+    if(v_article.isleaf = 0) then
+      p (v_article.id, v_level + 1);
+    end if;
+  end loop;
+end;
+/
+
+exec p(0, 0);
+
+================
+
+empno
+ename
+mgr
+
+//递归显示emp表中的树状结构
+create or replace procedure p_emp (v_mgr emp.mgr%type, v_level binary_integer) is
+  cursor c is select * from emp where mgr = v_mgr;
+  v_preStr varchar2(1024) := '';
+begin
+  for i in 0..v_level loop
+    v_preStr := v_preStr || '----';
+  end loop;
+
+  for v_emp in c loop
+    dbms_output.put_line(v_preStr || v_emp.ename);
+      p_emp (v_emp.empno, v_level + 1);
+  end loop;
+end;
+/
+
+exec p_emp(7839, 0);
+

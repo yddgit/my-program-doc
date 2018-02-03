@@ -1,0 +1,521 @@
+# 第一章 Shell简介
+
+  * ls -l 命令执行结果:
+    类型-拥有者权限-组用户权限-其他用户权限 [] 拥有者 拥有者所属的组 大小 最近一次更新时间 文件名
+    -    rwx        rw-        r--          1  root   root           228  Apr 30 16:38     index.html
+
+  * 设定文件权限时：
+
+    - 符号模式:
+      chmod [who] operator [permission] filename
+      [who]
+
+      u--user
+      g--group
+      o--other
+      a--all
+
+      [operator]ls
+
+      +  -  =
+
+      [permission]
+      r--读
+      w--写
+      x--运行
+      s--suid/guid(setuid),当运行该文件时,同组用户和其他用户均获得拥有者的权限
+      t--文件运行时在缓存中进行
+      grep '^...s'
+
+    - 绝对模式:
+      744  -rwxr--r--
+      644  -rw-r--r--
+      4744 -rwsr--r--
+      6744 -rwsr-Sr--
+      7744 -rwsr-Sr-T
+
+  * Shell特性:
+    - 别名/管道/命令替换/重定向/后台处理/模式匹配/变量/特殊字符
+
+      + 别名: alias ll='ls -lah --color=tty'
+              $HOME/.bashrc(用自定义的别名)
+
+      + 管道: ls -l|sort
+
+      + 命令替换: ls `cat filename` -alh
+
+      + 重定向: ll > aa
+                sort <index.html >index_sort.html
+
+      + 后台处理: nohup command &
+                  nohup tar -czf vmware-tools-distrib.tar.gz vmware-tools-distrib &
+                  jobs -l
+
+      + 模式匹配: ls *.txt
+
+      + 特殊字符: 
+        1. 双引号(") 用来使Shell不识别空格,制表符和其他大多数特殊字符,这样"David Medinets"表示一个值,
+           而不是2个, 同样"David < Medinets"表示一个值
+        2. 单引号(') 用来使Shell不识别所有特殊字符
+        3. 反引号(`) 用来替换命令
+        4. 反斜杠(\) 用来使Shell不识别其后的特殊字符,使其后的字符失去特殊的含义
+        5. 分号(;)   允许在一行上放多个命令
+        6. &         命令后台执行
+        7. 括号()    创建成组的命令
+        8. 大括号{}  创建命令块
+        9. 坚杠|     管道表示符
+        10.< >&      表示重定向
+        11.* ? [ ] ! 表示模式匹配
+        12.$         变量名的开头
+        13.#         表示注释(第一行除外)
+        14.空格,制表符,换行符(当作空白处理)
+
+
+# 第二章 变量与运算符
+
+
+  * 本地变量
+    在用户现在的shell生命期的脚本中使用
+      variable-name=vlaue(LOCALTSET="test")
+      set 显示本地所有的变量
+      readonly -p(显示当前用户下的所有只读变量)
+      readonly variable-name
+      (readonly LOCALTEST, 只读变量不能取消,也不能更改为可写权限,也不能清除)
+
+
+  * 环境变量
+    用于所有的用户进程(经常称为子进程). 
+    登录过程称为父进程. 
+    Shell中执行的用户进程均称为了进程. 
+    不像本地变量(只用于现在的Shell)环境变量可用于所有的子进程, 这包括编辑器,脚本和应用.
+      $HOME/.bash_profile(/etc/profile)
+      export YANG="yang"
+      env | grep YANG
+
+
+  * 变量替换
+    用变量的值替换它的名字
+      echo
+    在变量名前加$, 使用echo命令可以显示单个变量取值
+      testvar="this is a test"
+      echo $testvar
+      echo ${testvar}
+      echo ${testvar1:+value}(如果设置了testvar1,则显示value,否则为空)
+      echo ${testvar1:?value}(如果未设置testvar1,则显示用户定义的错误信息value,否则显示变量的值)
+      echo ${testvar1:-value}(如果未设置testvar1,则显示value,否则显示变量的值)
+      echo ${testvar1:=value}(如果未设置testvar1,则设置其值value,并显示,否则显示原变量的值)
+      变量清除: unset testvar
+
+
+  * 位置变量
+    $0          $1   $2   $3   $4   $5   $6   $7   $8   $9
+    脚本名字    A    B    C    D    E    F
+
+
+  * 标准Shell变量
+    bash默认建立了一些标准环境变量,可在/etc/profile中定义
+    EXINIT(初始化vi的一些参数)
+    HOME(当前用户主目录)
+    IFS(设置域分隔符)
+    LOGNAME(登录名)
+    MAIL(邮箱存储位置)
+    MAILCHECK(第隔MAILCHECK秒检查邮箱)
+    MAILPATH(多个邮箱)
+    TERM(终端类型)
+    PATH(可执行文件的路径)
+    TZ(时区)
+    PS1(终端提示符模式:[\u@\h \w]\$) 如:[root@localhost etc]#
+    PS2(一行上面运行多个命令时用到, 默认为"> ")
+    如:  [root@localhost yang]# for loop in `cat filename`
+         > do
+         > echo $loop
+         >done
+    PWD(当前目录)
+    SHELL(当前使用的shell解析器)
+    MANPATH(man命令使用的帮助文档所存放的位置)
+    TERMINFO(终端的详细信息)
+
+
+  * 特殊变量
+    $#(传递到脚本的参数个数)
+    $*(以一个单字符串显示所有向脚本传递的参数, 与位置变量不同, 此选项参数可超过9个)
+    $$(脚本运行的当前进程ID号)
+    $!(后台运行的最后一个进程的进程ID号)
+    $@(参数列表, 使用时加引号, 并在引号中返回每个参数)
+    $-(显示shell使用的当前选项, 与set命令功能相同)
+    $?(显示最后命令的退出状态, 0表示没有错误, 其他任何值表明有错误)
+
+
+  * 影响变量的命令
+
+    declare(设置或显示变量)
+      -f 只显示函数名
+      -r 创建只读变量(declare和typeset)
+      -x 创建转出变量
+      -i 创建整数变量
+      (使用+替代-, 可以颠倒选项的含义)
+
+    export(用于创建传给子shell的变量)
+      --表明选项结束, 所有后续参数都是实参
+      -f表明在"名-值"对中的名字是函数名
+      -n把全局变量转换成局部变量, 换句话说, 命令的变量不再传给shell
+      -p显示全局变量列表
+
+    readonly(用于显示或设置只读变量)
+      --表明选项结束
+      -f创建只读变量
+
+    set(设置或重设各种shell)
+
+    shift [n](用于移动位置变量, 调整位置变量, 使$3的值赋予$2, $2的值赋予$1
+
+    typeset(用于显示或设置变量, 是declare的同义词)
+
+    unset(用于取消变量的定义)
+      --表明选项结束
+      -f,-v从shell环境中删除指定的函数和变量, 但不能取消删除只读变量, 
+      如PATH, PS1, PS2, PPID, UID, EUID等的设置
+
+
+
+  * 引用符号
+    变量和替换操作, 在脚本中执行变量替换时最容易犯的一个错误就是引用错误
+    如: echo * 和 echo "*"执行结果不同的
+    1. 双引号: 可忽略除字符$,`,\外的任意字符或字符串
+       echo -e "ert, $SHELL'\n*china`echo itlab`"
+    2. 单引号: 忽略任何引用值, 会将引号内所有字符, 包括反引号都作为一个字符串
+       echo 'ert, $SHELL * china `echo itlab`'
+    3. 反引号: 用于设置系统命令的输出到变量, shell将反引号中的内容作为一个系统命令, 并执行其内容.
+       echo "* china `echo itlab`"
+    4. 反斜杠: 如果一个字符有特殊含义, 反斜杠防止shell误解其含义(即可以屏蔽其特殊含义)
+       含有特殊含义的字符:& * + ^ $ ` " | ?
+       echo \*
+
+
+  * 运算符
+    运算符类型: 按位运算符: ~(取反), <<(左移), >>(右移), &(与), |(或), ^(异或)
+      $[ ]表示形式告诉shell以方括号中的表达式求值. $[2+8]
+    逻辑运算符: && || > == < !=
+    赋值运算符: = += -= *= /= %= &= ^= |=
+      let $count = $count + $change
+      let $count += $change
+
+
+  * 表达式替换
+    $[ ]和$(())  所有shell的求值都是用整数完成
+    $[ ]可以接受不同基数的数字  [base#n] n表示基数从2到36的任何基数
+      echo $[10#8+1]
+
+  * 运算符的优先级
+    原则: 加括号
+
+
+# 第三章 Shell输入与输出
+
+  * echo命令可以显示文件本行和变量或者把字符串输入到文件
+    echo [option] string
+      -e解析转义字符
+      -n回车不换行, Linux系统默认回车换行
+        转义符(\c--回车不换行, \f, \t--TAB键, \n--回车换行)
+
+
+  * read语句可以从键盘或文件的某一行文件中读入信息, 并将其赋给一个变量
+    read variable1 variable2
+    如果中指定了一个变量, 那么read将会把所有的输入赋给变量, 直至遇到第一个文件结束符或回车;
+    如果给出了多个变量, 它们按顺序分别被赋予不同的变量. shell用空格作为变量之间的分隔符.
+
+
+  * cat是一个简单而通用的命令, 可以用来显示文件内容, 创建文件, 还可以用它来显示控制字符
+    cat [options] filename1 filename2 ...
+    -v 显示控制字符
+       使用cat命令时要注意, 它不会在文件分布符停下来; 它会一下显示完整个文件. 
+       如果希望每次显示一页, 可以使用more命令或者把cat命令的输出通过管道传递
+       到另外一个具有分布功能的命令(more, less)中
+    man cat
+    less linux_tips.txt
+
+  * 管道可以把一个命令的输出传递给另一个命令作为输入. 用"|"表示
+    cat myfile|more
+    ls -l|grep "myfile"
+    df -k|awk '{print $1}'|grep -v "Filesystem"
+
+  * tee命令把输出的一个副本输送到标准输出, 另一个副本拷贝到相应的文件中
+    tee -a files
+      如果希望在看到输出的同时, 也将其存入一个文件, 那么这个命令再合适不过了
+      一般用于管道之后
+
+  * 标准输入, 输出和错误
+    在shell中执行命令时, 每个进程都和三个打开的文件相关联, 并使用文件描述符
+    来引用这些文件. 由于文件描述符不容易记忆, shell同时给出了相应的文件名
+
+    输入文件--标准输入      0(缺省是键盘, 也可以是文件或其他命令的输出)
+    输出文件--标准输出      1(缺省是屏幕, 也可以是文件)
+    错误输出文件--标准错误  2(缺省是屏幕, 也可以是文件)
+
+    系统中实际上有12个文件打描符, 可以任意使用文件描述符3到9
+
+  * 文件重定向(改变程序运行的输入来源和输出地点
+    command > filename              把标准输出重定向到一个新文件中
+    command >> filename             把标准输出重定向到一个文件中(追加)
+    command 1 > filename            把标准输出重定向到一个文件中
+    command > filename 2 > &1       把标准输出和标准错误一起重定向到一个文件中
+    command >> filename 2 > &1      把标准输出和标准错误一起重定向到一个文件中(追加)
+    command 2 > filename            把标准错误重定向到一个文件中
+    command 2 >> filename           把标准错误重定向到一个文件中(追加)
+    command < filename1 > filename2 命令command以filename1文件作为标准输入, 以filename2文件作为标准输出
+    command < filename              命令command以filename文件作为标准输入
+    command << delimiter            从标准输入中读入, 直至遇到delimiter分界符
+    command < &m                    把文件描述符m作为标准输入
+    command > &m                    把标准输出重定向到文件描述符m中
+    command < &-                    关闭标准输入
+
+    重定向标准输出
+    cat file|sort 1>sort.out
+    cat file|sort >sort.out
+    pwd >>path.out
+    >nullfile.txt(功能等同于touch nullfile.txt)
+
+    重定向标准输入
+    sort <file
+    sort <name.txt >name.out
+
+    重定向标准错误
+    [root@localhost yang]# grep "trident" missiles
+    grep: missiles: No such file or directory
+
+    [root@localhost yang]# grep "trident" missiles 2> err_message.txt
+
+
+  * 结合使用标准输出和标准错误
+    [root@localhost yang]# cat account_new.txt account_old.txt 1>accounts.out 2>accounts.err
+    [root@localhost yang]# cat accounts.out
+    janny
+    annie
+    john
+    [root@localhost yang]# cat accounts.err
+    cat: account_old.txt: No such file or directory
+
+  * 合并标准输出和标准错误, 切记shell是从左至右分析相应的命令
+    grep "standard" standard.txt >grep.out 2>&1
+
+  * exec命令可以用来替代当前shell, 换句话说, 并没有启动子shell, 使用这一命令时
+    任何现有环境都将会被清除, 并重新启动一个shell
+    exec command
+      其中command通常是一个shell脚本
+      对文件中描述符进行操作的时候(也只有在这时), 它不会覆盖你当前的shell
+
+  * 文件描述符
+    3--9文件描述符(exec与文件描述符的结合) 
+    #!/bin/bash
+    #file_desc
+    exec 3>&0 0<name.txt
+    read line1
+    read line2
+    exec 0>&3
+    echo $line1
+    echo $line2
+
+# 第四章 控制流结构
+
+  * 控制结构
+    #!/bin/bash
+    # create a directory
+    make /home/yang/shell/txt
+    # copy all *.txt files in current directory to /home/yang/shell/txt
+    cp *.txt /home/yang/shell/txt/
+    rm-f *.txt
+    上述脚本会出现问题吗? 如果目录创建失败或目录创建成功文件拷贝失败, 如何处理?
+
+  * if then else语句
+
+    格式1:
+    if   条件1       如果条件1为真
+    then             那么
+         命令1       执行命令1
+    elif 条件2       如果条件1不成立, 但条件2成立
+    then             那么
+         命令2       执行命令2
+    else             如果条件1, 条件2均不成立
+         命令3       那么执行命令3
+    fi               完成(if语句必须以单词fi终止)
+
+    格式2:
+    if 条件
+    then 命令
+    fi
+
+    #!/bin/bash
+    #iftest
+    #this is a comment line, all comment lines start with a #
+    if [ "10" -lt "12" ]
+    then
+      #yes 10 is less than 12
+      echo "Yes, 10 is less than 12"
+    fi
+
+  * case语句为多选择语句, 可以用case语句匹配一个值与一个模式,
+    如果匹配成功, 执行相匹配的命令
+
+    格式:
+    case 值 in
+    模式1)
+        命令1
+        ;;
+    模式2)
+        命令2
+        ;;
+    esac
+
+    注意: case取值后面必须为单词in, 每一模式必须以右括号结束.
+    取值可以为变量或常数. 匹配发现取值符合某一模式后, 其间所有命令开始执行直至;;
+    模式匹配符*表示任意字符, ?表示任意单字符, [..]表示类或范围中任意字符.
+
+    #!/bin/bash
+    #caseselect
+    echo -n "Enter a number from 1 to 3:"
+    read ANS
+    case $ANS in
+    1)
+    echo "You select 1"
+    ;;
+    2)
+    echo "You select 2"
+    ;;
+    3)
+    echo "You select 3"
+    ;;
+    *)
+    echo "`basename $0`: This is not between 1 and 3" >&2
+    exit;
+    ;;
+    esac
+
+  * for循环
+
+    格式:
+    for 变量名 in 列表(以空格分隔)
+    do
+      命令1
+      命令2
+    done
+
+    当变量值在列表里, for循环即执行一次所有命令, 使用变量名访问列表中取值.
+    命令可为任何有效的shell命令和语句. 变量名为任何单词. in列表用法是可选的,
+    如果不用它, for循环使用命令行的位置参数. in列表可以包含替换,字符串和文件名.
+
+    #!/bin/bash
+    #forlist1
+    for loop in 1 2 3 4 5
+    do
+      echo $loop
+    done
+
+    #!/bin/bash
+    #forlist2
+    for loop in orange red blue grey
+    do
+      echo $loop
+    done
+
+  * until循环
+
+    格式:
+    until 条件
+    do
+      命令1
+      命令2
+      ...
+    done
+    注: 条件可为任意测试条件, 测试发生在循环末尾, 因此循环至少执行一次
+
+    #!/bin/bash
+    #until_mon
+    Part="/backup"
+    # get the percentage of disk
+    LOOK_OUT=`df|grep "$Part" | awk '{print $5}' | sed 's/%//g'`
+    echo $LOOK_OUT
+    until [ "$LOOK_OUT" -gt "90" ]
+    do
+      echo "Filesystem /backup is nearly full" | mail root
+    done
+
+  * while循环
+
+    格式:
+    while 命令
+    do
+      命令1
+      命令2
+    done
+
+    注: 在while和do之间虽然通常只使用一个命令, 但可以放几个命令
+    命令通常用作测试条件
+
+    #!/bin/bash
+    #whileread
+    echo "Press Ctrl+D to exit."
+    while echo -n "enter your favorite file: "; read FILM
+    do
+      echo  "Yeah, $FILE is a good film"
+    done
+
+    #!/bin/bash
+    #whileread
+    while read LINE
+    do
+      echo $LINE
+    done < file
+
+  * break控制
+
+    break [n]
+    退出循环
+    如果是在一个嵌入循环里, 可以指定n来跳出的循环个数
+
+  * continue控制
+    跳过循环步
+
+    注: continue命令类似于break命令
+    只有一点重要差别, 它不会跳出循环, 只是跳过这个循环步
+
+    #!/bin/bash
+    #breakout
+    while
+    do
+      echo -n "Enter any number [1--5]: "
+      read ANS
+      case $ANS in
+      1|2|3|4|5)
+        echo "You enter a legal number(1 to 5)."
+        ;;
+      *)
+        echo "Wrong number, Bye."
+        break;
+        ;;
+      esac
+    done
+
+    #!/bin/bash
+    #breakout1
+    while :
+    do
+      echo -n "Enter any number [1--5]: "
+      read ANS
+      case $ANS in
+      1|2|3|4|5)
+        echo "You enter a number $ANS."
+        ;;
+      *)
+        echo -n "Wrong number, continue (y/n)?:"
+        read IS_CONTINUE
+        case $IS_CONTINUE in
+          y|yes|Y|Yes)
+            continue
+            ;;
+          *)
+            break
+            ;;
+        esac
+      esac
+    done
+

@@ -1,0 +1,53 @@
+Reflection入门
+
+ClassLoader
+Class
+
+程序运行过程:
+1. xxx.class
+2. ClassLoader将其Load到内存中CodeSegment
+3. 运行环境找到main方法开始执行
+4. 运行过程中会有更多的class被Load内存
+
+ClassLoader的类加载机制
+1. 并非一次性加载
+2. 需要的时候加载(运行期间动态加载)
+   TestDynamicLoading
+   java -verbose:class可以观察类的具体加载过程
+3. static语句块在加载后执行一次
+4. dynamic语句块每次new新的对象都会执行
+   等同于构造方法中语句,用的较少
+
+JDK内置ClassLoader
+1. bootstrap class loader(管理classloader,最核心,一般调用不到)
+   implemented by native language(由C语言或者汇编语言写成)
+   load core classes of jdk(加载核心的类)
+2. extension class loader(扩展的类)
+   load the class form jre/lib/ext
+3. application class loader(自己写的类)
+   load user_define classes
+   ClassLoader.getSystemClassLoader()(也可以通过此方式load)
+4. other class loader
+   SecureClassLoader
+   URLClassLoader
+   ...
+
+JDK CLass Loader层次关系
+ClassLoader: getParent()返回委托的父类加载器(对象之间的关系)
+
+classloader在load class的时候首先找上一层loader是不是load过了,
+如果已经load过了,就不会再次load, 安全性好!自己写的String.class
+永远没有机会执行(破坏性代码)
+
+
+站在ClassLoader的角度看CodeSegment, xxx.class是一个一个的Class对象
+
+java.lang.Class
+--代表了Load到内存中的Classc对象
+--Object的getClass()可以拿到该类对象(等同于类名.class)
+
+java.lang.reflect
+
+Field
+Method
+--Class的getClassLoader可以拿到装载这个class的ClassLoader

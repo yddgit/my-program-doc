@@ -1,0 +1,213 @@
+1. PHP环境搭建
+	(1)wamp = windows + apache + mysql + php
+	下载: http://sourceforge.net/projects/wampserver/
+	(2)lamp = linux   + apache + mysql + php
+	下载: 无, 手动搭建
+	(3)xampp = Apache + MySQL + PHP + PERL
+	下载: http://sourceforge.net/projects/xampp/
+	(4)Apache启动报错可先将php的主目录加到PATH中
+
+2. PHP代码测试
+	+---------------------------+
+	|index.php                  |
+	|<?php                      |
+	|echo "Hello World <br/>";  |
+	|phpinfo();                 |
+	|?>                         |
+	+---------------------------+
+
+3. PHP代码段(可自定义标签风格, 不建议)及注释
+	使用短标签:   short_open_tag = On
+	提示代码错误: display_errors = On
+	PHP标签:
+	   <? ... ?>
+	   <?php ... ?>
+	   <script language="php">...</php>
+	   <% ... %>
+	PHP注释:
+	 - 多行:
+	   /* ... */
+	 - 单行: 
+	   // ...
+	   #  ...
+
+4. PHP调试: 使用echo或print
+	<?php echo  "debug1" ?>
+	<?php print "debug2" ?>
+
+5. PHP基本语法
+	(1)HTML+PHP混编
+	(2)语句以";"结束
+	(3)如何定义一个变量, 和变量的使用
+	(4)常量作用域是全局的, 命令规则与变量相同,但不带$符号
+	通常使用大写字母, 又分为系统常量和自定义常量
+	(5)在PHP中通过define()函数来定义一个常量
+	bool define(string $name, mixed $value[, bool $case_insensitive])
+	name: 指定常量名称
+	value: 指定常量的值
+	case_insensitive: 指定常量名称是否区分大小写, 如果设置为true则不区
+	分大小写; 如果设置为false则区分大小写. 如果未设置该参数, 则为false
+	
+	e.g. define("COLOR", "red"); //定义一个常量COLOR=red
+		 echo COLOR."<br/>";     //输出常量COLOR的值
+
+6. PHP数据运算类型
+	标量类型: boolean/integer/float/double/string
+	复合类型: array/object
+	boolean:
+	  大于0为true, 小于等于0为false
+	  $b = TRUE;
+	  $b = true;
+	  $b = FALSE;
+	  $b = false;
+	integer:
+	  $i = 1;
+	  $i = 2;
+	float and double:
+	  $f = 1.001;
+	  $d = 3.1415926;
+	string:
+	  $s = "this is a string"; #支持所有转义字符
+	  $s = 'this is a string'; #只支持简单转义
+	array:
+	  $arr = array(1,2,3,4);
+	  #arr = array("A"=>1, "B"=>2);
+
+7. 算术运算/赋值运算/比较运算/逻辑运算/递增递减运算
+	(1)算术运算:
+	  5*6-12=18
+	(2)赋值运算:
+	  $a=1, $a=1
+	  $a+=2, $a=3
+	  $a*=3, $a=9
+	(3)比较运算:
+	  1==2 is false
+	  3!=2 is true
+	  5<3 is false
+	  "ok"=="ok" is true
+	  1==='1' is false
+	  1=='1' is true
+	(4)逻辑运算:
+	  1&&1 is true
+	  0&&1 is false
+	  1&&0 is false
+	  0&&0 is false
+	  1||1 is true
+	  1||0 is true
+	  0||1 is true
+	  0||0 is false
+	  0 xor 0 is false
+	  1 xor 1 is false
+	  0 xor 1 is true
+	  1 xor 0 is true
+	(5)递增递减运算:
+	  $i = 1; echo $i++; output: 1
+	  $i = 1; echo ++$i; output: 2
+	  $i = 1; echo $i--; output: 1
+	  $i = 1; echo --$i; output: 0
+
+8. 简单语句
+	/* if语句 */
+	$a = 1;
+	if($a > 0) {
+		echo "positive:{$a}";
+	} else if($a == 0) {
+		echo "neutual:{$a}";
+	} else {
+		echo "negative:{$a}";
+	}
+
+	/* switch语句 */
+	$b = 0;
+	switch($b) {
+		case -1: echo "negative:{$b}";break;
+		case  0: echo "neutual:{$b}";break;
+		case  1: echo "positive:{$b}";break;
+		default: echo "unknown status:{$b}";break;
+	}
+
+	/*
+	 * for循环
+	 * break: 跳出一层循环
+	 * break n: 跳出N层循环
+	 */
+	echo "three for start";
+	for($i=1; $i<=3; $i++) {
+		for($j=1; $j<=3; $j++) {
+			for($k=1; $k<=3; $k++) {
+				if($j==1 && $k==2) {
+					echo $i.",".$j.",".$k.",break!";
+					break 2;
+				} else {
+					echo $i.",".$j.",".$k."";
+				}
+			}
+		}
+	}
+	echo "done";
+
+	/* do-while */
+	$m = 1;
+	do {
+		if($m%2 == 0) {
+			echo '$m='.$m."";
+		}
+		$m++;
+	} while($m <= 10);
+
+	/* while */
+	$n = 1;
+	while($n <= 10) {
+		if($n%2 == 1) {
+			echo '$n='.$n."";
+		}
+		$n++;
+	};
+
+9. 数组
+	/*
+	 * php的数组是一个key-value的结构, 使用array函数来创建:
+	 * array(key1=>value1, key2=>value2, ... ,keyn=>valuen);
+	 */
+	$arr1 = array(3,5,7); // array("0"=>3,"1"=>5; "2"=>7); 
+	$arr2 = array("id"=>2, "title"=>"hello");
+
+	echo '$arr1 = ';
+	print_r($arr1);
+	echo "==> ";
+	echo $arr1[0].",".$arr1[1].",".$arr1[2]."<br/>";
+
+	echo '$arr2 = ';
+	print_r($arr2);
+	echo "==> ";
+	echo $arr2['id'].",".$arr2['title']."<br/>";
+
+	/* 多维数组示例 */
+	$arr3 = array(array(1,2), array(3,4), array(5,6,7));
+
+	echo '$arr3 = ';
+	print_r($arr3);
+	$arr3[0][1] = 8;
+	$arr3[2][2] = 9;
+	echo '<br/>$arr3[0][1]=8; $arr3[2][2]=9<br/>';
+	echo '$arr3 = ';
+	print_r($arr3);
+	echo "<br/>";
+
+	/* 数组函数: count($arr)/is_array($arr) */
+	echo '$arr3 have '.count($arr3)." elements<br/>";
+	echo '$arr3 is array? '.(is_array($arr3)?"true":"false")."<br/>";
+
+	/* explode拆分变量为数组, 相当于java中的split */
+	$str = "1991,1992,1993,1994,1995";
+	$split = explode(",", $str);
+	echo '$str split by ",": ';
+	print_r($split);
+	echo "<br/>";
+
+	/* 遍历数组 */
+	foreach ($split as $key => $value) {
+		echo "$key => $value<br/>";
+	}
+
+10.函数

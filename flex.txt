@@ -1,0 +1,82 @@
+1. 运行时共享库, 对于客户端: 无则发送, 有则使用
+
+2. 项目中加载了新的资源时, 运行可能会出错, 可以清理并重新编译
+
+3. xml文件声明必须是第一行, 前面不能有任何字符, 甚至空格
+
+4. xmlns命名空间的概念
+
+5. 命名空间的URI只是一个字符串, 实现时用它来确保一个唯一的值以用于命名空间映射
+
+6. mx命名空间引用Flex3的类, 包括mx包和数据可视化组件
+
+   fx命名空间是Flex4中新加入的, 包括诸如对象/数值/Boolean/数组等, 还有MXML标签,
+   如<fx:Script>, <fx:Declarations>, <fx:Style>
+
+   s(Spark)命名空间包含Flex4可用的所有新的Spark组件和文本框架类, 还可以为WebService, 
+   HTTP和来自Spark命名空间的远程对象请求引用数据服务组件, Spark命名空间避免了Flex3 MX
+   组件和Flex4 Spark组件之间的混淆
+
+7. MX组件,又称Halo组件, 是Flex3中提供的用户界面元素. 每个MX组件都有定义其行为/布局/样式/皮肤
+   Spark组件是Flex4中提供的一套新组件, 它们进行了重新的设计, 其行为/布局/样式/皮肤都被分离成了独立的类.
+   这两个库都是基于同一个UI组件类的.
+
+8. mx和spark的区别请看Spark_vs_MX
+
+9. 界面布局时, 只需要拖动相关控件手工布局,并微调参数即可
+
+10.为控件生成CSS
+
+11.皮肤skinClass. 主题可在Design模式下选择Properties选项卡旁边的Appearance选项卡进行对应的选择
+
+12.数据绑定: 指定控件id属性, 然后使用{idValue.xxx}来绑定对应控件的属性值
+
+13.Network Monitor可以查看网络数据传输情况
+
+14.<fx:Declarations>标签内定义非可视化控件<s:HTTPService id="xxx" url="xx/xx/xx"/>
+
+15.所有的UI组件都有一个creationComplete事件,当在UI中生成并准备使用该组件时由Flex框架自动触发该事件.
+   如: creationComplete="employeeServcie.send()"
+
+16.Flex框架布局类:
+
+   BasicLayout:基于x和y绝对属性显示窗口中的所有内容要求子类指定一个基于窗口右上角原点的x, y属性
+
+   HorizontalLayout: 将所有内容水平方向彼此相邻放置只在水平方向上显示, 会忽略定义在子类上的x和y属性
+   每行的高度是最高子行的高度, 默认子行计算它们自己的宽度
+
+   TileLayout: 将并列显示容器中的所有内容. 在一个或多个垂直列或水平行上布置子内容, 这些行或
+   列基于一个名为方向的属性, 如果要一个列布局, 方向属性有效值为列; 如果要一个行布局, 方向属性有效值
+   为行. 默认方向是行. 一个排列模板布局中的所有单元有相同的高度和宽度. 这两个值分别以最高子行和最宽
+   子列来确定
+
+   VerticalLayout: 将所有内容彼此按垂直方向放置. 只在垂直方向上显示, 会忽略定义在子类上的x和y属性
+   每列的宽度是最宽子列的宽度, 默认子列计算它们自己的高度
+
+   <s:Application ...>
+    <s:layout>
+     <s:BasicLayout/>
+    </s:layout>
+   </s:Application>
+
+17.两类七个Spark容器
+
+   Group/DataGroup容器: 没有可视化皮肤可应用于该容器
+
+   五个有可视化皮肤的容器:
+   SkinnableContainer
+   SkinnableDataContainer
+   Application
+   BorderContainer: 加在Group外层, 用于控制显示样式
+   Panel: 唯一默认有一个可视化外观的容器,其他可视化容器均需要手动添加样式或应用一个皮肤类来指定外观
+
+18.Scroller控件用于显示滚动条
+
+   宽度和高度值最好加在Scroller控件上, 加在容器上可能不会起作用.
+   如果使用的是一个可换肤的容器, 那么必须将它们的滚动条定义在皮肤内部.
+   <s:BorderContainer ...>
+    <s:Scroller width="250" height="100">
+     <s:Group>
+     </s:Group>
+    </s:Scroller>
+   <s:BorderContainer>

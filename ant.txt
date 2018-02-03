@@ -1,0 +1,567 @@
+一、初识Ant
+
+1. 安装并配置JDK环境变量
+2. 设置ANT_HOME环境变量：ANT_HOME=D:\ant1.9.2
+3. 添加%ANT_HOME%\bin到PATH环境变量中
+4. (可选的)在ANT_HOME下执行命令：ant -f fetch.xml -Ddest=system
+5. -find 在上级目录寻找buildfile，直至文件系统的根
+6. -buildfile file 指定buildfile
+7. -quite 运行时只输出少量的必要信息
+   -verbose 运行时输出详细信息
+8. -Dproperty=value 给buildfile传递属性
+   例如：-Daaa=aaa，则在buildfile中可以使用${aaa}来引用此属性
+
+二、Ant深入学习
+
+1. project属性
+<project name="HelloWorld" default="run" basedir=".">
+name：       项目名称，可自由定义
+default：    定义一个缺省（默认）的target，当我们执行没有指定target的build.xml时，就会执行这个缺省的target
+basedir：    用于定义项目的基路径
+description：表示项目的描述
+
+2. property属性
+<property>
+一个property有一个名字和一个值。Property可以用于task的属性值。
+这是通过将属性名放在“${}”之间并放在属性值的位置来实现的。
+
+要想使用系统属性的列表可以参考the javadoc of System.getProperties
+
+除java内置的属性外，ant还定义了一些自己的内置属性：
+basedir：           可以理解为project 项目的绝对路径，于<project>中的basedir属性一样
+ant.file：          buildfile的绝对路径 
+ant.version：       ant的版本 
+ant.propertie.name：当前执行的project的名字，由<project>的name属性设定 
+ant.java.version：  ant检测到的jvm版本。
+
+3. target属性
+<target name="compile" depends="init">
+name：       target的名字
+depends：    用逗号分隔的target的名字列表，也就是依赖列表
+if：         执行target需要清除设定的属性名
+unless：     执行target需要清除设定的属性名  否 
+description：描述target的功能，这些描述可由-projexthelp 命令行输出
+
+target中的depends属性指定了target的执行顺序，Ant会依照depends属性中的target出现顺序依次执行每个target。
+
+<target name="D" depends="C,B,A"/>，执行顺序: A--B--C--D
+另外，一个target只能执行一次，即使有多个target依赖于它，也只执行一次
+
+4. if/unless
+要想让一个target这样做，你就应该在target元素中，加入if或unless 属性，带上target应该有所判断的属性
+<target name="install-windows" if="osfamily-windows">
+<target name="install-unix" if="osfamily-unix">
+如果没有if或者else，target总会被执行。
+
+5. 一个task是一段可执行的代码。task可以有多个属性（也可以叫变量）。属性值可能包含对property的引用。这些应用会在task执行前被解析。
+task的一般构造形式：<name attribute1="value1" attribute2="value2" … /> 
+这里name是task的名字，attribute是属性名，value是属性值
+
+三、Ant常用task
+
+1. 设置classpath
+（1）使用嵌套元素，一般形式是：
+<classpath> 
+  <pathelement path="${classpath}"/> 
+  <pathelement location="lib/jar.jar"/> 
+</classpath>
+location：指定了相对于project基目录的一个文件和目录
+path：    接受冒号或分号分隔的一个位置列表
+
+classpath标签支持自己的path和location属性
+<classpath path="${classpath}"/>
+
+（2）通过<fileset>元素指定路径
+构成fileset的多个文件加入classpath的顺序是未定的
+<classpath> 
+  <pathelement path="${classpath}"/> 
+  <fileset dir="lib"> 
+    <include name="**/*.jar"/> 
+  </fileset> 
+  <pathelement location="${dest}"/>  
+</classpath>
+
+（3）References
+如果我们想在多个task中使用相同的classpath，可以用<path>元素定义它们（与target 同级），然后通过id属性引用buildfile元素的id属性可用来引用这些元素。
+<project ...>
+  <path id="project.class.path">
+    <pathelement location="lib/" />
+    <pathelement path="${java.class.path}/"/>
+    <pathelement location="${dest}"/>
+  </path>
+  <target…>
+    <rmic…>
+      <classpath refid="project.class.path"/>
+    </rmic>
+  </target>
+  <target ...>
+    <javac>
+      <classpath refid="project.class.path"/>
+    </javac>
+  </target>
+</project>
+
+2. 输出信息
+
+<echo message="XXXXXX">
+
+<echo>XXXXXX</echo>
+
+<echoxml file="subbuild.xml"> 
+  <project default="foo"> 
+    <target name="foo"> 
+        <echo>foo</echo> 
+    </target> 
+  </project> 
+</echoxml>
+
+3. 设置property属性
+（1）设置属性name-value
+<property name="src" value="src"/>
+（2）读取属性文件中的属性配置
+<property file="foo.properties"/>
+（3）读取网络中的property-set
+<property url="http://www.mysite.com/bla/props/foo.properties"/>
+（4）读取文件中的属性配置
+<property resource="foo.properties"/>
+（5）读取环境变量
+<property environment="env"/>
+（6）读取属性文件中的属性，并作为全局引用
+<property file="/Users/antoine/.ant-global.properties"/>
+
+4. 引入properties文件
+
+--build.properties
+src=src
+dest=dest
+hello_jar=hello.jar
+
+--build.xml
+<property file="build.properties"/>
+<property name="src" value="${src}"/>
+<property name="dest" value="${classes}"/>
+<property name="hello_jar" value="${hello_jar}"/>
+
+5. 引入XML文件（可以认为被引入的XML文件与build.xml在同一个文件里）
+
+--include.xml
+<property name="src" value="src"/> 
+<property name="dest" value="classes"/> 
+<property name="hello_jar" value="hello.jar"/>
+<target name="test"> 
+  <ant target="run"/>  
+</target>
+
+--build.xml
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!-- include a xml file ,it can be common propery ,can be also a target --> 
+<!DOCTYPE project [ 
+  <!ENTITY share-variable SYSTEM "file:../include.xml"> 
+]> 
+<project name="HelloWorld" default="run" basedir="."> 
+  ......
+</project>
+
+6. 复制文件上目录
+<copy
+  file="要复制的文件" tofil="复制后的文件"/>
+
+（1）复制一个文件到当前目录，并重命名
+<copy file="myfile.txt" tofile="mycopy.txt"/>
+（2）复制一个文件到指定目录
+<copy file="myfile.txt" todir="build /newdir"/>
+（3）复制一个文件到指定位置（copyfile）
+<copyfile src="test.java" dest="subdir/test.java"/>
+（4）复制一个文件集合到一个目录
+<copy todir="build/newdir"> 
+  <fileset dir="src_dir"/>
+</copy>
+（5）复制一个文件集合到一个目录，但不包含某些文件
+<copy todir="dest/dir"> 
+  <fileset dir="src_dir"> 
+    <exclude name="**/*.java"/> 
+  </fileset>
+</copy>
+或
+<copy todir="dest/dir"> 
+  <fileset dir="src_dir" excludes="**/*.java"/> 
+</copy>
+（6）复制一个文件集合到一个目录，同时建立备份文件
+<copy todir="backup/dir"> 
+  <fileset dir="src_dir"/> 
+  <globmapper from="*"  to="*.bak"/> 
+</copy>
+（7）复制一个文件集合到一个目录，并替换掉其中的字符，如：@TITLE@
+<copy todir="../backup/dir"> 
+  <fileset dir="src_dir"/> 
+  <filterset>
+    <!-- 批量替换文件内容，把文件中的"@TITLE@"替换为"Foo Bar" -->
+    <filter token="TITLE" value="Foo Bar"/> 
+  </filterset>  
+</copy>
+（8）复制一个目录到另一个目录
+<copydir src="${src}/resources" dest="${dist}" includes="**/*.java" excludes="**/Test.java" />
+
+7. 删除文件与目录
+<delete
+  file="要删除的文件"
+  dir="要删除的目录"
+  includeEmptyDirs="是否要删除空目录,默认是true"
+  failonerror="遇到错误是否停止,默认是true"/>
+
+（1）删除一个文件
+<delete file="/lib/aaa.jar"/>
+（2）删除一个目录
+<delete dir="lib"/>
+（3）删除一个目录下符合规则的文件，包括子目录
+<delete>
+  <fileset dir="." includes="**/*.bak"/>
+</delete>
+（4）删除一个目录下的所有文件和目录，包括当前目录
+<delete includeEmptyDirs="true">
+  <fileset dir="build"/>
+</delete>
+<fileset dir="build"/>也可写为<fileset dir="build" includes="**/*"/>
+（5）删除当前目录下所有的svn相关文件
+<delete defaultexcludes="false">
+  <fileset dir="src" includes="**/*.svn"/>
+</delete>
+（6）删除文件目录树
+<deltree dir="dist"/>
+
+8. 剪切文件/文件集合/目录
+<move todir="new/dir"> 
+  <fileset dir="src/dir"> 
+    <include name="**/*.jar"/> 
+    <exclude name="**/aaa.jar"/> 
+  </fileset>  
+</move>
+
+9. 生命名文件/文件集合/目录
+<rename src="foo.jar" dest="foo-${version}.jar"/>
+
+10.建立临时文件
+<tempfile property="temp.xml" destDir="build" suffix=".bak"/>
+
+11.touch用于修改最后访问时间
+（1）如果文件不存在，创建文件，如果存在，更改最后访问时间为当前系统时间
+<touch file="myfile"/>
+（2）如果文件不存在，创建文件，更改最后访问时间为：11/21/2010 2:02 pm
+<touch file="myfile" datetime="11/21/2010 2:02 pm"/>
+（3）如果文件不存在，创建文件，更改最后访问时间为：11/21/2010 2:02 pm
+<touch datetime="11/21/2010 2:02 pm">  
+  <fileset dir="src_dir"/> 
+</touch>
+
+11.condition的使用
+有<and> ,<or>,<not>等tag 
+<condition property="isMacOsButNotMacOsX"> 
+  <and>
+    <os family="mac"/> 
+    <not>  
+      <os family="unix"/>  
+    </not>  
+  </and>  
+</condition>
+
+12.替换replace
+<replace file="configure.sh" value="defaultvalue" propertyFile="source/name.properties">
+  <replacefilter token="@token1@"/> 
+  <replacefilter token="@token2@" value="value2"/> 
+  <replacefilter token="@token3@" property="property.key"/> 
+</replace>
+
+13.available的使用
+Available主要用于判断某个文件是否存在，再决定某个属性是true还是false
+（1）如果类存在，则设置属性Myclass.present为true，如果没有就false
+<available classname="org.whatever.Myclass" property="Myclass.present"/>
+（2）如果文件存在则设置属性jaxp.jar.present为true，否则为false
+<property name="jaxp.jar" value="./lib/jaxp11/jaxp.jar"/>
+<available file="${jaxp.jar}" property="jaxp.jar.present"/>
+（3）如果目录存在，则设置属性为true，否则为false
+<available file="/usr/local/lib" type="dir" property="local.lib.present"/>
+（4）如果classpath下寻找class，如果存在则设置属性为true，否则为false
+...in project...
+<property name="jaxp.jar" value="./lib/jaxp11/jaxp.jar"/> 
+<path id="jaxp" location="${jaxp.jar}"/>  
+...in target...
+<available classname="javax.xml.transform.Transformer" classpathref="jaxp" property="jaxp11.present"/>
+（5）如果在classpath下发现文件则设置属性为true，否则为false
+<available property="have.extras" resource="extratasks.properties">
+  <classpath>
+    <pathelement location="/usr/local/ant/extra.jar"/>
+  </classpath>
+</available>
+
+14.显示错误
+（1）显示错误方式一
+<fail>Something wrong here.</fail>
+（2）显示错误方式二
+<fail message="${属性}."/>
+（3）如果这个属性不存在显示错误
+<fail unless="failCondition" message="unless Condition"/>
+（4）如果这个属性存在显示错误
+<fail if="failCondition" message="if Condition"/>
+（5）如果符合条件显示错误，这里的条件是（没有设置属性）
+<fail message="tag condition">
+  <condition>
+    <not>
+	  <isset property="failCondition"/>
+	</not>
+  </condition>
+</fail>
+
+15.建立目录
+<mkdir dir="./build/lib"/>
+<mkdir dir="${dist}/lib"/>
+
+16.扫行程序（cmd命令）
+<target name="help">
+  <exec executable="cmd">
+    <arg value="/c"/>
+    <arg value="ant.bat"/>
+    <arg value="-p"/>
+  </exec>
+</target>
+
+17.编译程序（执行javac）
+<javac encoding="utf-8"
+  srcdir="${src.dir}"
+  destdir="${build.classes.dir}"
+  debug="on"
+  deprecation="false"
+  optimize="true"
+  failonerror="true"
+  source="1.6"
+  target="1.6">
+  <classpath refid="classpath"/>
+</javac>
+
+18.制作文档（执行javadoc）
+<javadoc ...>
+  <doclet name="theDoclet" path="path/to/theDoclet">
+    <param name="-foo" value="foovalue"/>
+	<param name="-bar" value="barvalue"/>
+  </doclet>
+</javadoc>
+
+19.运行jar包
+<target name="jar" depends="compile">
+  <jar jarfile="${hello_jar}" basedir="${dest}"/>
+</target>
+或者
+<jar destfile="${dist}/lib/app.jar"
+  basedir="${build}/classes"
+  includes="mypackage/test/**"
+  excludes="**/*Test*.class"
+/>
+
+20.运行jar包
+<target name="run" depends="jar">
+  <java classname="test.ant.HelloWorld" classpath="${hello_jar}"/>
+</target>
+
+<java classname="test.Main">
+  <arg value="-h"/>
+  <classpath>
+    <pathelement location="dist/test.jar"/>
+	<pathelement path="/Users/antoine/dev/asf/ant-core/bootstrap/lib/ant-launcher.jar"/>
+  </classpath>
+</java>
+
+<java classname="test.Main" dir="${exec.dir}"
+  jar="${exec.dir}/dist/test.jar"
+  fork="true"
+  failonerror="true"
+  maxmemory="128m">
+  <arg value="-h"/>
+  <classpath>
+    <pathelement location="dist/test.jar"/>
+	<pathelement path="/Users/antoine/dev/asf/ant-core/bootstrap/lib/ant-launcher.jar"/>
+  </classpath>
+</java>
+
+21.运行SQL
+<target name="initDB1">
+  <sql driver="com.mysql.jdbc.Driver"
+    url="jdbc:mysql://localhost/login/"
+	userid="root"
+	password="root">
+	<classpath refid="classpath"/>
+	insert into user values(10000,'ydd','123','ydd@163.com');
+  </sql>
+</target>
+
+<target name="initDB2">
+  <sql driver="com.mysql.jdbc.Driver"
+    url="jdbc:mysql://localhost/"
+	userid="root"
+	password="root"
+	src="./mysql.sql">
+	<classpath refid="classpath"/>
+</target>
+其中的classpath可以用如下方式替代
+<classpath>
+  <pathelement location="c:\java\jdbc\mysql-connector-java-3.1.0-alpha-bin.jar"/>
+</classpath>
+
+22.发送邮件
+<mail mailhost="smtp.myisp.com" mailport="1025" subject="Test Build">
+  <from address="config@myisp.com"/>
+  <replyto address="me@myisp.com"/>
+  <to address="all@xyz.com"/>
+  <message>The ${buildname} nightly build has completed</message>
+  <attachments>
+    <fileset dir="dist">
+	  <include name="**/*.zip"/>
+	</fileset>
+  </attachments>
+</mail>
+
+23.发布程序
+<property name="project.name" value="antdemo"/>
+<property name="webserver" value="C:/java/tomcat-6.0.18/webapps"/> 
+<!-- 发布项目（其实就是WebContent目录）到web容器下 -->
+<target name="deploy" depends="init,compile,test" description="将工程打成war包"> 
+  <echo message="deploy项目到Web服务器" /> 
+  <mkdir dir="${webserver}/${project.name}" /> 
+  <copy todir="${webserver}/${project.name}" overwrite="true"> 
+    <fileset dir="${WebContent.dir}" /> 
+  </copy> 
+</target>
+
+24.Filter的使用，可以用Ant提供的filter任务替换属性值
+（1）把所有的@aaaa@替换成bbbb
+<filter token="aaaa" value="bbbb"/> 
+  <copy todir="${dest.dir}" filtering="true"> 
+    <fileset dir="${src.dir}"/> 
+  </copy> 
+</filter>
+（2）替换属性文件中的内容
+<filter filtersfile="deploy_env.properties"/> 
+<copy todir="${dest.dir}" filtering="true"> 
+  <fileset dir="${src.dir}"/> 
+</copy>
+
+25.Length的使用
+（1）把字符串"foo"的长度保存到属性"length.foo"中 
+<length string="foo" property="length.foo" /> 
+（2）把文件"bar"的长度保存到属性"length.bar"中 
+<length file="bar" property="length.bar" />
+
+26.输入input
+提示消息"Please enter db-username"然后把用户的输入赋值给db.user，如果没有输入则有默认值Scott-Tiger 
+<input message="Please enter db-username:" addproperty="db.user" defaultvalue="Scott-Tiger"/>
+
+27.target之间的调用
+（1）使用<ant target="***">调用另外一个target 
+<target name="rerun"> 
+  <ant target="clean"/> 
+  <ant target="run"/> 
+</target>
+可以写成<target name="rerun" depends="clean,run"/> 
+（2）使用antcall调用另外一个target 
+<target name="default"> 
+  <antcall target="isInvoked"> 
+    <param name="param1" value="value"/> 
+  </antcall>  
+</target>
+<target name="isInvoked "> 
+  <echo message="param1=${param1}"/>  
+</target>
+
+28.调用其他目录下的build.xml
+（1）调用目录aaa/bbb/下的build.xml
+第一种写法：<ant antfile="aaa/bbb/build.xml"/>  
+第二种写法：<ant antfile="bbb/build.xml" dir="aaa"/> 
+第三种写法：<ant antfile="build.xml" dir="aaa/bbb"/> 
+（2）调用指定文件中的制定target
+<ant antfile="subproject/subbuild.xml" target="compile"/>
+
+29.压缩/解压缩zip包
+压缩zip文件：
+<zip destfile="${dist}/manual.zip"  
+  basedir="htdocs/manual"  
+  includes="api/**/*.html" 
+  excludes="**/todo.html" 
+/>  
+解压缩zip文件：
+<unzip src="apache-ant-bin.zip" dest="${tools.home}"> 
+  <patternset> 
+    <include name="apache-ant/lib/ant.jar"/> 
+  </patternset> 
+  <mapper type="flatten"/> 
+</unzip>
+
+30.打tar包/解tar包
+打tar包：
+<tar destfile="/Users/antoine/dev/asf/ant-core/docs.tar">  
+  <tarfileset dir="${dir.src}/docs" fullpath="/usr/doc/ant/README" preserveLeadingSlashes="true"> 
+    <include name="readme.txt"/> 
+  </tarfileset>  
+  <tarfileset dir="${dir.src}/docs" prefix="/usr/doc/ant" preserveLeadingSlashes="true"> 
+    <include name="*.html"/> 
+  </tarfileset>  
+</tar> 
+解tar包：
+<untar src="tools.tar" dest="${tools.home}"/>
+
+31.打war包/解war包
+打war包：
+<target name="war-test" depends="test"> 
+  <delete dir="${buildWar}" /> 
+  <mkdir dir="${buildWar}" /> 
+  <war warfile="${buildWar}/${assembly.war}" webxml="${buildWebRoot}/WEB-INF/web.xml"> 
+    <fileset dir="${buildWebRoot}" /> 
+  </war> 
+</target>
+解war包：
+<target name="init">  
+  <echo>init in deploy</echo>  
+  <property file="deploy.properties" />  
+  <delete dir="${unpack.base.dir}" failonerror="false" />  
+  <delete dir="${pack.base.dir}" failonerror="false" />  
+  <mkdir dir="${unpack.base.dir}" />  
+  <mkdir dir="${pack.base.dir}" />  
+</target>  
+<target name="unpack">  
+    <echo>unpack the ${war.name}</echo>
+    <copy file="${dest.dir}/${war.name}" todir="${unpack.base.dir}"/> 
+    <unzip src="${unpack.base.dir}/${war.name}" dest="${unpack.base.dir}/${projectName}"/>  
+    <delete file="${unpack.base.dir}/${war.name}" />  
+</target>
+在init段中首先删除掉上次解压的目录和目标打包目录，然后重新建立目录；在unpack中，首先将编译好的默认war包拷贝至unpack定义的目录，解压之后把unpack下的war包删除。
+
+32.打ear包
+<ear destfile="build/myapp.ear" appxml="src/metadata/application.xml"> 
+  <fileset dir="build" includes="*.jar,*.war"/> 
+</ear>
+
+33.Ant控制流程（if...else...）
+<?xml version="1.0" encoding="UTF-8"?> 
+<project basedir="." name="learn" default="run"> 
+  <property name="db.type" value="oracle"/> 
+  <import file="properties.xml"/> 
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${ant-contrib.jar}"/> 
+  <target name="run">
+    <if>  
+      <equals "${db.type}" arg2="mysql"/> 
+      <then>  
+        <echo message="The db is mysql"/>
+      </then> 
+      <else>
+        <echo message="The db is oralce"/>
+      </else>  
+    </if> 
+  </target> 
+</project>
+
+四、最佳实践
+1. 创建文件夹
+build-->所有的文件信息
+src-->所有的源码文件
+classes-->编译好的class文件
+dist-->编译好的jar文件
+2. 编译源代码
+3. 将源代码打为jar包
+4. 直接运行程序

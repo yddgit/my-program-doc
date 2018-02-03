@@ -1,0 +1,313 @@
+Struts2读取配置文件的顺序:
+1. struts-default.xml
+2. struts-plugin.xml
+3. struts.xml
+4. struts.properties
+5. web.xml
+
+--加JavaDoc
+在struts2-core-2.2.3.jar上右键
+  -->Properties
+  -->JavaDoc Location
+  -->Browser...
+  -->定位到javadoc所在目录
+  -->确定
+  -->Validate...
+  -->验证通过即可
+  -->确定
+
+--加java source
+在struts2-core-2.2.3.jar上右键
+  -->Properties
+  -->Java Source Attachm
+  -->External Folder...
+  -->定位到java source所在目录
+  -->确定
+  -->确定
+
+--加XML的DTD验证文件
+window-->preferences-->MyEclipse-->Files and Editors-->XML-->XML Catalog-->Add
+Location: the path of dtd
+Key Type: URI
+Key     : http://struts.apache.org/dtds/struts-2.0.dtd
+
+Action
+1. 实现一个Action的最常用的方式: 从ActionSupport继承
+2. DMI动态方法调用!
+3. 通配符配置*{1}{2}...
+   *_*
+4. 接收参数的方法(一般用属性或者DomainModel来接收)
+5. 简单参数验证addFieldError
+   一般不使用Struts2的UI标签
+6. 访问Web元素
+   Map类型
+      IoC, 依赖Struts2
+   原始类型
+      IoC, 依赖Struts2
+7. 包含文件配置
+8. 默认action处理
+
+步骤: 从ActionSupport继承, 按照约定写好方法(add, delete...), 使用DomainModel接收参数, 如果需要访问Session, 使用IoC访问
+
+================================
+
+Result类型
+1. dispatcher       服务器跳转
+2. redirect         只以跳转到一个页面(html, jsp......)
+   注: 服务器端跳转(浏览器-->服务器-->内部跳转-->目标结果返回浏览器<客户端无感觉>)
+       客户端跳转(浏览器-->访问-->服务器Redirect反馈给浏览器-->浏览器重新发起访问请求)
+3. chain            Forward到一个Action
+   使用如下形式:
+   <result type="chain">
+     <param name="actionName">dashboard</param>
+     <param name="namespace">/secure</param>
+   </result>
+4. redirectAction   客户端跳转到一个Action
+5. freemarker       
+6. httpheader       发一个HTTP的头信息
+7. stream           下载
+8. velocity         与freemark类似的一个模板框架
+9. xslt             xml修饰
+10.plaintext        把页面源码显示出来
+11.tiles            页面分块, 可动态指定内容
+
+Global Results
+global-results | extends
+
+Dynamic Result
+在action中保存一个属性, 存储具体的结果location
+
+Parameters
+1. 客户端跳转时才需要传递
+2. ${}表达式(不是EL)
+
+================================
+
+struts-tags
+
+1. if
+<s:if test="%{false}">
+    <div>Will Not Be Executed</div>
+</s:if>
+<s:elseif test="%{true}">
+    <div>Will Be Executed</div>
+</s:elseif>
+<s:else>
+    <div>Will Not Be Executed</div>
+</s:else>
+
+2. append
+<s:append var="myAppendIterator">
+     <s:param value="%{myList1}" />
+     <s:param value="%{myList2}" />
+     <s:param value="%{myList3}" />
+</s:append>
+<s:iterator value="%{#myAppendIterator}">
+     <s:property />
+</s:iterator>
+
+3. generator
+Example One:
+<pre>
+Generate a simple iterator
+<s:generator val="%{'aaa,bbb,ccc,ddd,eee'}">
+ <s:iterator>
+     <s:property /><br/>
+ </s:iterator>
+</s:generator>
+</pre>
+This generates an iterator and print it out using the iterator tag.
+
+Example Two:
+<pre>
+Generate an iterator with count attribute
+<s:generator val="%{'aaa,bbb,ccc,ddd,eee'}" count="3">
+ <s:iterator>
+     <s:property /><br/>
+ </s:iterator>
+</s:generator>
+</pre>
+This generates an iterator, but only 3 entries will be available in the iterator
+generated, namely aaa, bbb and ccc respectively because count attribute is set to 3
+
+Example Three:
+<pre>
+Generate an iterator with var attribute
+<s:generator val="%{'aaa,bbb,ccc,ddd,eee'}" count="4" separator="," var="myAtt" />
+<%
+ Iterator i = (Iterator) pageContext.getAttribute("myAtt");
+ while(i.hasNext()) {
+     String s = (String) i.next(); %>
+     <%=s%> <br/>
+<%    }
+%>
+</pre>
+This generates an iterator and put it in the PageContext under the key as specified
+by the var attribute.
+
+
+Example Four:
+<pre>
+Generate an iterator with comparator attribute
+<s:generator val="%{'aaa,bbb,ccc,ddd,eee'}" converter="%{myConverter}">
+ <s:iterator>
+     <s:property /><br/>
+ </s:iterator>
+</s:generator>
+
+
+public class GeneratorTagAction extends ActionSupport {
+
+  ....
+
+  public Converter getMyConverter() {
+     return new Converter() {
+         public Object convert(String value) throws Exception {
+             return "converter-"+value;
+         }
+     };
+  }
+
+  ...
+
+}
+</pre>
+This will generate an iterator with each entries decided by the converter supplied. With
+this converter, it simply add "converter-" to each entries.
+
+
+4. merge
+<s:merge var="myMergedIterator1">
+     <s:param value="%{myList1}" />
+     <s:param value="%{myList2}" />
+     <s:param value="%{myList3}" />
+</s:merge>
+<s:iterator value="%{#myMergedIterator1}">
+     <s:property />
+</s:iterator>
+
+5. sort
+USAGE 1:
+<s:sort comparator="myComparator" source="myList">
+     <s:iterator>
+     <!-- do something with each sorted elements -->
+     <s:property value="..." />
+     </s:iterator>
+</s:sort>
+
+USAGE 2:
+<s:sort var="mySortedList" comparator="myComparator" source="myList" />
+
+<%
+   Iterator sortedIterator = (Iterator) pageContext.getAttribute("mySortedList");
+   for (Iterator i = sortedIterator; i.hasNext(); ) {
+     // do something with each of the sorted elements
+   }
+%>
+
+
+6. subset
+<!-- s: List basic -->
+   <s:subset source="myList">
+      <s:iterator>
+         <s:property />
+      </s:iterator>
+   </s:subset>
+
+OGNL--Object Graph Navigation Language对象图导航语言
+1. 必须以user.xxx的形式传递参数，才会构造对象实例
+2. 手动在Action中new对象实例也可以
+3. Domain Model必须提供无参数的构造方法
+4. 总结：user.xxx只有传，才会构造；想初始化domain model，也可以自己new，也可以传参数值，但这时候需要保持参数为空的构造方法
+5. 什么时候在stack中会有两个action
+   使用chain类型的result的时候
+
+
+Struts-Tags
+1. 通用标签：
+   --property
+   --set
+     默认为action scope，会将值放入request和ActionContext中
+     page, request, session, application
+   --bean
+   --include(对中文文件支持有问题，不建议使用，如需包含，改用jsp包含)
+   --param
+   --debug
+2. 控制标签：
+   --if elseif else
+   --iterator  collections(list,stack,queue) map enumeration iterator array
+   --subset
+3. UI标签
+   --theme  simple xhtml(默认) css_xhtml ajax
+4. AJAX标签
+   --补充
+5. $#%的区别
+   --$用于i18n和struts配置文件
+   --#取得ActionContext的值
+   --%将原本的文件属性解析为ognl，对于本来就是ognl的属性不起作用
+     参考<s:property--ognl和<s:include--string
+
+定义自己的theme
+1. css(覆盖struts2原来的css)
+2. 覆盖单个文件
+3. 定义自己的theme
+4. 实战：
+   --把所有主题定义为simple
+   --fielderror特殊处理
+   --自己控制其他标签的展现
+
+编码规范：
+1. 数据库表命名：_ShoppingItem, t_User, _TOPIC
+   _ModelName
+2. 字段命名：简单就是美
+   保持与属性名一致（尽量不要与数据库命名冲突）
+3. 库名：项目名称
+4. 用层来划分包
+   cn.edu.kmust.bbs.action/model(bean)/service(manager)/dto(vo)
+5. Action：xxxxAction
+6. *-*, *_*
+7. 前台：/
+   后台：/admin
+8. package 'action', 'adminAction'
+
+
+项目开发过程
+1. 建立界面原型
+2. 建立struts.xml
+   --确定namespace
+   --确定package
+   --确定Action名称, 空的方法
+   --确定result
+   --将界面原型页面进行修改, 匹配现有设置
+   --测试
+   --做好规划
+3. 建立数据库(或者实体类)
+4. 建立Model层
+5. 建立Service层(此时可以使用JUnit进行单元测试了)
+6. 着手开发
+
+
+声明式异常处理
+1. 在action中进行异常映射
+2. 在package中进行全局异常映射
+3. 使用继承共用异常映射
+4. struts2中异常处理由拦截器实现(观察struts-default.xml)
+   实际上struts2的大多数功能都由拦截器实现
+
+
+I18N
+1. I18N原理
+   --ResourceBundle和Locale的概念
+   --资源文件
+   --native2ascii
+2. Struts的资源文件
+   --Action-Package-App级
+   --一般只用App级
+     struts.xml.custom.i18n
+   --PropertiesEditor插件
+   --动态语言切换
+
+Struts拦截器以及源码解析
+1. Struts架构图（见文档）
+2. Struts执行过程
+3. ....

@@ -1,0 +1,148 @@
+SVN相关软件下载:
+
+Subversion下载地址(svn服务器--Win32Svn):
+http://subversion.apache.org/packages.html
+
+TortoiseSVN下载地址(svn客户端):
+http://tortoisesvn.net/downloads.html
+
+Subclipse下载地址(svn的Eclipse插件):
+http://subclipse.tigris.org/servlets/ProjectProcess?pageID=p4wYuA
+
+
+
+SVN for Windows的简单使用和配置[示例中Repository目录在d:/svnrepo]
+
+
+
+一. 安装Subversion和TortoiseSVN, 安装过程略...
+
+
+
+二. SVN服务器运行方式之svnserve
+
+1. SVN建立Repository("svnrepo"即是目录名)
+   # svnadmin create d:/svnrepo
+2. 权限设置
+   --在刚刚建好的Repository中会多出一些目录和文件
+   --打开d:/svnrepo/conf/svnserve.conf, 去掉: "# password-db = passwd" 的注释.
+   --这个配置项表明svn服务器允许passwd文件中定义的用户使用对应的密码来访问.
+   --打开d:/svnrepo/conf/passwd, 在[users]区域下添加形如user=password的配置来添加用户
+3. 启动svn服务器
+   # svnserve -d -r d:/svnrepo
+   --参数说明:
+     -d demo(后台运行)
+     -r root(以管理员身份运行)
+     d:/svnrepo即是Repository所在目录(可以是相对路径)
+4. 启动后的cmd窗口不要关闭!
+
+此时: svn服务器访问地址: svn://localhost/
+
+
+
+三. SVN服务器运行方式之Apache HTTP Server
+
+1. SVN建立Repository("svnrepo"即是目录名)
+   # svnadmin create d:/svnrepo
+1. 将[Subversion安装]目录下的:
+     Subversion/bin/mod_dav_svn.so
+     Subversion/bin/mod_authz_svn.so
+   [复制]到Apache下的modules目录下
+2. 确保Subversion/bin已经配置在path环境变量中
+3. 修改Apache的http.conf文件
+   --去掉如下两行的注释:
+     #LoadModule dav_fs_module modules/mod_dav_fs.so
+     #LoadModule dav_module modules/mod_dav.so
+   --在LoadModule模块末尾加入如下两行:
+     LoadModule dav_svn_module modules/mod_dav_svn.so
+     LoadModule authz_svn_module modules/mod_authz_svn.so
+   --在文件末尾添加如下配置信息
+     <Location /svnrepo>
+       DAV svn
+       SVNPath D:/svnrepo
+
+       # Authentication: Basic
+       AuthName "Subversion repository"
+       AuthType Basic
+       AuthUserFile D:/svnrepo/conf/htpasswd
+
+       # Authorization: Authenticated users only
+       Require valid-user
+
+       # Authorization: Path-based access control
+       AuthzSVNAccessFile D:/svnrepo/conf/authz
+     </Location>
+4. 使用Apache的htpasswd命令创建用户名和密码文件:
+   # First time: use -c to create the file
+   # Use -m to use MD5 encryption of the password, which is more secure
+   # 特别注意: 第一次运行时使用-c参数, 但再次运行时不要加-c参数, 否则以前的配置会被冲掉
+
+   htpasswd -c -m d:/svnrepo/conf/htpasswd admin
+   New password: *****
+   Re-type new password: *****
+   Adding password for user admin
+
+   htpasswd -m d:/svnrepo/conf/htpasswd yang
+   New password: ****
+   Re-type new password: ****
+   Adding password for user yang
+
+   htpasswd -m d:/svnrepo/conf/htpasswd user
+   New password: ****
+   Re-type new password: ****
+   Adding password for user user
+5. 配置用户权限
+   在d:/svnrepo/conf/authz文件中添加如下配置信息
+   [groups]
+   root = yang,admin
+   users = user
+   [/]
+   yang = rw
+   admin = rw
+   user = r
+6. 启动Apache HTTP Server...
+
+此时: svn服务器访问地址: http://localhost/svnrepo
+
+
+
+四. TortoiseSVN的简单使用
+
+1. 切换到自己的基于svn管理的项目工作目录下
+2. 浏览repository的内容: 右键-->TortoiseSVN-->Repo-browser...
+3. checkout: 右键-->SVN Checkout...
+4. checkout之后, 工作目录就会被TortoiseSVN感知, 并接管(多出一个.svn的目录)
+5. 在工作目录下所有新建的项目, 文件及目录:
+   --可以被提交到svn服务器
+   --可以从svn服务器更新和下载对应的项目
+6. 上传自己的项目
+   在要上传的项目目录上右键-->TortoiseSVN-->Add...输入用户名和密码, OK即可
+   在要上传的项目目录上右键-->SVN Commit...输入message, OK, 输入用户名和密码, OK即可
+
+
+
+五. 在Eclipse中使用svn
+
+1. 安装Subclipse插件...
+2. Window-->Show view-->Other-->SVN资源库
+3. 在SVN资源库中右键-->新建-->资源库位置
+4. 指定URL: http://localhost/svnrepo
+   弹出对话框: 输入用户名和密码, OK即可
+5. 剩下的所有与svn有关的操作都可以在项目上右键-->Team-->...中进行
+
+
+
+六. 配置SVN仓库的热备份
+
+1. 在备份库添加pre-revprop-change hook
+   echo "Changing revision properties other than svn:log is prohibited" >&2
+   exit 0
+2. 在备份库上执行
+   svnsync init <BACKUP_SVN_ADDRESS> <SOURCE_SVN_ADDRESS --username <username> --password <password> --allow-non-empty
+3. 在源仓库上添加post-commit hook
+   svnsync sync --non-interactive <BACKUP_SVN_ADDRESS> --username <username> --password <password>
+
+
+
+Enjoy it!
+

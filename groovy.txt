@@ -1,0 +1,207 @@
+Groovy 是 JVM 的一个替代语言——替代是指可以用 Groovy 在 Java 平台上进行 Java 编程
+使用方式基本与使用 Java 代码的方式相同。
+
+Groovy 和 Java 语言的主要区别是：完成同样的任务所需的 Groovy 代码比 Java 代码更少。
+
+Groovy特点：
+ - Groovy 的松散的 Java 语法允许省略分号和修改符。
+ - 除非另行指定，Groovy 的所有内容都为 public。
+ - Groovy 允许定义简单脚本，同时无需定义正规的 class 对象。
+ - Groovy 在普通的常用 Java 对象上增加了一些独特的方法和快捷方式，使得它们更容易使用。
+ - Groovy 语法还允许省略变量类型。
+ - 本地集合、内置的正则表达式和闭包
+ - 除非您另外指定，否则 Groovy 中的
+    所有类都是 public
+	所有属性都是 private
+	而所有方法都是 public
+   编译器将为每个属性自动提供一组 public getter 和 setter 方法。
+
+用 Groovy 编写的任何内容都可以编译成标准的 Java 类文件并在 Java 代码中重用
+用 Java 代码编写的内容也可以在 Groovy 中重用
+
+Ant + Groovy
+
+引入Groovy的Task定义
+<taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpathref="classpath" />
+<taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="classpath" />
+
+编辑Groovy代码和执行Groovy脚本
+<target name="compileAndRun" depends="init">
+	<groovyc srcdir="src" destdir="${build.classes}">
+		<javac debug="on" />
+	</groovyc>
+	<groovy src="src/ant/demo/groovy/HelloAnt.groovy" />
+</target>		
+
+0.安装Groovy
+  - 下载 最新的 Groovy ZIP 文件或 tar。
+  - 将存档解压缩到所选目录中（您应当避免在目录名称中使用空格）。
+  - 创建 GROOVY_HOME 环境变量。
+  - 把 GROOVY_HOME/bin 添加到 PATH 中。
+  - 将Groovy与Java项目集成，添加GROOVY_HOME/embeddable下的jar到classpath即可
+groovy -version
+
+1.运行Groovy示例
+
+groovy MyFirstExample.groovy
+groovy -e "println 'Hello World!'"
+
+# groovyc HelloGroovyWorld.groovy
+# java HelloGroovyWorld
+Exception in thread "main" java.lang.NoClassDefFoundError: groovy/lang/Script
+# java -classpath %GROOVY_HOME%/embeddable/groovy-all-x.y.z.jar;. HelloGroovyWorld
+Hello Groovy World
+# javap HelloGroovyWorld
+Compiled from "HelloGroovyWorld.groovy"
+public class HelloGroovyWorld extends groovy.lang.Script{
+  ...
+  public static void main(java.lang.String[]);
+  ...
+}
+
+2.Groovy是没有类型的 Java代码
+def message = "Hello World!"
+println message.class //output: class java.lang.String
+
+3.Groovy中一切都是对象
+def num = 12
+println num.class //output: class java.lang.Integer
+
+4.each直接在acoll实例内调用, 在each调用之后的{}部分就是闭包
+acoll.each {
+  //闭包中的it变量是一个关键字, 指向集合中的每个值, 是默认值
+  println it
+}
+acoll.each { value ->
+  //使用value代替了Groovy默认的it
+  println value
+}
+
+5.闭包通常用于在一系列值上迭代的时候, 如
+//Map、String、JDBC Rowset、File的行上迭代等等
+def hash = ["name":"Andy", "VPN-#":45]
+hash.each { key, value ->
+  //闭包还允许使用参数, 以上包含两个参数key和value
+  println "${key}:${value}"		
+}
+
+凡是集合或一系列的内容都可以使用这个的代码进行迭代
+"ITERATION".each {
+  print it.toLowerCase()
+}
+
+6.闭包是一个代码块, 所以能够作为参数进行传递(Groovy中函数或方法不能这样做)
+//如下是一个名为excite的闭包, 它接受一个参数word, 返回String是word变量加两个感叹号
+def excite = {word ->
+  return "${word}!!"
+}
+println excite.class
+assert "Groovy!!" == excite("Groovy")
+assert "Java!!" == excite.call("Java")
+
+7.Groovy提供了坚固的映射机制, 映射也是本地数据结构
+而且Groovy中的任何映射都是java.util.Map
+
+//映射中的键不必是String, 但最终会被变成String
+def hash = [name:"Andy", "VPN-#":45]
+println hash.getClass()
+assert hash.getClass() == java.util.LinkedHashMap
+
+hash.dob = "1976/01/29"
+assert hash.dob == "1976/01/29"
+println hash
+
+//使用[]语法获取项时必须将项作为String引用
+assert hash["name"] == "Andy"
+hash["gender"] = "male"
+assert hash.gender == "male"
+assert hash["gender"] == "male"
+println hash
+
+8.默认参数值, 调用程序可以选择省略参数, 使用默认值
+def repeat(val, repeat=5) {
+  for (i in 0..<repeat) {
+    println val
+  }
+}
+
+9.Groovy对集合支持相当丰富，而且美妙之处就在于每个Groovy
+集合都是java.util.Collection或java.util.Map的实例
+
+def range = 0..4
+println range.class //output: groovy.lang.IntRange
+assert range instanceof List
+
+def coll = ["Groovy", "Java", "Ruby"]
+println coll.class //output: java.util.ArrayList
+assert coll instanceof Collection
+assert coll instanceof ArrayList
+
+//向集合中添加项
+coll.add("Python")
+coll << "Smalltalk" // <<操作符被重载以支持向集合添加项
+coll[5] = "Perl"
+println coll
+
+//检索集合使用[index]
+assert coll[1] == "Java"
+//允许在集合中增加或去掉集合
+//以下操作实际上创建了新的集合实例
+def numbers = [1, 2, 3, 4]
+assert numbers + 5 == [1, 2, 3, 4, 5]
+println numbers + 5
+assert numbers - [2, 3] == [1, 4]
+println numbers - [2, 3]
+
+//魔法方法
+assert numbers.join(",") == "1,2,3,4"
+assert [1,2,3,4,3].count(3) == 2
+
+//分布操作符
+//*.标记对于列表中的每个值都会调用.toUpperCase()
+assert ["JAVA", "GROOVY"] == ["java", "Groovy"]*.toUpperCase()
+
+
+10.Groovy 中的类
+
+class Song {
+  def name
+  String artist
+  def genre
+	
+  def getGenre() {
+    genre?.toUpperCase();
+  }
+	
+  @Override
+  //可以省略public修饰符, 仍需要指定返回类型String以便实际地覆盖正确的方法
+  String toString() {
+    //Groovy中默认返回方法的最后一行, 因此可以省略return
+    "name=${name}, artist=${artist}, genre=${getGenre()}";
+  }
+}
+
+//Groovy自动提供一个构造函数, 构造函数接受一个Map, 其中的key与属性相对应
+def sng  = new Song(name:"Le Freak",artist:"Chic", genre:"Disco")
+def sng2 = new Song(name:"Kung Fu Fighting", genre:"Disco")
+
+//Groovy允许通过.语法间接访问属性, 并生成了getter和setter方法
+def sng3 = new Song();
+sng3.name = "Funkytown"
+sng3.artist = "Lipps Inc."
+sng3.setGenre("Disco")
+assert sng3.getArtist() == "Lipps Inc."
+assert sng3.genre == "DISCO"
+
+println sng
+//在方法调用前添加一个?就相当于在调用前面放了一个条件, 可以防止在null对象上调用方法
+println sng2.artist?.toUpperCase()
+println sng3
+
+//在Groovy中对于接受参数的方法可以省略括号
+sng2.setArtist "Carl Douglas"
+assert sng2.artist == "Carl Douglas"
+
+//这里的genre属性为空, 在getGenre()方法中调用toUpperCase()前加了?判断
+def sng4 = new Song(name:"Thriller",artist:"Michael Jackson")
+println sng4

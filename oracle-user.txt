@@ -1,0 +1,188 @@
+创建用户:
+
+   create user tom identified by tom;
+
+   --详细语法
+   create user 用户名
+   identified by 密码
+   default tablespace 表空间   --默认表空间(用户数据)
+   temporary tablespace 表空间 --临时表空间(临时数据, 不能使用限额)
+   quota 整数K|M|unlimited on 表空间
+
+限制用户:
+   用户加锁
+   alter user 用户名 account lock;
+   用户解锁
+   alter user 用户名 account unlock;
+   用户口令即刻失效
+   alter user 用户名 password expire;
+
+删除用户:
+   drop user 用户名 [cascade]
+
+系统权限:
+
+2. 用户登录授权
+   grant create session to tom;
+
+3. 用户建表授权
+   grant create table to tom;
+
+4. 用户使用表空间授权
+   grant unlimited tablespace to tom;
+
+5. 用户建立的表属于当前用户, 它可以对其进行增删改查
+
+6. 撤消建表权限
+   revoke create table from tom;
+
+7. 查看当前用户的系统权限
+   select * from user_sys_privs;
+
+注: grant create session to public; --public表示所有用户
+
+对象权限:
+
+8. 对象权限（其他用户是否能访问当前用户的对象）
+
+9. 将当前用户mt表的select权限授予用户tom
+   grant select on mt to tom;
+
+10.将当前用户mt表的insert权限授予用户tom
+   grant insert on mt to tom;
+
+11.将当前用户mt表的所有权限授予用户tom
+   grant all on mt to tom;
+
+12.撤消当前用户mt表的所有权限从用户tom
+   revoke all on mt from tom;
+
+13.对象权限: 谁拥有谁授权
+
+14.查看当前用户的对象权限
+   select * from user_tab_privs;
+
+15.将对象权限控制到列级别
+   grant update(name) on mt to tom;
+   grant insert(id) on mt to tom;
+   注: 查询和删除不能控制到列!!!
+   select * from user_col_privs;
+
+权限传递:
+
+16.授权系统权限
+   grant alter any table to jack;
+
+17.带管理选项的授权, 被授予者可以将该系统权限授予其他用户
+   grant alter any table to jack with admin option;
+
+18.授权对象权限
+   grant select on mt to jack;
+
+19.带授权选项的授权, 被授予者可以将该对象权限授予其他用户
+   grant select on mt to jack with grant option
+
+角色（权限的集合）:
+
+20.create role myrole;
+
+21.grant create table to myrole;
+
+22.grant create session to myrole;
+
+23.grant myrole to tom;
+
+24.drop role myrole;
+
+25.有些系统权限不能通过角色授予用户
+   例如: grant unlimited tablespace to myrole;
+
+注意: create table   create any table --给任意用户创建表
+      [alter table]  alter any table  --修改任意用户的表
+      [drop  table]  drop any table   --删除任意用户的表
+      表是属于某一用户的, 角色不属于某一个用户
+
+修改普通用户密码:
+
+26.用sys用户登录: alter user scott identified by tiger;
+
+27.Oracle数据库的验证机制
+   操作系统验证(sysoper, sysdba)
+   密码文件验证(sysoper, sysdba)
+   数据库验证(大部分用户使用此机制)
+
+28.Linux下启动Oracle的启动过程
+   启动监听: lsnrctl start
+   sys登录 : sqlplus sys/oracle as sysdba
+             --旧的Oracle版本的登录方法
+             sqlplus /nolog
+             conn sys/oracle as sysdba
+   启动实例: startup
+
+29.windows下Oracle的启动过程
+   启动监听: lsnrctl start
+   启动实例: oradim -startup -sid orcl
+
+管理员密码修改:
+
+30.更改密码文件
+
+   1. 删除掉密码文件
+   D:\oracle\product\10.2.0\db_1\database\PWDorcl.ora
+
+   2. orapwd file=D:\oracle\product\10.2.0\db_1\database\PWDorcl.ora password=123456 entries=10
+   --password=123456 entries=10
+   --密码=123456, 密码文件中最多允许存储的特权用户信息数=10
+
+   3. 查看当前系统中的特权用户列表
+      select * from v$pwfile_users;
+
+31.操作系统验证
+
+   删除ora_dba组中的用户,操作系统验证即失效
+
+
+==============================
+
+
+create tablespace and user
+
+CREATE TABLESPACE TB_NAME_IDX DATAFILE 'DATA_PATH/TB_FILE_IDX.dbf' SIZE 100m AUTOEXTEND ON NEXT 32m EXTENT MANAGEMENT LOCAL;
+CREATE TABLESPACE TB_NAME DATAFILE 'DATA_PATH/TB_FILE.dbf' SIZE 100m AUTOEXTEND ON NEXT 32m EXTENT MANAGEMENT LOCAL;
+CREATE TEMPORARY TABLESPACE TB_NAME_TEMP TEMPFILE 'DATA_PATH/TB_FILE_TEMP.dbf' SIZE 100m AUTOEXTEND ON NEXT 32m EXTENT MANAGEMENT LOCAL;
+CREATE USER TEST IDENTIFIED BY PASSWORD DEFAULT TABLESPACE TB_NAME TEMPORARY TABLESPACE TB_NAME_TEMP;
+GRANT CONNECT, RESOURCE, DBA, EXPORT FULL DATABASE, IMPORT FULL DATABASE TO TEST;
+--DROP USER TEST CASCADE;
+--DROP TABLESPACE TB_NAME_IDX INCLUDING CONTENTS AND DATAFILES;
+--DROP TABLESPACE TB_NAME INCLUDING CONTENTS AND DATAFILES;
+--DROP TABLESPACE TB_NAME_TEMP INCLUDING CONTENTS AND DATAFILES;
+
+--//////////////////////////////////////
+-- USER SQL
+CREATE USER TEST IDENTIFIED BY 123456 
+DEFAULT TABLESPACE USERS
+TEMPORARY TABLESPACE TEMP;
+-- ROLES
+GRANT "RESOURCE" TO TEST ;
+GRANT "CONNECT" TO TEST ;
+ALTER USER TEST DEFAULT ROLE "RESOURCE";
+-- SYSTEM PRIVILEGES
+GRANT CREATE SEQUENCE TO TEST ;
+GRANT CREATE SYNONYM TO TEST ;
+GRANT CREATE VIEW TO TEST ;
+GRANT CREATE SESSION TO TEST ;
+GRANT UNLIMITED TABLESPACE TO TEST ;
+GRANT CREATE DATABASE LINK TO TEST ;
+GRANT ALTER SESSION TO TEST ;
+--//////////////////////////////////////
+
+--exp HR/123456 owner=HR file=hr.dmp
+--imp TEST/123456 fromuser=HR touser=TEST file=hr.dmp
+
+-- UNLOCK USER
+ALTER USER SCOTT ACCOUNT UNLOCK;
+-- SHOW USER STATUS
+SELECT USERNAME, ACCOUNT_STATUS FROM DBA_USERS;
+-- CHANGE PASSWORD
+ALTER USER SCOTT IDENTIFIED BY tiger;
+

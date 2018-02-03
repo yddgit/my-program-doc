@@ -1,0 +1,227 @@
+create table employee
+(
+eno number(3) primary key,
+ename varchar2(10),
+sex varchar2(4),
+dept varchar2(20),
+job varchar2(20),
+birth date,
+education varchar2(10),
+title varchar2(10)
+);
+
+insert into employee values (001,'张三','女','研发部','一般销售',to_date('1974-8-22','YYYY-MM-DD'), '中专','特高级');
+insert into employee values (002,'李四','男','销售二部','一般销售',to_date('1985-10-1','YYYY-MM-DD'), '高中','高级');
+insert into employee values (003,'小王','女','市场部','一般销售',to_date('1981-9-29','YYYY-MM-DD'), '高中','中级');
+insert into employee values (004,'刘淇','男','技术咨询中心','大客户销售',to_date('1987-5-3','YYYY-MM-DD'), '硕生','中级');
+insert into employee values (005,'小霸','女','销售二部','一般销售',to_date('1977-11-17','YYYY-MM-DD'), '博士','初级');
+insert into employee values (006,'小究','女','技术支持部','会计',to_date('1979-2-13','YYYY-MM-DD'), '博士后','特高级');
+insert into employee values (007,'小蒋','女','财务部','会计',to_date('1976-6-27','YYYY-MM-DD'), '博士','高级');
+insert into employee values (008,'老贼','女','销售部','大客户销售',to_date('1989-4-25','YYYY-MM-DD'), '本科','初级');
+insert into employee values (009,'林郡','女','综合部','一般职员',to_date('1979-11-24','YYYY-MM-DD'), '初中 ','特高级');
+insert into employee values (010,'梁炜','女','总经理办公室','大客户销售',to_date('1967-5-2','YYYY-MM-DD'), '博士','特高级');
+insert into employee values (011,'赵谦','男','综合部','总经理',to_date('1974-8-26','YYYY-MM-DD'), '本科','高级');
+insert into employee values (012,'孙犁','男','综合部','一般销售',to_date('1968-5-19','YYYY-MM-DD'), '本科','初级');
+insert into employee values (013,'小周','女','润乾公司','销售部经理',to_date('1988-7-1','YYYY-MM-DD'), '中专','初级');
+insert into employee values (014,'温望','男','总裁办公室','一般职员',to_date('1984-7-2','YYYY-MM-DD'), '博士','特高级');
+insert into employee values (015,'宝钗','女','综合部','一般职员',to_date('1988-10-25','YYYY-MM-DD'), '小学','中级');
+insert into employee values (016,'戴玉','男','销售部','一般职员',to_date('1966-6-15','YYYY-MM-DD'), '硕生','初级');
+insert into employee values (017,'小玉','女','销售部','一般职员',to_date('1981-3-5','YYYY-MM-DD'), '大专','高级');
+insert into employee values (018,'喜人','男','总经理办公室','会计部经理',to_date('1966-5-18','YYYY-MM-DD'), '博士','高级');
+insert into employee values (019,'探春','男','技术支持部','大客户销售',to_date('1991-1-11','YYYY-MM-DD'), '硕生','中级');
+insert into employee values (020,'小高','男','综合部','总经理',to_date('1974-8-26','YYYY-MM-DD'), '本科','高级');
+insert into employee values (021,'小武','女','润乾公司','销售部经理',to_date('1988-7-1','YYYY-MM-DD'), '中专','初级');
+insert into employee values (022,'小温','男','总裁办公室','一般职员',to_date('1984-7-2','YYYY-MM-DD'), '博士','特高级');
+insert into employee values (023,'小戴','男','销售部','一般职员',to_date('1966-6-15','YYYY-MM-DD'), '硕生','初级');
+insert into employee values (024,'宝玉','女','销售部','一般职员',to_date('1981-3-5','YYYY-MM-DD'), '大专','高级');
+insert into employee values (025,'小徐','男','总经理办公室','会计部经理',to_date('1966-5-18','YYYY-MM-DD'), '博士','高级');
+insert into employee values (026,'小吴','男','技术支持部','一般职员',to_date('1991-1-11','YYYY-MM-DD'), '硕生','中级');
+insert into employee values (027,'小刘','男','技术咨询中心','一般职员',to_date('1987-5-3','YYYY-MM-DD'), '硕生','中级');
+insert into employee values (028,'赵究','女','技术支持部','会计',to_date('1979-2-13','YYYY-MM-DD'), '博士后','特高级');
+insert into employee values (029,'蒋师','女','财务部','会计',to_date('1976-6-27','YYYY-MM-DD'), '博士','高级');
+insert into employee values (030,'吴莱','女','销售部','一般职员',to_date('1989-4-25','YYYY-MM-DD'), '本科','初级');
+insert into employee values (031,'小张','女','研发部','一般职员',to_date('1974-8-22','YYYY-MM-DD'), '中专','特高级');
+insert into employee values (032,'小梁','女','总经理办公室','总经理',to_date('1967-5-2','YYYY-MM-DD'), '博士','特高级');
+insert into employee values (033,'小孙','男','综合部','一般职员',to_date('1968-5-19','YYYY-MM-DD'), '本科','初级');
+insert into employee values (034,'小宝','女','综合部','一般职员',to_date('1988-10-25','YYYY-MM-DD'), '小学','中级');
+insert into employee values (035,'小李','男','销售二部','销售部经理',to_date('1985-10-1','YYYY-MM-DD'), '高中','高级');
+insert into employee values (036,'王五','女','市场部','一般职员',to_date('1981-9-29','YYYY-MM-DD'), '高中','中级');
+insert into employee values (037,'周霸','女','销售二部','一般职员',to_date('1977-11-17','YYYY-MM-DD'), '博士','初级');
+insert into employee values (038,'小林','女','综合部','一般职员',to_date('1979-11-24','YYYY-MM-DD'), '初中 ','特高级');
+
+create table t (a varchar2(10));//创建表t，指定一个字段a，10位的字符
+drop table t;//删除表t
+
+varchar2(length)变长字符串，最多4096
+char(length)定长字符串(效率高，浪费空间)
+number(8, 3)8位数字，包含三位小数
+date日期时间
+long()变长字符串，最多2G
+
+//建表
+
+共5种约束：
+1.非空
+2.唯一
+3.主键,可以唯一标识整条记录的关键字
+4.外键,加在一张表的两个字段上或两张表的两个字段上
+5.检查
+
+constraint用来给约束定义名称
+两种加约束方法：字段级约束（单个字段）和表级约束（多个字段组合）
+
+示例1
+create table stu
+(
+id number(6),
+name varchar2(20) not null,//（字段级约束只能单独约束某个字段）非空约束
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4),
+email varchar2(50)
+);
+
+示例2
+create table stu
+(
+id number(6),
+name varchar2(20) constraint stu_name_nn not null,//为约束条件起名
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4),
+email varchar2(50) unique//唯一约束，字段级约束, 空值之间认为互不重复
+);
+
+示例3
+create table stu
+(
+id number(6),
+name varchar2(20) constraint stu_name_nn not null,
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4),
+email varchar2(50),
+constraint stu_name_email_uni unique(name, email)//表级约束，约束多个字段的组合
+);
+
+示例4
+create table stu
+(
+id number(6) primary key,//字段级主键约束
+name varchar2(20) constraint stu_name_nn not null,
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4),
+email varchar2(50),
+constraint stu_name_email_uni unique(name, email)
+);
+
+示例5
+create table stu
+(
+id number(6),
+name varchar2(20) constraint stu_name_nn not null,
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4),
+email varchar2(50),
+constraint stu_id_pk primary key (id),//表级主键约束
+constraint stu_name_email_uni unique(name, email)
+);
+
+示例6
+create table stu
+(
+id number(6),
+name varchar2(20) constraint stu_name_nn not null,
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4) references class(id),//字段级外键约束
+email varchar2(50),
+constraint stu_id_pk primary key (id),
+constraint stu_name_email_uni unique(name, email)
+);
+
+create table class
+(
+id number(4) primary key,
+name varchar2(20) not null
+);
+
+示例7
+create table stu
+(
+id number(6),
+name varchar2(20) constraint stu_name_nn not null,
+sex number(1),
+age number(3),
+sdate date,
+grade number(2) default 1,
+class number(4),
+email varchar2(50),
+constraint stu_class_fk foreign key (class) references class(id),//表级外键约束
+constraint stu_id_pk primary key (id),
+constraint stu_name_email_uni unique(name, email)
+);
+
+create table class
+(
+id number(4) primary key,//**外键约束被参考的字段必须是主键
+name varchar2(20) not null
+);
+
+//更改表结构
+alter table stu add(addr varchar2(100));//添加字段
+alter table stu drop(addr);//删除字段
+alter table stu modify (addr varchar2(150));//更改字段类型,前提是不破坏原有数据
+alter table stu drop constraint stu_class_fk;//删除一个约束条件
+alter table stu add constraint stu_class_fk foreign key (class) references class(id);//添加一个约束条件
+
+
+//数据字典表
+1.user_tables
+select table_name from user_tables;
+2.user_views
+select view_name from user_views;
+3.user_constraints
+select constraint_name,table_name from user_constraints;
+4.user_indexes
+select index_name from user_indexes;
+
+//数据字典表的字典表
+dictionary
+select table_name from dictionary where table_name like 'USER%' order by table_name;
+
+//索引
+create index idx_stu_email on stu (email);//为某个字段建立索引
+drop index idx_stu_email;//删除索引
+
+//视图(一个子查询，简化查询，保护私有数据)
+create view v$_stu as select id, name, age from stu;//建立一个视图
+drop view v$_stu;//删除视图
+
+//序列(产生一个不重复的数字序列)
+create sequence seq;//建立序列
+create sequence seq start with 1 increment by 1;//从1开始每次递增1
+drop sequence seq;//删除序列
+select seq.nextval from dual;//每次都选出一个不同的数字，可以方便的向表中插入新的记录
+
+数据的常用对象：
+1. 表
+2. 约束：非空，唯一，主键，外键，检查（依附在表上的对象）
+3. 索引
+4. 视图
+5. 序列（oracle特有的）一个表建一个
+

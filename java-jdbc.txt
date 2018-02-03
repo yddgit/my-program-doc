@@ -1,0 +1,77 @@
+JDBC编程步骤
+1. Load the Driver
+   1. Class.forName() | Class.forName().newInstance() | new DriverName()
+   2. 实例化时自动向DriverManager注册，是需要显示调用DriverManager.registerDriver方法
+2. Connect to the DataBase
+   1. DriverManager.getConnection("jdbc:oracle:thin:@192.168.0.1:1521:orcl", "scott", "tiger")
+3. Execute the SQL
+   1. Connection.CreateStatement()//创建语句对象
+   2. Statement.executeQuery()//select
+   3. Statement.executeUpdate()//insert,update,delete
+4. Retrieve the result data
+   1. 循环取得结果while(rs.next())
+5. Show the result data
+   1. 将数据库中的各种类型转换为Java中的类型(getXXX)方法
+6. Close
+   1. close the resultset. / close the statement / close the connection
+
+
+JDBC进阶
+1. 灵活指定SQL语句中的变量
+   PreparedStatement
+2. 对存储过程进行调用
+   CallableStatement
+3. 运用事务处理
+   Transaction
+4. 批处理
+   Batch
+5. Movable ResultSet
+   可以前后移动的结果集
+       Rs.last()
+       Rs.getRow() 返回值可以确定一共有多少条记录
+6. Updatable ResultSet(*)
+
+
+DataSource & RowSet
+1. DataSource
+   1. DriverManager的替代
+   2. 连接池实现
+   3. 分布式实现
+      DataSource的属性可以动态改变
+2. RowSet
+   1. 新的ResultSet
+   2. 从ResultSet继承
+   3. 支持断开的结果集
+   4. 支持JavaBean标准
+
+
+JDBC Connection
+
+1. DB2
+Class.forName("com.ibm.db2.jdbc.net.DB2Driver"); 
+String url="jdbc:db2://dburl:port/DBname" 
+cn = DriverManager.getConnection( url, sUsr, sPwd );
+
+2. Microsoft SQLServer(microsoft)
+Class.forName( "com.microsoft.jdbc.sqlserver.SQLServerDriver" ); 
+cn = DriverManager.getConnection( "jdbc:microsoft:sqlserver://DBServerIP:1433;databaseName=master", sUsr, sPwd ); 
+
+3. Sybase(jconn2.jar)
+Class.forName( "com.sybase.jdbc2.jdbc.SybDriver" ); 
+cn = DriverManager.getConnection( "jdbc:sybase:Tds:DBServerIP:2638", sUsr, sPwd ); 
+
+4. MySQL(mm.mysql-3.0.2-bin.jar)
+Class.forName( "org.gjt.mm.mysql.Driver" ); 
+cn = DriverManager.getConnection( "jdbc:mysql://DBServerIP:3306/myDatabaseName", sUsr, sPwd ); 
+
+5. PostgreSQL(pgjdbc2.jar)
+Class.forName( "org.postgresql.Driver" ); 
+cn = DriverManager.getConnection( "jdbc:postgresql://DBServerIP/myDatabaseName", sUsr, sPwd ); 
+
+6. Oracle(classes12.jar)
+Class.forName( "oracle.jdbc.driver.OracleDriver" ); 
+cn = DriverManager.getConnection( "jdbc:oracle:thin:@MyDbComputerNameOrIP:1521:ORCL", sUsr, sPwd ); 
+
+7. ODBC 
+Class.forName( "sun.jdbc.odbc.JdbcOdbcDriver" ); 
+Connection cn = DriverManager.getConnection( "jdbc:odbc:" + sDsn, sUsr, sPwd ); 

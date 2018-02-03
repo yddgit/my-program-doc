@@ -1,0 +1,110 @@
+MySQL
+
+show create table article;
+
+set names gb2312;//如果你的mysql编码是UTF-8
+
+//创建一个数据库mydata
+create database mydata;
+
+//上句执行后，下面的操作将都在这个数据库上进行
+use mydata;
+
+数据类型:
+1. int整型
+2. double浮点型
+3. char定长字符串
+4. varchar=varchar2(in oracle)//最大长度255
+5. datatime
+6. text(4G)
+
+建表示例1: 外键约束foreign key
+create table emp
+(
+empno int primary key,
+ename varchar(10),
+job varchar(10),
+mgr int,
+hiredate datetime,
+sal double,
+deptno int,
+comm double,
+foreign key (deptno) references dept(deptno)
+);
+
+建表示例2: 自动递增auto_increment
+create table article
+(
+id int primary key auto_increment,
+title varchar(255)
+);
+
+insert into dept values(10, 'ACOUNTING', 'NEW YORK');
+update dept set dname = 'HELLO' where deptno = 10;
+delete from dept where deptno = 10;
+
+//分页语句limit 2, 2表示取第二条记录的后面两条, 即取3, 4两条记录
+select * from dept order by deptno desc limit 2, 2;
+
+//取得当前系统时间
+select now();
+//自定义日期格式
+select date_format(now(), '%Y-%m-%d %H:%i:%s');
+其中: 年份的y为大写时, 显示完整年份, 小写时只显示两位数字的年份
+      月份的m为大写时, 显示英文月份, 小写时显示数字表示的月份
+      日期的d为大写时, 显示英文的序数词, 小写时只显示数字
+      小时的h为大写时, 按24时制显示, 小写时按12进制显示
+
+--创建数据库
+
+create database bbs;
+
+use bbs;
+
+--创建表
+--使用
+
+create table article
+(
+id int primary key auto_increment,
+pid int,
+rootid int,
+title varchar(255),
+cont text,
+pdate datetime,
+isleaf int
+);
+
+
+--0代表leaf,1代表非leaf
+insert into article values(null, 0, 1, '蚂蚁大战大象', '蚂蚁大战大象', now(), 1);
+insert into article values(null, 1, 1, '大象被打趴下了', '大象被打趴下了', now(), 1);
+insert into article values(null, 2, 1, '蚂蚁也不好过', '蚂蚁也不好过', now(), 0);
+insert into article values(null, 2, 1, '瞎说', '瞎说', now(), 1);
+insert into article values(null, 4, 1, '没有瞎说', '没有瞎说', now(), 0);
+insert into article values(null, 1, 1, '怎么可能', '怎么可能', now(), 1);
+insert into article values(null, 6, 1, '怎么没有可能', '怎么没有可能', now(), 0);
+insert into article values(null, 6, 1, '可能性的很大的', '可能性的很大的', now(), 0);
+insert into article values(null, 2, 1, '大象进医院了', '大象进医院了', now(), 1);
+insert into article values(null, 9, 1, '护士是蚂蚁', '护士是蚂蚁', now(), 0);
+
+
+        1蚂蚁大战大象
+        |
+        |---2大象被打趴下了
+        |   |
+        |   |---3蚂蚁也不好过isleaf
+        |   |
+        |   |---4瞎说
+        |   |   |
+        |   |   |---5没有瞎说isleaf
+        |   |
+        |   |---9大象进医院了
+        |       |
+        |       |---10护士是蚂蚁isleaf
+        |
+        |---6怎么可能
+            |
+            |---7怎么没有可能isleaf
+            |
+            |---8可能性是很大的isleaf

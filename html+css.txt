@@ -1,0 +1,127 @@
+一、标准网页设计
+    结构、展现、动作三者相分离
+    firefox插件：CSSViewer/Firebug/Web Developer
+
+二、为页面添加正确的DOCTYPE
+  1.过渡型（Transitional）
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+  2.严格型（Strict）
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+  3.框架型（Frameset）
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+
+三、设定一个名字空间（Namespace）
+    直接在DOCTYPE声明后添加如下代码：
+<html xmlns="http://www.w3.org/1999/xhtml">
+一个namespace是收集元素类型和属性名字的一个详细的DTD，namespace声明允许你通过一个在线地址指向来识别你的namespace
+
+四、声明你的编码语言
+    为了被浏览器正确解释和通过标识校验，所有的XHTML文档都必须声明它们所使用的编码语言。代码如下：
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- charset=utf-8/GB2312/BIG5 -->
+
+五、选择合适的标签去做有意义的事情
+1.布局
+  <div>网页头部</div>
+  <div>网页内容</div>
+  <div>网页底部</div>
+2.文本
+  <h1>文章标题</h1>
+  <h2>文章副标题</h2>
+  <h1>----><h6>用于识别标题内容
+  <p>正文</p>
+  <strong>文字加粗</strong>
+  <b>文字加粗</b>
+3.图片及其他元素
+  <img src="图片路径" title="图片名称" alt="图片简介"/>
+  <object>Flash元素经常用到</object>
+4.列表元素
+  ul无序列表
+  ol有序列表
+  li  dl  dt  dd
+
+六、CSS
+1.嵌入样式
+<style type="text/css"></style>
+<style type="text/css">
+<!--
+@import url("css/layout.css");
+-->
+</style>
+2.行内样式
+<a href="#" style="color:#000;">Home</a>
+3.连接样式
+<link href="css/print.css" rel="stylesheet" type="text/css"/>
+
+七、CSS的语法结构
+1.类选择符
+  body{} div{} span{}
+2.群组选择符
+  h1,h2,h3,p,span{}
+3.包含选择符
+  h1 span{}
+4.id及class选择符
+  #ydd1226{} .apple{}
+5.组合选择符
+  h1 .a1{}
+  #content h1{}
+  h1 .a1{}, #content h1{}
+  h1 #content h2{}
+6.通配选择符
+  *{}
+
+八、Web标准的好处
+1.高效开发与简单维护
+2.信息跨平台的可用性
+3.降低服务器成本
+4.便于改版
+5.加快网页解析的速度
+6.与未来兼容
+7.更加良好的用户体验
+
+九、兼容IE
+1. h2标签字号大小比其他浏览器大，可以设置h2标签的默认字号大小来解决
+2. p标签外间距比其他浏览器宽，用通用选择符设置全部元素的外边距和内边距
+   * { margin:0; padding:0; }
+3. IE6不支持png格式图片（只能更改图片背景色与页面背景色一致）
+
+=======================================
+
+version2-new:
+
+1. 布局
+<div>网页头部</div>
+<div>网页内容</div>
+<div>网页底部</div>
+
+2. 文本
+<h1>文章标题</h1>
+<h2>文章副标题</h2>
+<h1>--<h6>用于识别标题内容
+<p>正文</p>
+<strong>把文本定义为语气更强的强调内容</strong>
+<em>把文本定义为强调的内容</em>
+
+3. 图片及其他元素
+<img src="图片路径" title="图片名称" alt="图片简介"/>
+<object>Flash元素经常用到</object>
+
+4. 列表元素
+ul无序列表
+ol有序列表
+li列表项
+dl定义列表
+dt定义术语
+dd定义说明
+
+5. 其他标签元素
+<cite>定义引用</cite>
+<blockquote>块引用</blockquote>
+<sub>下标</sub>
+<sup>上标</sup>
+<code>定义计算机代码文本</code>
+<pre>表示计算机的源代码(带格式)</pre>
+
