@@ -1,0 +1,583 @@
+
+内容:
+
+1. HelloWorld
+   a) xml
+   b) annotation
+2. Hibernate原理模拟 -- 什么是 O/R Mapping 以及为什么要有 O/R Mapping
+3. 常见 O/R (Object/Relation) 框架
+4. hibernate基础配置
+5. hibernate核心接口介绍
+6. 对象的三种状态
+7. ID生成策略
+8. 关系映射
+9. Hibernate查询(HQL)
+10.在Struts基础上继续完善BBS2009
+11.性能优化
+12.补充话题
+
+
+要点:
+
+着重Annotation, 轻xml配置文件
+   1) JPA
+   2) hibernate extension
+
+
+资源:
+
+http://www.hibernate.org
+http://www.slf4j.org--版本对应请到hibernate下的lib/required/slf4j-api-x.x.x.jar来查看
+hibernate zh_CN文档
+hibernate annotation references
+
+
+环境准备:
+
+1. 下载hibernate3.6.7.Final
+2. 下载slf4j-1.6.1
+
+
+Hibernate HelloWorld
+
+1. 建立新的Java项目
+2. 学习建立User library -- hibernate, 并加入相应的jar包
+   a) Window-->Preferences-->Java-->BuildPath-->User Libraries-->New, 输入名称:Hibernate
+   b) Add JARS...
+      i.  hibernate core
+      ii. /required
+      iii.slf4j-nop-x.x.x.jar
+      --iv. hibernate3.6.7.Final还需要引入/jpa下的hibernate-jpa-2.0-api-1.0.1.Final.jar
+   c) Project上右键-->Build Path-->Add Libraries...-->User Library
+      -->勾选Hibernate-->Finish
+3. 引入MySQL的JDBC驱动包
+4. 在MySQL中建立相应的数据库以及表
+   a) create database hibernate;
+   b) use hibernate;
+   c) create table student ( id int primary key, name varchar(20), age int );
+5. 建立Hibernate配置文件hibernate.cfg.xml
+   a) 从参考文档中复制
+   b) 修改对应的数据库连接
+   c) 注释掉暂时不用的内容
+6. 建立Student类
+7. 建立Student映射文件Student.hbm.xml
+   a) 参考文档
+8. 将映射文件加入到hibernate.cfg.xml中
+   a) 参考文档
+9. 写测试类StudentTest的main方法, 在main方法中对Student对象进行直接的存储测试
+   a) 参考文档
+10.FAQ: 要调用new Configuration().configure().buildSessionFactory(),
+   而不是省略configure, 否则会出hibernate dialect must be set的异常
+
+示例代码(以下过程亦可使用"启动和辅助类", 详见hibernate文档):
+
+   public static void main(String[] args) {
+     Student s = new Student();
+     s.setId(1);
+     s.setName("s1");
+     s.setAge(1);
+		
+     //实例化Hibernate配置对象
+     Configuration cfg = new Configuration();
+     //获得一个SessionFactory
+     SessionFactory sf = cfg.configure().buildSessionFactory();
+     //用SessionFactory实例化Session
+     Session session = sf.openSession();
+		
+     //事务开始
+     session.beginTransaction();
+     //事务操作
+     session.save(s);
+     //事务提交
+     session.getTransaction().commit();
+		
+     //关闭Session
+     session.close();
+     //关闭SessionFactory
+     sf.close();
+  }
+
+
+建立Annotation版本的HelloWorld
+
+1. 建立teacher表
+   create table teacher (id int primary key, name varchar(20), title varchar(10));
+2. 创建Teacher类
+3. 在hibernate中加入annotation的jar包
+   a) hibernate annotation jar
+   b) ejb3 persistence jar
+   c) hibernate common annotation jar
+   d) !!!文档中没有提到hibernate-common-annotaion.jar
+4. 参考Annotation文档建立对应注解
+   @Entity
+   @Id
+5. 在hibernate.cfg.xml中建立映射<mapping class="..."/>
+6. 建立TeacherTest测试, 注意实例化的Configuration改为AnnotationConfiguration
+7. @提示: Window-->Preferences-->java-->Editor-->Content Assist
+   Auto activation triggers for java: .@
+   Auto activation tirggers for javadoc: #
+
+注意: hibernate 3.6.7中只要引入了/jpa/hibernate-jpa-2.0-api-1.0.1.Final.jar, 就可以
+进行Annotation的测试了, 而且直接实例化Configuration对象即可, AnnotationConfiguration
+已经废弃了.
+
+
+What is and Why O/R Mapping?
+
+1. JDBC操作数据库很繁琐
+2. SQL语句编写并不是面向对象的
+3. 可以在对象和关系表之间建立关联来简化编程
+4. O/R Mapping简化编程
+5. O/R Mapping跨越数据库平台
+6. Hibernate_0200_OR_Mapping_Simulation
+
+
+O/R Mapping Frameworks
+
+1. hibernate
+2. toplink
+3. jdo
+4. ibatis
+5. JPA
+   a) 意愿即是: 一统天下
+
+
+Hibernate基础配置
+
+1. 对应项目: hibernate_0300_BasicConfiguration
+2. 介绍MySQL的图形化客户端
+3. hibernate.cfg.xml: hbm2ddl.auto
+   --create: 若数据库里没有对应的表, 则hibernate自动创建(较为常用)
+   --update: 若数据库中表结构与配置文件中表结构不对应, 则hibernate自动更新表结构到数据库
+   --create-drop: 当关闭了SessionFactory之后, 将删除创建的表
+   --validate: 操作数据库之前, hibernate会检查数据库表与配置文件是否对应(项目完成后测试用)
+   a) 先建表还是先建实体类
+4. 搭建日志环境并配置显示DDL语句:
+   --去掉slf4j-nop-x.x.x.jar
+   --加入log4j-x.x.x.jar
+   --加入slf4j-log4jxx-x.x.x.jar
+   --加入log4j.properties: 从这里复制hibernate-distribution-3.6.7.Final/project/etc
+   --去掉对这一句的注释: log4j.logger.org.hibernate.tool.hbm2ddl=debug
+5. 搭建JUnit环境
+   a) 需要注意JUnit的Bug
+      --对于hibernate配置文件错误无提示的Bug: 
+        --在beforeClass中加try-catch
+        --写main方法调用beforeClass输出错误信息
+6. hibernate.cfg.xml: show_sql
+7. hibernate.cfg.xml: format_sql
+
+8. 表名和类名不同, 对表名进行配置
+   a) Annotation: @Table(name="_Admin")
+   b) xml: 参考文档
+9. 字段名和属性相同
+   a) Annotation: @Basic
+   b) xml中不写column
+10.字段名和属性名不同
+   a) Annotation: @Column(name="_id")
+   b) xml: column="_id"
+11.不需要persistence的字段
+   a) Annotation: @Transient
+   b) xml: 不写
+12.映射日期与时间类型, 指定时间精度
+   a) Annotation: @Temporal(TemporalType.DATE)
+   b) xml: 指定type
+13.映射枚举类型
+   a) Annotation: @Enumerated(EnumType.ORDINAL)
+   b) xml: 参考文档(但是很麻烦)
+14.字段映射的位置(field或者[get]方法)
+   a) best practice: 保持field和get set方法一致
+15.@Lob
+16.课外: CLOB BLOB类型的数据存取
+17.课外: Hibernate自定义数据类型
+18.Hibernate类型
+
+
+ID生成策略
+
+1. 对应项目: hibernate_0400_ID
+2. 注意: 我们观察hibernate生成表的结构并不是为了将来就用它生成,
+(可能还有自己的扩展, 比如index等), 而是为了明白我们应该建立什么
+样的表和实体类映射
+3. xml生成id
+   --generator
+   --常用四个: native(可跨平台) identity sequence uuid(可跨平台)
+4. @GeneratedValue
+   --自定义ID
+   --AUTO
+     --默认: 对MySQL, 使用auto_increment
+     --对Oracle使用hibernate_sequence(名称固定)
+   --IDENTITY
+   --SEQUENCE
+     --@SequenceGenerator
+   --TABLE
+     --@TableGenerator
+5. FAQ:
+   注意: 用JUnit测试时HibernateSessionFactory初始化异常不提示.
+   解决: 加try-catch block 或者 用main来做测试
+6. 联合主键
+   xml: composite-id
+   --为什么要重写equals和hashCode方法
+   --为什么要实现Serializable接口
+   Annotation
+   --@Embeddable @Id
+     [@Embeddable public class PkClass ...]
+     [@Id public PkClass getPkClass()]
+   --@EmbeddedId (*)
+   --@Id @IdClass (*)
+
+
+核心开发接口
+
+1. hibernate_0500_CoreAPI
+2. HibernateAPI需单独下载
+3. Configuration
+   Configuration (AnnotationConfiguration)
+   用来产生SessionFactory
+   可以在configure方法中指定hibernat配置文件[new Configuration().configure("cfg.xml")]
+   只需关注一个方法: buildSessionFactory(), openSession(), getCurrentSession()
+   --openSession 每次都是新的
+   --getCurrentSession 从上下文找,如果有,用旧的,如果没有,建新的
+     --用途: 界定事务边界
+     --事务提交自动close
+     --current_session_context_class: thread|jta|managed|custom.Class
+       --thread使用connection管理事务(单数据库服务器事务)
+       --JTA: Java Transaction API(分布式事务处理)
+   /*
+    * openSession方法每次调用都会打工新的Session
+    * Session s1 = sf.openSession();
+    * Session s2 = sf.openSession();
+    * System.out.println(s1 == s2);
+    * s1.close();
+    * s2.close();
+    * 
+    * result: false
+    *
+    * getCurrentSession在Session未提交前拿到的都是同一个Session
+    * Session s1 = sf.getCurrentSession();
+    * Session s2 = sf.getCurrentSession();
+    * System.out.println(s1 == s2);
+    * 
+    * result: true
+    */
+4. 对象的三种状态区分之关键:
+   (1)有没有ID--Transient: 内存中有,缓存中没有(没有ID)
+   (2)ID在数据库中有没有--Persistent: 内存中有,缓存中有,数据库中有(有ID)
+   (3)在内存中有没有(session缓存)--Detached: 内存中有,缓存中[没]有,数据库中有(有ID)
+5. Session
+   管理一个数据库单元
+   CRUD: save(), delete(), load(), get(), update(), saveOrUpdate()
+         find()[过时]
+   get与load的区别
+   --不存在对应记录时表现不同
+   --load返回的是代理对象, 等到真正用到对象的内容时才发出sql语句
+   --get直接从数据库加载,不会延迟
+   update方法
+   --用来更新detached对象, 更新完成后转为persistent状态
+   --更新transient对象会报错
+   --更新自己设定id的transient对象可以(数据库必须有对应记录)
+   --persistent状态的对象只要设定不同字段就会发生更新
+     当设定的值与原值相同时,不进行更新操作
+   --更新部分更改的字段
+     --xml设定property标签的update属性, annotation设定@Column的update属性[很少用,不灵活]
+     --使用xml中的dynamic-update, JPA1.0 Annotation没有对应的属性, hibernate扩展?
+       同一个session可以,跨session不行,不过可以用merge()(不重要)
+       使用HQL(EJBQL)(建议)
+   saveOrUpdate()方法
+   --当new一个没有ID的对象,调用saveOrUpdate方法时执行save操作
+   --对Detached状态的对象(即有ID的对象)调用saveOrUpdate方法时执行update操作
+   clear方法
+   --无论是load还是get,都会首先查找缓存(一级缓存), 如果没有,才会去数据库查找
+     调用clear方法可以强制清除session缓存
+   flush方法
+   --可以强制进行从内存到数据库的同步!
+   --具体flush操作的执行时间由FlushMode设定session.setFlushMode(FlushMode.AUTO);
+   find方法
+   --Duplicated(过时的)
+6. Note:
+   Hibernate中涉及很多非常细节的区别,但实际应用较少
+   --save和persist的区别
+   --merge, evict方法
+   --refresh, lock等
+   学习方法: 动手实验
+7. SchemaExport(用程序生成建表语句)
+   new SchemaExport(new Configuration().configure()).create(false, true);
+
+
+关系映射
+
+1. 对象之间的关系, 并非数据库的关系, 解决的是当对象之间处于下列关系之一时
+   数据库表该如何映射, 编程上该如何对待
+2. 简化问题:
+   a.怎么写Annotation
+   b.增删改查CRUD怎么写
+3. 一对一 [ 规律: 凡是双向关联, 必设mappedBy ]
+   单向unidirectional(主键, 外键)
+   --外键:
+         Annotation: @OneToOne @JoinColumn
+         XML: <many-to-one name="wife" column="wifeId" unique="true" />
+   --主键: (不重要)
+         Annotation: @OneToOne @PrimaryKeyJoinColumn
+         XML: <one-to-one name="wife" constrained="true" />
+              主键生成方式改为foreign, 并设置参考属性为wife属性的id
+              <id name="id" column="id">
+                <generator class="foreign" >
+                   <param name="property">wife</param>
+                </generator>
+              </id>
+
+   双向bidirectional(主键, 外键)
+   --外键:
+         Annotation: @OneToOne @JoinColumn
+                     @OneToOne(mappedBy="wife")  // 指定约束由对方类中的[wife成员]配置
+         XML: <many-to-one name="wife" column="wifeId" unique="true" />
+              <one-to-one name="husband" property-ref="wife" />
+   --主键: (不重要)
+         Annotation: @OneToOne @PrimaryKeyJoinColumn
+                     @OneToOne(mappedBy="wife") @PrimaryKeyJoinColumn
+         XML: <one-to-one name="wife" constrained="true" />
+              <one-to-one name="husband" property-ref="wife" />
+   // 中间表(很少用)
+   联合主键: Annotation: @OneToOne
+                         @JoinColumns(
+                           {
+                             @JoinColumn(name="wifeId", referencedColumnName="id"),
+                             @JoinColumn(name="wifeName", referencedColumnName="name")
+                           }
+                         )
+                         Wife: @Id @IdClass
+             XML: <many-to-one name="wife" unique="true">
+                    <column name="wife_id"></column>
+                    <column name="wife_name"></column>
+                  </many-to-one>
+                  Wife:
+                  <composite-id class="WifePK">
+                    <key-property name="id" />
+                    <key-property name="name" />
+                  </composite-id>
+4. 组件映射
+   Annotation: @Embedded
+               解决与主组件属性名冲突问题:
+               (1)在@Embedded下再加入:
+               @AttributeOverrides( {
+                 @AttributeOverride(name="wifeName",column=@Column(name="wife_name")),
+                 @AttributeOverride(name="wifeAge",column=@Column(name="wife_age"))
+               })
+               (2)在被引用的类的属性的get方法上加上@Column(name="xxx")
+               (3)更改被引用的类的属性名
+   XML: <component name="wife">
+          <property name="wifeAge" column="wife_age"></property>
+          <property name="wifeName" column="wife_name"></property>
+        </component>
+5. 一对多(单向在一的一方配置)
+   --单向: Annotation: @OneToMany
+                       @JoinColumn(name="group_id") // 必须
+           XML: <set name="users">
+                  <key column="groupId"></key>
+                  <one-to-many class="User"/>
+                </set>
+   --双向: Annotation: @OneToMany(mappedBy="group") // 多
+                       @ManyToOne // 一
+           XML: <set name="users">
+                  <key column="groupId"></key>
+                  <one-to-many class="User"/>
+                </set> <!-- 多 -->
+                <many-to-one name="group" column="groupId" /><!-- 一 -->
+                <!-- column属性的值在"多"和"一"中必须相同 -->
+6. 多对一(单向在多的一方配置)
+   --单向: Annotation: @ManyToOne
+                       @JoinColumn(name="g_id")
+           XML: <many-to-one name="group" column="group_id" />
+   --双向: 同一对多双向
+7. 多对多
+   --单向: Annotation: @ManyToMany
+                       @JoinTable(
+                         name="t_s",
+                         joinColumns={@JoinColumn(name="t_id")},
+                         inverseJoinColumns={@JoinColumn(name="s_id")}
+                       )
+           XML: <set name="students" table="t_s">
+                  <key column="teacher_id"></key>
+                  <many-to-many class="Student" column="student_id" />
+                </set>
+   --双向: Annotation: @ManyToMany
+                       @JoinTable(
+                         name="t_s",
+                         joinColumns={@JoinColumn(name="t_id")},
+                         inverseJoinColumns={@JoinColumn(name="s_id")}
+                       )
+                       Student: @ManyToMany(mappedBy="students")
+           XML: <set name="students" table="t_s">
+                  <key column="teacher_id"></key>
+                  <many-to-many class="Student" column="student_id" />
+                </set>
+                <set name="teachers" table="t_s">
+                  <key column="student_id"></key>
+                  <many-to-many class="Teacher" column="teacher_id" />
+                </set>
+                <!-- column和table属性的值必须相同 -->
+
+
+关联关系中的CRUD[cascade影响增删改, fetch影响读取]
+
+1. 项目: hibernate_1700_one2many_many2one_bi_crud
+2. 设定cascade可以设定在持久化时对于关联对象有操作: @ManyToOne(cascade=CascadeType.ALL)
+3. cascade仅仅是帮我们省了编程的麻烦而已,不要把它的作用看的太大
+   cascade的属性指明做什么操作的时候关联对象是绑在一起的
+   merge=save+update
+   refresh=A里面需要读B改过之后的数据
+4. 双向关系在程序中要设定双向关联
+5. 双向要设mappedBy属性
+6. get,load时对于'一'对'多'或'多'对'一': cascade默认为无级联
+   如果读取'多', 则会自动关联'一': fetch默认为eager
+   如果读取'一', 则不会自动关联'多': fetch默认为lazy
+   --双向关联: 不要两边都设fetch为eager:
+     '多'对'一': eager
+     '一'对'多': lazy
+     XML中加inverse="true"来控制
+7. fetch
+   双向不要两边设置eager(会有多余的查询语句发出)
+   对多方设置fetch的时候要谨慎, 结合具体应用, 一般用lazy不用eager
+   --特殊情况: 多方数量不多的时候可以考虑, 提高效率的时候可以考虑
+8. ORMapping编程模型
+   映射模型: JPA annotation, Hibernate annotation extention, Hibernate XML, JPA XML
+   编程接口: JPA, Hibernate
+   数据查询语言: HQL, EJBQL(JPQL)
+9. CascadeType.MERGE, CascadeType.PERSIST
+   表示在调用merge和persist方法时进行级联
+10.要想删除或者更新,先做load,除了精确知道ID之外
+11.如果想消除关联关系,先设定关系为null, 再删除对应记录,如果不删记录,该记录就变成垃圾数据
+12.如果指定@OneToOne属性fetch为FetchType.LAZY, 会延迟对于关联对象的加载,不管是load还是get
+
+关联映射总结:
+
+1. 什么样的关系, 设计什么样的表, 进行什么样的映射
+2. 设定关系, 不加cascade, 只是影响读取
+3. 双向: 在程序中设定双向的关系
+4. 双向: 在映射中设定mappedBy
+5. CRUD, 按照自然的理解即可(动手测试)
+
+集合映射
+
+1. List
+2. Set
+3. Map
+
+继承关系(不重要)
+
+1. 单表: single table
+2. 多表: table per class
+3. 一张主表, 多张子表: joined
+
+Text: 
+学生/课程/分数的设计(重要)
+--使用联合主键@EmbeddedId(实现Serializable)
+--不使用联合主键, 在score中手动加一个Id
+--设计: 
+  实体类(表)
+  导航(编程方便)
+  确定了编程方式
+树状结构的设计(狠重要)
+--在同一个类中使用OneToMany和ManyToOne
+
+
+Hibernate查询(Query Language)
+
+HQL vs EJBQL
+1. NativeSQL > HQL > EJBQL(JPQL, Java Persistence Query Language) >
+   QBC(Query By Criteria) > QBE(Query By Example)
+2. 总结: QL应该和导航关系结合, 共同为查询提供服务
+
+性能优化
+
+1. 注意session.clear()的运用, 尤其在不断分布循环的时候
+   --如: 在一个大集合中进行遍历, 遍历message, 取出其中的含有敏感字样的对象
+   --另外一种开式的内存泄露
+   --面试题: Java有内存泄露吗? 语法级别上没有, 但实际使用方面有(打开文件, 数据库连接)
+2. 1+N问题
+   --Lazy
+   --BatchSize
+   --join fetch
+3. list和iterate不同之处
+   --list取所有
+   --iterate先取ID, 等用到的时候再根据ID来取对象
+   --session中list第二次发出, 仍会到数据库查询
+   --iterate第二次, 首先找session缓存
+4. 一级缓存, 二级缓存, 查询缓存
+   --什么是缓存
+   --什么是一级缓存, session级别的缓存
+   --什么是二级缓存, SessionFactory级别的缓存, 可以跨session存在
+     --适合使用二级缓存的数据: 经常被访问, 不会经常改动, 数量有限(权限, 组织机构)
+   --打开二级缓存
+     --hibernate.cfg.xml设定
+     <property name="cache.use_second_level_cache">true</property>
+     <property name="cache.provider_class">org.hibernate.cache.EhCacheProvider</property>
+     --@Cache注解
+   --load默认使用二级缓存, iterate默认使用二级缓存
+   --list默认往二级缓存加数据, 但是查询的时候不使用
+   --如果要query用二级缓存, 需要打开查询缓存(两个查询条件完全相同时起作用)
+     --<property name="cache.use_query_cache">true</property>
+     --调用Query的setCachable(true)方法指明使用二级缓存
+   --缓存算法
+     --LRU, LFU, FIFO
+       --Least Recently Used
+       --Least Frequently Used
+       --First In First Out
+     --memoryStoreEvictionPolicy="LRU"(ehcache.xml)
+5. 事务并发处理
+   --事务: ACID
+     --Atomic(原子性), Consistency()一致性), Integrity(独立性), Durability(持久性)
+   --事务并发时可能出现的问题.doc
+     --第一类丢失更新(Lost Update)
+     --Dirty read脏读(读取了另外一个事务没有提交的数据)
+     --Non-repeat read不可重复读(同一个事务中对同一个对象两次读取的值不同)
+     --Second lost update problem第二类丢失更新(不可重复读的特殊情况)
+     --Phantom read幻读(插入和更新操作， 影响其他事务的读取结果)
+   --数据库的事务隔离机制
+     --查看java.sql.Connection文档
+       1: read-uncommitted: 可以读尚未提交的数据
+       2: read-committed: 只可以读已提交的数据
+       4: repeatable-read: 可重复读(通过对查询到记录进行锁定来实现)
+       8: serializable: 将事务序列化
+       1-2-4-8 : 0001-0010-0100-1000
+     --只要数据库支持事务, 就不可能出现第一类丢失更新
+     --read-uncommitted会出现dirty-read, phantom-read, non-repeatable-read问题
+     --read-committed不会出现dirty-read, 因为只有另一个事务提交才会读出来结果
+       但仍会出现phantom-read, non-repeatable-read问题
+     --repeatable-read
+     --serializable解决一切问题
+   --设定hibernate的事务隔离级别
+     --hibernate.connection.isolation=2(read-committed, 通常情况下设定为2)
+       [ 设定为read-committed后要进行如下配置以解决repeatable-read问题 ]
+     --用悲观锁解决repeatable-read问题(依赖于数据库的锁)
+       select ... for update
+       load(xxx.class, i, LockMode.Upgrade)
+       --LockMode.None无锁的机制, Transaction结束时, 切换到此模式
+       --LockMode.read在查询的时候hibernate会自动获取锁
+       --LockMode.write insert update hibernate会自动获取锁
+       --以上3种锁的模式, 是hibernate内部使用的
+       --可自定义: LockMode.UPGRADE_NOWAIT Oracle支持的锁的方式
+     --Hibernate(JPA)乐观锁定(ReadCommitted)
+       加@Version字段
+       +------+----------------------------------+-------------------------------------+
+       | 时间 | 转账事务A                        | 取款事务B                           |
+       +------+----------------------------------+-------------------------------------+
+       | T1   |                                  | 开始事务                            |
+       +------+----------------------------------+-------------------------------------+
+       | T2   | 开始事务                         |                                     |
+       +------+----------------------------------+-------------------------------------+
+       | T3   |                                  | 查询账户余额为1000元(version=0)     |
+       +------+----------------------------------+-------------------------------------+
+       | T4   | 查询账户余额为1000元(version=0)  |                                     |
+       +------+----------------------------------+-------------------------------------+
+       | T5   |                                  | 取出100元把余额改为900元(version=1) |
+       +------+----------------------------------+-------------------------------------+
+       | T6   |                                  | 提交事务                            |
+       +------+----------------------------------+-------------------------------------+
+       | T7   | 汇入100元                        |                                     |
+       +------+----------------------------------+-------------------------------------+
+       | T8   | 提交事务 ? version > 0 exception |                                     |
+       +------+----------------------------------+-------------------------------------+
+       | T9   | 把余额改为1100元(丢失更新)       |                                     |
+       +------+----------------------------------+-------------------------------------+
+
+

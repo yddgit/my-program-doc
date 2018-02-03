@@ -1,0 +1,74 @@
+//java.util.Date拿到数据库中的日期类型
+Date d = rs.getDate("hiredate");
+
+//java.util.Calendar拿到特定的年、月、日、时、分、秒的值
+Calendar c = Calendar.getInstance();
+c.setTime(d);
+System.out.println(c.get(Calendar.MONTH));
+
+//java.text.SimpleDateFormat以特定的字符串格式拿到日期类型的值(不能拿到时,分,秒的值)
+//若字符串格式写为yyyy年MM月dd日 HH:mm:ss,无论数据库内的时间值是多少, 后面的时分秒都将显示为00:00:00
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+System.out.println(sdf.format(d));
+
+//java.sql.Timestamp
+Timestamp ts = rs.getTimestamp("hiredate");
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+System.out.println(sdf.format(ts));			
+
+
+1. 查文档、做实验
+2. Google
+   1. 关键词的选择
+      1. 由精细到粗化
+   2. 略读页面介绍, 分析可能性
+      1. 超过5页没找到, 不要再往后翻
+   3. 先中文, 后英文
+3. 论坛
+   1. 问题问清楚
+   2. www.csdn.net
+   3. 国外的论坛
+
+Date and Time
+
+Agenda
+1. What is UTC/UT? //世界时间, UT是UTC科学上的简称
+2. What is GMT? //格林威治时间
+3. How to get the current time?
+4. How to format it?
+5. How to convert a string to a date/time?
+6. How to process the date/time with database?
+
+Here's the answer:
+
+   java.lang.System.currentTimeMillis()
+
+   java.util.Date
+   java.util.Calendar
+   java.util.GregorianCalendar
+   java.util.TimeZone
+
+   java.text.DateFormat
+   java.text.SimpleDataFormat
+
+   java.sql.Date
+   java.sql.Time
+   java.sql.Timestamp
+
+
+上面几类的关系:
+
+java.util.TimeZone
+         |
+         |
+         |
+java.util.Calendar-------------------java.util.Date--------------------java.text.DateFormat
+         |                             |    |    |                        |
+         |           +-----------------+    |    +----------+             |
+         |           |                      |               |             |
+         |           |                      |               |             |
+         |    java.sql.Date   java.sql.Timestamp    java.sql.Time         |
+         |                                                                |
+         |                                                                |
+java.util.GregorianCalendar(时区日历)                          java.text.SimpleDateFormat
+

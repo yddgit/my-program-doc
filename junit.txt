@@ -1,0 +1,88 @@
+什么是单元测试?
+
+写了个类, 要给别人用, 会不会有BUG? 怎么办? 测试一下.
+用main方法测试好不好? 不好!
+1. 不能一起运行!
+2. 大多数情况下需要人为的观察输出确定是否正确
+
+
+
+为什么要进行单元测试?
+
+重用测试, 应付将来的实现的变化.
+提高士气, 明确知道我的东西是没问题的.
+
+
+
+Junit4HelloWorld
+
+1. new Project
+2. 建立类
+3. 建立testcase
+
+keeps the bar green to keeps the code clean!!!
+
+其他框架: TestNG
+
+
+
+放弃旧的断言, 使用hamcrest断言
+
+1. assertThat
+2. 使用hamcrest的匹配方法(更自然)
+3. 示例
+   assertThat(n, allOf(greaterThan(1), lessThan(15))); //1<n<15
+   assertThat(n, anyOf(greaterThan(16), lessThan(15)));
+   assertThat(n, anything());
+   assertThat(str, is("kmust"));
+   assertThat(str, not("kmust"));
+
+   assertThat(str, containsString("kmust"));
+   assertThat(str, endsWith("kmust"));
+   assertThat(str, startsWith("kmust"));
+   assertThat(n, equalTo(nExpected));
+   assertThat(str, equalToIgnoringCase("developerWorks"));
+   assertThat(str, equalToIgnoringWhiteSpace("developerWorks));
+
+   assertThat(d, closeTo(3.0, 0.3));//d接近3.0, 误差不超过0.3
+   assertThat(d, greaterThan(3.0));
+   assertThat(d, lessThan(10.0));
+   assertThat(d, greaterThanOrEqualTo(5.0));
+   assertThat(d, lessThanOrEqualTo(16.0));
+
+   assertThat(map, hasEntry("kmust", "kmust"));
+   assertThat(iterable, hasItem("kmust"));//List是否包含某个对象
+   assertThat(map, hasKey("kmust"));
+   assertThat(map, hasValue("kmust"));
+
+
+
+Failure & Error
+
+1. Failure是测试失败
+2. Error是指测试程序本身出错
+
+
+
+JUnit4 Annotation
+
+1. @Test: 测试方法
+   (expected=XXException.class)
+   (timeout=XXX)
+2. @Ignore: 被忽略的测试方法
+3. @Before: 每一个测试方法之前运行
+4. @After: 每一个测试方法之后运行
+5. @BeforeClass: 所有测试开始之前运行
+6. @AfterClass: 所有测试结束之后运行
+
+TDD--Test Driven Development, 测试驱动开发
+
+运行多个测试
+
+
+注意
+
+1. 遵守给定, 比如:
+   --类放在test包中
+   --类名用XXXTest结尾
+   --方法用testMethod命名

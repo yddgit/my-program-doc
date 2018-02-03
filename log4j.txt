@@ -1,0 +1,44 @@
+Log4j三大概念：
+--logger：使用这个对象来进行输出
+--appender：使用这个对象来定义输出到哪里去
+--layout：使用这个对象来定义输出的格式
+
+
+获得一个Logger对象：
+Logger logger = Logger.getLogger(TestLog.class);
+
+
+使用logger对象输出日志：
+logger.debug("DEBUG调试信息");
+logger.info("INFO调试信息");
+
+
+log4j.properties的配置logger/appender/layout/level：
+
+--输出到控制台
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.Target=System.out
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+
+--输出到文件：
+log4j.appender.file=org.apache.log4j.FileAppender
+log4j.appender.file.File=test.log
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+log4j.appender.file.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+
+--控制输出信息的格式：
+log4j.appender.file.layout.ConversionPattern=%d{yyyy年MM月dd日 HH:mm:ss} %5p %c{1}:%L - %m%n
+
+--控制输出级别：DEBUG(所有信息)<INFO(一般信息)<WARN(警告)<ERROR(一般错误)<FATAL(致命错误)
+----根Logger, 当没有配置其他logger时, 最终将使用这个Logger
+log4j.rootLogger=warn, stdout, file
+----配置要输出log信息的包其要输出何种级别的log:
+log4j.logger.cn.edu.kmust=debug(输出所有级别的信息)
+log4j.logger.cn.edu.kmust=info(输出info及以上级别的信息)
+log4j.logger.cn.edu.kmust=warn(输出warn及以上级别的信息)
+log4j.logger.cn.edu.kmust=error(输出error及以上级别的信息)
+log4j.logger.cn.edu.kmust=fatal(输出fatal及以上级别的信息)
+
+注: Commons-logging是一个抽象的日志接口:
+只要ClassPath里面有log4j的jar包, 它就会使用log4j的实现, 如果没有, 则使用Java Log API

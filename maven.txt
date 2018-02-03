@@ -1,0 +1,30 @@
+mvn -v 查看版本
+mvn install 构建整个项目
+mvn install -X 以调试模式构建整个项目
+mvn install -Dmaven.test.skip=true 跳过单元测试
+mvn site 站点生成和报告
+mvn test 运行单元测试
+mvn test -Dmaven.test.failure.ignore=true
+mvn help:describe -Dplugin=compiler -Dmojo=compile -Dfull 查看插件详细说明(mojo=goal)
+mvn help:effective-pom 查看项目真正使用的POM内容
+mvn archetype:create -DgroupId=com.project.maven -DartifactId=simple
+                     -DpackageName=com.project.maven -Dversion=1.0 创建一个简单的项目
+mvn archetype:create -DgroupId=com.project.maven -DartifactId=simple-webapp
+                     -DpackageName=com.project.maven
+                     -DarchetypeArtifactId=maven-archetype-webapp 创建一个web项目
+mvn package 打包
+mvn resources:resources compiler:compile resources:testResources compiler:testCompile surefire:test jar:jar 项目生命周期
+mvn exec:java -Dexec.mainClass=com.project.maven.Main -Darguments=713505 运行项目
+mvn dependency:resolve 浏览项目依赖
+mvn dependency:tree 项目依赖树
+mvn install assembly:assembly 创建应用程序分发包
+mvn clean install 清理并重新构建整个项目
+mvn jetty:run 使用jetty运行web项目
+mvn hibernate3:hbm2ddl 使用maven的hibernate3插件(hibernate3-maven-plugin)构建数据库
+mvn assembly:assembly 创建一个带有依赖的JAR(maven-assembly-plugin)
+mvn dependency:analyze 依赖解析, 常用于发现直接依赖
+mvn dependency:tree 列出项目中所有的直接和传递性依赖
+
+**在某个项目目录下直接创建新项目时，maven会自动进行模块包含和相关配置文件更新
+
+

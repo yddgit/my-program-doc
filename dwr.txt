@@ -1,0 +1,110 @@
+DWR的基本使用
+1. 拷贝dwr.jar文件到classpath
+2. 修改web.xml, 添加dwr servlet配置(从dwr.war的WEB-INF目录下拷贝)
+	<servlet>
+		<servlet-name>dwr-invoker</servlet-name>
+		<servlet-class>org.directwebremoting.servlet.DwrServlet</servlet-class>
+		<init-param>
+			<param-name>debug</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>dwr-invoker</servlet-name>
+		<url-pattern>/dwr/*</url-pattern>
+	</servlet-mapping>
+3. 添加配置文件dwr.xml(从dwr.war的WEB-INF目录下拷贝)
+	<dwr>
+	  <allow>
+	    <!-- 用new的方式实例化一个cn.edu.kmust.dwr.TestDwr类的对象, 取名为test -->
+	    <create creator="new" javascript="test">
+	      <param name="class" value="cn.edu.kmust.dwr.TestDwr"/>
+	    </create>
+	  </allow>
+	</dwr>
+4. 页面上引入如下javascript
+	<script type='text/javascript' src='dwr/engine.js'></script>
+	<script type='text/javascript' src='dwr/util.js'></script>
+	<script type='text/javascript' src='dwr/interface/test.js'></script>
+5. 使用如下javascript代码引用dwr生成的javascript对象
+	<script type="text/javascript">
+		function testDwr() {
+			test.sayHello1(
+				function(data) {
+					alert(data);
+				}
+			);
+		}
+	</script>
+6. 使用spring
+	<create creator="spring" javascript="userManager">
+		<param name="beanName" value="userManager"/>
+	</create>
+
+对应的Java程序代码：
+
+TestDwr.java
+
+package cn.edu.kmust.dwr;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+public class TestDwr {
+	
+	private static Log log = LogFactory.getLog(TestDwr.class);
+	
+	public String sayHello1() {
+		return "Hello World!";
+	}
+	
+	public String sayHello2(String message) {
+		return "你传递的参数是: " + message;
+	}
+	
+	public Date	currentDate() {
+		return new Date();
+	}
+	
+	public String[] strArray() {
+		return new String[]{"杨冬冬","孙永星","高瑜雄"};
+	}
+	
+	public Map<String, Object> strMap() {
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("first", "高瑜雄");
+		map.put("second", "杨冬冬");
+		map.put("third", "孙永星");
+		return map;
+	}
+	
+	public String[][] strDyadicArray() {
+		return new String[][]{{"AA","AB"},{"BA","BB"}};
+	}
+	
+	public boolean hasPermission(String name, int permission) {
+		if("yang".equals(name) && permission == 1) {
+			return true;
+		}
+		return false;
+	}
+	
+	public void addPermission(int userId, int resourceSn, boolean yes) {
+		log.info("为用户-" + userId + "-针对资源-" + resourceSn + "-授权: " + yes);
+	}
+	
+	public String synchronous1() {
+		return "同步方法调用--1";
+	}
+	
+	public String synchronous2() {
+		return "同步方法调用--2";
+	}
+
+}
+

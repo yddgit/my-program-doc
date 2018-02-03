@@ -1,0 +1,49 @@
+
+三范式：数据库设计的规则(不存在冗余数据)
+1. (1)任何表都要有主键
+   (2)列不可分
+2. (1)不能存在部分依赖,即:当一张中有多个字段做为主键时,非主键字段不能依赖于部分主键
+      (解决方法,分为三张表s,c,sc)
+3. (1)不能存在传递依赖(如:emp, dept)
+
+==================
+
+transaction 事务（要么同时完成，要么同时不完成）
+
+一个transaction起始于一条DML语句,
+结束于
+1. 用户显式的执行commit(提交)或rollback(回退)
+2. 执行DDL或DCL语句时事务自动提交
+3. 当用户正常断开连接时，transaction自动提交
+
+==================
+
+SQL四大语句: select insert update delete
+
+//删除用户
+drop user yang;
+
+//创建新用户
+1--backup scott
+   exp
+2--create user
+   create user yang identified by yang default tablespace users quota 10M on users
+   grant create session, create table, create view to yang//授权登录、建表、建视图
+3--import the data
+   imp
+
+//备份某张表时
+create table dept2 as select * from dept;
+
+insert
+insert into dept2 values(50, 'game', 'BJ');//根据字段结构插入
+insert into dept2 (deptno,dname) values (60, 'game2');//插入特定字段的值
+insert into dept2 select * from dept;//插入某张表中的数据，前提是两者表结构完全一致
+
+update
+update emp2 set sal = sal * 2, ename = ename||'-' where deptno = 10;//10号部门薪水加倍，名字后加-
+
+delete
+delete from emp2 where deptno < 25;
+
+rollback;//撤消操作

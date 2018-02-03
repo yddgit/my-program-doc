@@ -1,4 +1,4 @@
-﻿1.Logcat 显示日志,是一个命令行工具，位于system/bin目录中
+1.Logcat 显示日志,是一个命令行工具，位于system/bin目录中
 # logcat [options] [filterspecs]
 
 2.Emulator Control仿真器控制

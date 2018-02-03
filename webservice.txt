@@ -1,0 +1,646 @@
+WebService
+
+Java原生提供的JAX-WS(Java API XML WebService)
+
+Metro-Webservice toolkit: https://javaee.github.io/metro/
+
+1.服务端
+
+  - 创建接口
+    SEI(Service Endpoint Interface) @WebService
+    在接口方法上使用@WebResult(name = 'xxx')指定返回值名称
+    在方法参数上使用@WebParam(name = 'xxx')指定参数名
+
+  - 创建实现类
+    SIB(Service Implementation Bean) @WebService(endpointInterface = "com.my.project.jaxws.IMyService")
+
+  - 开启服务
+    String address = "http://localhost:9000/myService";
+    Endpoint.publish(address, new MyServiceImpl());
+
+2.客户端
+
+  - 代码示例
+    URL wsdlLocation = new URL("http://localhost:9000/myService?wsdl");
+    //从WSDL命名空间定义属性中确定: new QName(targetNamespace, name)
+    QName serviceName = new QName("http://jaxws.project.my.com/", "MyServiceImplService");
+    Service service = Service.create(wsdlLocation, serviceName);
+    IMyService my = service.getPort(IMyService.class);
+
+  - 使用JDK提供的wsimport命令生成客户端源代码
+    -d 指定生成文件的目录
+    -keep 指定生成源文件
+    -verbose 输出详细信息
+    -p 指定生成文件的包名, 不指定则使用wsdl中定义
+    -Xnocompile 不编译生成的源码文件
+    -最后指定wsdl地址
+    wsimport -d . -p com.my.project.jaxws.wsimport -keep -verbose -Xnocompile http://localhost:9000/myService?wsdl
+
+3.WSDL文件的组成
+
+  - types 访问类型定义，对应到一个xsd文件，每个类型都会对应一个对象
+    <types>
+      <xsd:schema>
+        <xsd:import namespace="http://jaxws.project.my.com/" schemaLocation="http://localhost:9000/myService?xsd=1"/>
+      </xsd:schema>
+    </types> 
+
+  - message SOAP消息定义(Simple Object Access Protocol)
+    <message name="add"><!-- 方法请求消息 -->
+      <part name="parameters" element="tns:add"/>
+    </message>
+    <message name="addResponse"><!-- 方法返回消息 -->
+      <part name="parameters" element="tns:addResponse"/>
+    </message>
+    <message name="minus"><!-- 方法请求消息 -->
+      <part name="parameters" element="tns:minus"/>
+    </message>
+    <message name="minusResponse"><!-- 方法返回消息 -->
+      <part name="parameters" element="tns:minusResponse"/>
+    </message>
+
+  - portType 指定服务接口
+
+    <portType name="IMyService">
+      <operation name="add"><!-- operation节点对应方法 -->
+        <!-- input节点对应请求参数 -->
+        <input wsam:Action="http://jaxws.project.my.com/IMyService/addRequest" message="tns:add"/>
+        <!-- output节点对应返回值 -->
+        <output wsam:Action="http://jaxws.project.my.com/IMyService/addResponse" message="tns:addResponse"/>
+      </operation>
+      <operation name="minus">
+        <input wsam:Action="http://jaxws.project.my.com/IMyService/minusRequest" message="tns:minus"/>
+        <output wsam:Action="http://jaxws.project.my.com/IMyService/minusResponse" message="tns:minusResponse"/>
+      </operation>
+    </portType>
+
+  - banding 指定消息传输格式
+
+    <binding name="MyServiceImplPortBinding" type="tns:IMyService">
+      <!-- style可选值: document/rpc -->
+      <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+      <operation name="add">
+        <soap:operation soapAction=""/>
+        <input>
+          <!-- use可选值: literal(以xml格式传输)/encode(RMI, SOAPMessage encode格式) -->
+          <soap:body use="literal"/>
+        </input>
+        <output>
+          <soap:body use="literal"/>
+        </output>
+      </operation>
+      <operation name="minus">
+        <soap:operation soapAction=""/>
+        <input>
+          <soap:body use="literal"/>
+        </input>
+        <output>
+          <soap:body use="literal"/>
+        </output>
+      </operation>
+    </binding>
+
+  - service 指定服务基本信息
+
+    <service name="MyServiceImplService">
+      <port name="MyServiceImplPort" binding="tns:MyServiceImplPortBinding">
+        <soap:address location="http://localhost:9000/myService"/>
+      </port>
+    </service>
+
+4.WebService接口测试
+
+  - 使用Eclipse执行webservice方法:
+    - 切换到JavaEE视图
+    - 在工具栏打开Web Services Explorer
+    - 在右上解点击 WSDL Page 按钮
+    - 输入WSDL地址开始测试WebService接口
+
+  - 使用TCPMon工具: http://ws.apache.org/tcpmon/
+    - 指定TCPMon监听端口: 9001
+    - 设置TCPMon将监听端口数据转发到WebService对应的地址和端口: 9000
+    - 添加Listener
+    - 修改调用WebService的代码, 将address的端口改为TCPMon的监听端口
+    - 即可在请求过程中截获WebService报文
+    - 也可使用Eclipse自带的TCP/IP monitor
+      - Preferences --> Run/Debug --> TCP/IP monitor
+      - 点击Add按钮, 输入本地端口和要监听的地址端口
+      - Type选择: TCP/IP
+      - 点击OK, 然后选中添加的监听记录, 点击Start按钮
+
+5.服务类型:
+
+  - 基于实体的服务(基本的数据发布)，如：查询用户基本信息
+  - 基于功能的服务(基本功能的发布)，如：天气预报服务
+  - 基于流程的服务(业务流程)，如：不同独立系统之间的业务流程
+
+XML相关基础
+
+1.DTD
+
+  DTD（文档类型定义）的作用是定义 XML 文档的合法构建模块。它使用一系列的合法元素来定义文档结构
+  DTD教程: http://w3school.com.cn/dtd/index.asp
+
+  定义元素: <!ELEMENT 元素名称 类别>或者<!ELEMENT 元素名称 (元素内容)>
+  定义属性: <!ATTLIST 元素名称 属性名称 属性类型 默认值>
+
+  - 常用控制符:
+    1. ?表示0次或1次
+    2. *表示0次或多次
+    3. +表示1次或者多次
+    4. 默认表示1次
+  
+  - 属性类型:
+    1. CDATA 值为字符数据
+    2. (en1|en2|...) 此值是枚举列表中的一个值
+    3. ID 值为唯一的id
+    4. IDREF 值为另外一个元素的id
+    5. IDREFS 值为其他id的列表
+    6. NMTOKEN 值为合法的XML名称
+    7. NMTOKENS 值为合法的XML名称列表
+    8. ENTITY 值是一个实体
+    9. ENTITIES 值是一个实体列表
+    10.NOTATION 此值是符号的名称
+    11.xml: 值是一个预定义的XML值
+  
+  - 默认值:
+    1. 值 属性的默认值
+    2. #REQUIRED 属性值是必须的
+    3. #IMPLIED 属性不是必须的
+    4. #FIXED value 属性值是固定的
+
+2.Schema
+
+  - DTD的问题
+
+    1.元素命名冲突
+    2.对XML格式的限制粒度不够细致
+    3.专用的DTD语法
+
+  - Schema的特点
+
+    1.通过一种更合理的方式来编写XML的限制文件(基于XML语法)
+    2.使用命名空间来支持多个名称相同的元素
+    3.很好的完成对所有对象的修饰并且提供大量的数据类型
+
+  - 命名空间
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://www.example.org/schema01"
+        xmlns="http://www.example.org/schema01"
+        elementFormDefault="qualified">
+    </xs:schema>
+
+    1.targetNamespace="http://www.example.org/schema01"
+    此schema定义的元素的命名空间"http://www.example.org/schema01"
+
+    2.xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    schema中用到的元素和数据类型来自命名空间
+      "http://www.w3.org/2001/XMLSchema"
+    并且这个命名空间的元素和数据类型应该使用前缀xs:
+    注意: 这是默认需要引入的命名空间, 它包含了所有schema定义的元素和数据类型
+
+    3.xmlns="http://www.example.org/schema01"
+    默认命名空间是"http://www.example.org/schema01"
+    注意: 这里的默认命名空间即是此schema本身的命名空间
+    表示本文档定义的元素和数据类型在当前文档中可以直接引用
+
+    4.elementFormDefault="qualified"
+    任何XML实例文档所使用的且在此schema中声明过的元素必须被命名空间限定
+
+  - 在XML中使用Schema进行格式限制
+
+    <user xmlns="http://www.example.org/schema01"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.example.org/schema01 http://www.example.org/schema01">
+        ...
+    </user>
+
+    1.xmlns="http://www.example.org/schema01"
+    声明此XML文档的默认命名空间
+
+    2.xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    声明XML Schema实例命名空间, 用于引入其他命名空间
+
+    3.xsi:schemaLocation="http://www.example.org/schema01 http://www.example.org/schema01"
+    schemaLocation属性有两个值:
+    一、需要使用的命名空间
+    二、供命名空间使用的XML schema的位置
+
+    4.编写好的Schema可以添加到Eclipse的XML Catalog，使编辑器可以验证XML
+    点击菜单栏: Preferences --> XML --> XML Catalog
+    --> User Specified Entries --> Add --> Workspace --> 选择工作空间内的Schema文件
+
+    5.可以在XML文档中直接引用本地Schema文件
+    xsi:noNamespaceSchemaLocation="schema01.xsd"
+
+  - Schema简易类型
+    string/decimal/integer/boolean/date/time
+    所有的属性均作为简易类型来声明
+
+  - Schema Order指示器
+    <all> 指示器规定子元素可以按照任意顺序出现, 且每个子元素必须只出现一次
+    <choice> 指示器规定可出现某个子元素或者可出现另外一个子元素(非此即彼)
+    <sequence> 规定子元素必须按照特定的顺序出现
+
+  - 限定(restriction)用于为XML元素或者属性定义可接受的值
+    对XML元素的限定被称为facet
+    如: 定义了带有一个限定且名为age的元素, age的值不能低于0或者高于120
+    <xs:element name="age">
+      <xs:simpleType>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0"/>
+          <xs:maxInclusive value="120"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:element>
+
+  - Schema编写方式
+    Russian Doll(俄罗斯套娃式)
+    - 只有一个根元素, 嵌套定义类型
+    - 优点: 结构清晰
+    - 缺点: 元素无法重用
+    Salami Slice(腊肠切片式)
+    - 将所有元素单独定义出来, 然后互相引用
+    - 优点: 元素可以最大程度的重用
+    - 缺点: 文档结构不清晰, 根结点不清晰
+    Venetian Blind(百叶窗式)
+    - 结合以上两种风格的定义方式
+    - 推荐一个类对应一个schema(.xsd)文件
+
+  - 使用JDK提供的xjc命令通过schema文件生成对应的Java类
+    -d 指定生成文件的目录
+    -p 指定生成文件的包名
+    -encoding 指定生成源码的文件编码
+    -verbose 输出详细信息
+    -最后指定xsd文件的路径
+    xjc -d src/main/java -p com.my.project.jaxws.xjc -encoding UTF-8 -verbose src/main/resources/schema/xjc/class.xsd
+
+3.Java中处理XML的API
+
+  - 使用JAXB对Java对象和XML进行互相转换
+  - 使用Stax处理XML(遍历/查找/XPath/XMLStreamWriter/Transformer)
+
+SOAP相关基础
+
+1.SOAP消息的组成
+
+  SOAPMessage
+  +--SOAPPart
+  |  +--SOAPEnvelope
+  |     +--SOAPHeader(optional): Headers(if any)
+  |     +--SOAPBody: XML Content or SOAPFault
+  +--AttachmentPart
+  |  +--MIME Headers
+  |  +--Content: XML or non-XML
+  +--AttachmentPart
+  |  +--MIME Headers
+  |  +--Content: XML or non-XML
+  \--More AttachmentPart ...
+
+2.SOAP消息的发送SAAJ
+
+  基于Message的方式发送
+  基于Payload的方式发送
+
+3.SOAPHeader/SOAPFault的处理
+
+  - 接口声明的异常类型会被抛到客户端，如果有未声明的异常抛出则不会被抛到客户端
+  - 显式的Header声明导致客户端调用非常不便: @WebParam(name="xxx", header=true), 推荐使用Handler
+  - 通过Handler处理SOAP消息:
+    - LogicHandler: 只能获取SOAPBody信息
+    - SOAPHandler: 可以获取SOAPMessage信息
+    - 可以指定各个Handler的执行顺序
+    - 对于客户端: 总是先执行所有的LogicHandler, 再执行所有的SOAPHandler
+      - 创建Handler类实现SOAPHandler<SOAPMessageContext>
+      - 实现handleMessage方法
+      - 编写handler配置文件handler-chain-client.xml
+      - 在客户端生成的服务类MyServiceImplService上增加@HandlerChain(file = "handler-chain-client.xml")
+      - 重新调用服务Handler即可生效
+    - 对于服务端: 总是先执行所有的SOAPHandler, 再执行所有的LogicHandler
+      - 创建Handler类实现SOAPHandler<SOAPMessageContext>
+      - 实现handleMessage方法
+      - 编写handler配置文件handler-chain-server.xml
+      - 在服务实现类MyServiceImpl上增加@HandlerChain(file = "handler-chain-server.xml")
+      - 重启服务Handler即可生效
+
+4.SOAPBinding
+
+  在服务定义的接口上添加注解@SOAPBinding(style = Style.XXX)
+  - 默认的style = Style.DOCUMENT
+  - style = Style.DOCUMENT, 参数会被包装, 可以对特定参数值做约定和限制
+  - style = Style.RPC, 参数将直接传递不再包装, 缺点是不能对参数值做约定和限制
+  - 可以对比两种方式对应的WSDL文件和xsd类型定义文件的区别
+
+契约优先的编码方式
+
+1.开发流程
+
+  - 编写schema或WSDL文件
+    - 在src目录下新建META-INF目录, 通常将WSDL文件放置在这个目录下
+    - New --> Other... -->  Web Services --> WSDL File
+    - 输入文件名myService, [Protocol]选择[SOAP], [SOAP Binding Options]选择[document literal]
+    - 点击Finish, 编写WSDL文件内容
+  - 根据WSDL文件生成客户端代码
+    - wsimport -d . -p com.my.project.sample.wsimport -keep -verbose -Xnocompile META-INF/wsdl/myService.wsdl
+    - 删除接口定义以外的其他代码
+  - 编写实现类(在实现类上指定endpointInterface/wsdlLocation/serviceName/portName)
+  - 发布服务
+  - 生成客户端代码调用服务
+    wsimport -d . -p com.my.project.sample.client -keep -verbose -Xnocompile http://localhost:9000/myService?wsdl
+  - 总结:
+    - 服务端基于WSDL文件生成接口定义, 只需编写接口实现类即可完成开发
+    - 服务端的接口定义其实也不是必须的(保留它主要是为了使用接口方法上生成注解)
+    - 客户端基于WSDL文件生成调用代码, 即可直接调用服务
+
+2.添加隐式头信息的流程(可以用来传输登录用户信息做权限控制)
+
+  - 修改WSDL文件
+    types:
+      <xsd:element name="license" type="xsd:string"/>
+    messages:
+      <wsdl:message name="license" >
+        <wsdl:part element="tns:license" name="license"/>
+      </wsdl:message>
+    binding/operation/input:
+      <soap:header use="literal" part="license" message="tns:license"/>
+    注意: 以上修改不影响wsimport命令生成的代码内容
+  - 直接修改服务端接口定义, 在对应的请求方法中添加参数, 并指定:
+    @WebParam(name="license", header=true)
+    修改接口实现类, 增加相应的头信息验证逻辑
+  - 客户端无需重新生成代码, 即使重新生成代码内容也不会变化
+    客户端发送头信息的方式有三种:
+    - 使用Handler
+    - 直接创建SOAPMessage, 组装Header信息
+    - 使用代理类(见下文第6条)
+
+3.WSDL文件的编写方式
+
+  - 基于Document的Wrapped方式
+    所有参数都通过一个element封装, 推荐的方式
+    缺点是客户端生成代码时成会为所有的包装类型创建类
+  - 基于Document的BARE方式
+    传入具体的参数名称, 复杂对象进行封装, 简单对象不封装
+  - 基于RPC的方式
+    所有参数都不做封装, 直接注明参数type, 并要在<soap:body/>标签上注明namespace
+    当方法有多个参数时需要指定<wsdl:operation/>标签的parameterOrder属性
+
+  - 注意:
+    当WSDL引入外部xsd文件时, 外部xsd文件根结点不要添加elementFormDefault="qualified"属性
+    同时, 发布服务的代码也要稍做修改:
+
+    // 创建服务发布结点
+    Endpoint endpoint = Endpoint.create(new UserServiceImpl());
+    // 添加外部的xsd文件
+    List<Source> metadata = new ArrayList<>();
+    String xsdLocation = "META-INF/wsdl/user.xsd";
+    URL xsdURL = UserServiceServer.class.getClassLoader().getResource(xsdLocation);
+    if (xsdURL == null) {
+      System.out.println(xsdLocation + " does not exist");
+      return;
+    }
+    Source xsdSource = new StreamSource(xsdURL.openStream());
+    xsdSource.setSystemId(xsdURL.toExternalForm());
+    metadata.add(xsdSource);
+    endpoint.setMetadata(metadata);
+    // 发布服务
+    endpoint.publish("http://localhost:9000/userService");
+
+4.处理异常
+
+  - 创建异常类, 继承java.lang.Exception, 不能继承RuntimeException
+  - 在WSDL中添加异常定义
+    - 定义异常类型
+      <xs:complexType name="userException">
+        <xs:sequence>
+            <xs:element name="message" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+    - 定义element:
+      <xs:element name="userException" type="tns:userException"/>
+    - 添加异常消息
+      <wsdl:message name="userException">
+        <wsdl:part name="fault" element="tns:userException"/>
+      </wsdl:message>
+    - 在portType和binding中给可能抛出异常的接口添加异常定义
+      对于portType下的<wsdl:operation/>节点:
+      <wsdl:fault name="userException" message="tns:userException"/>
+      对于binding下的<wsdl:operation/>节点:     
+      <wsdl:fault name="userException">
+        <soap:fault name="userException" use="literal"/>
+      </wsdl:fault>
+
+5.将WebService部署到Web容器(jetty, tomcat)
+
+  - 将WSDL文件复制到WEB-INF目录
+  - 添加JAX-WS RI的依赖
+
+    <dependency>
+        <groupId>com.sun.xml.ws</groupId>
+        <artifactId>jaxws-ri</artifactId>
+        <version>2.2.10</version>
+        <type>pom</type>
+        <exclusions>
+            <exclusion>
+                <groupId>com.sun.xml.ws</groupId>
+                <artifactId>release-documentation</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>com.sun.xml.ws</groupId>
+                <artifactId>samples</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+  - 在WEB-INF下创建sun-jaxws.xml文件
+    - name: 对应web.xml中servlet名称
+    - implementation: 服务实现全类名
+    - url-pattern: 对应web.xml中访问路径
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <endpoints xmlns="http://java.sun.com/xml/ns/jax-ws/ri/runtime" version="2.0">
+        <endpoint
+            name="userService"
+            implementation="com.my.project.service.container.UserServiceImpl"
+            url-pattern="/userService"/>
+    </endpoints>
+
+  - 配置web.xml
+
+    <listener>
+        <listener-class>
+            com.sun.xml.ws.transport.http.servlet.WSServletContextListener
+        </listener-class>
+    </listener>
+    <servlet>
+        <!-- 必须与sun-jaxws.xml中endpoint的name属性相同 -->
+        <servlet-name>userService</servlet-name>
+        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>userService</servlet-name>
+        <!-- 必须与sun-jaxws.xml中endpoint的url-pattern属性相同 -->
+        <url-pattern>/userService</url-pattern>
+    </servlet-mapping>
+
+6.使用JAX-WS RI发送SOAPHeader
+
+  - 创建Header元素对象, 可以使用wsimport生成的ObjectFactory类创建
+
+    ObjectFactory factory = new ObjectFactory();
+    User authorizedUser = factory.createUser();
+    authorizedUser.setUsername("admin");
+    authorizedUser.setPassword("123456");
+    authorizedUser.setNickname("超级管理员");
+    Authorize authorize = factory.createAuthorize();
+    authorize.setAuthorizedUser(authorizedUser);
+
+  - 使用JAXB将Header元素转换为XML Document
+    - JDK和JAX-WS RI中类冲突时, 可以新建目录: JAVA_HOME/jre/lib/endorsed
+      将有冲突的jar包放置在此目录下, 这样在程序执行时JVM就会优先使用此目录下的类
+
+    JAXBElement<Authorize> authorizeElement = factory.createAuthorize(authorize);
+    JAXBContext ctx = JAXBContext.newInstance(Authorize.class);
+    Marshaller marshaller = ctx.createMarshaller();
+    marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+    marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+    DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+    Document doc = builder.newDocument();
+    marshaller.marshal(authorizeElement, doc);
+
+  - 通过Headers.create()方法添加头信息
+    - 这里的userService是服务接口对象
+    - 在调用WebService调用过程中, userService接口其实是WSBindingProvider的一个代理类, 所以可以直接进行类型转换
+
+    WSBindingProvider provider = (WSBindingProvider)userService;
+    provider.setOutboundHeaders(Headers.create(doc.getDocumentElement()));
+
+7.服务端接收SOAPHeader
+
+  - 在接口服务实现类中添加如下属性:
+    @Resource
+    private WebServiceContext context;
+
+  - 获取客户端发送的SOAPHeader信息
+    HeaderList headers = (HeaderList) context.getMessageContext().get(JAXWSProperties.INBOUND_HEADER_LIST_PROPERTY);
+
+  - 提取服务端关心的Header信息
+    QName name = new QName("http://service.project.my.com/user", "authorize");
+    Header header = headers.get(name, true);
+
+  - 解析Header中的内容
+    XMLStreamReader reader = header.readHeader();
+    while(reader.hasNext()) {
+        int event = reader.next();
+        if(event == XMLEvent.START_ELEMENT) {
+            //TODO something
+        }
+    }
+
+8.简单(字节数组)二进制数据的发送与接收
+
+  - 修改WSDL文件, 并分别生成服务端和客户端代码
+
+    - 修改user.xsd, 添加类型定义, 注意二进制数据字段类型使用base64Binary
+      <xs:element name="upload" type="tns:upload"/>
+      <xs:element name="uploadResponse" type="tns:uploadResponse"/>
+      <xs:complexType name="upload">
+          <xs:sequence>
+              <xs:element name="file" type="xs:base64Binary"/>
+          </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="uploadResponse">
+          <xs:sequence/>
+      </xs:complexType>
+
+    - 修改user.wsdl文件, 添加upload方法
+      message:
+        <wsdl:message name="upload">
+            <wsdl:part element="tns:upload" name="parameters" />
+        </wsdl:message>
+        <wsdl:message name="uploadResponse">
+            <wsdl:part element="tns:uploadResponse" name="parameters" />
+        </wsdl:message>
+      portType:
+        <wsdl:operation name="upload">
+            <wsdl:input message="tns:upload" />
+            <wsdl:output message="tns:uploadResponse" />
+        </wsdl:operation>
+      binding:
+        <wsdl:operation name="upload">
+            <soap:operation soapAction="http://service.project.my.com/user/upload" />
+            <wsdl:input>
+                <soap:body use="literal" />
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal" />
+            </wsdl:output>
+        </wsdl:operation>
+
+  - 完成新增方法的实现, 接收上传文件并写到服务端指定目录(如用户home目录)
+    public void upload(byte[] file) {
+        ...
+    }
+
+  - 修改服务端实现类, 在类定义上添加@MTOM注解
+    @MTOM
+    public class UserServiceImpl implements UserService {
+        ...
+    }
+
+  - 修改客户端调用代码, 在获取服务接口实例时传递MTOMFeature实例
+    userService = service.getUserServicePort(new MTOMFeature());
+
+9.使用DataHandler进行二进制数据的发送与接收
+
+  - 修改WSDL文件, 并分别生成服务端和客户端代码
+    - 修改user.xsd, 添加类型定义
+      xs:schema结点添加命名空间:
+        xmlns:xmime="http://www.w3.org/2005/05/xmlmime"
+      对于二进制字段或返回值类型使用:
+        <xs:element name="file" type="xs:base64Binary" xmime:expectedContentTypes="application/octet-stream"/>
+    - 修改user.wsdl文件, 添加uploadMime方法
+
+  - 完成新增方法的实现, 接收上传文件并写到服务端指定目录(如用户home目录)
+    public void upload(DataHandler file) {
+        InputStream inputStream = file.getInputStream();
+        ...
+    }
+
+  - 修改服务端实现类, 在类定义上添加注解
+    @BindingType(SOAPBinding.SOAP11HTTP_MTOM_BINDING)
+    public class UserServiceImpl implements UserService {
+        ...
+    }
+
+  - 修改客户端调用代码, 开启MTOM
+    userService = service.getUserServicePort();
+    BindingProvider bindingProvider = (BindingProvider) userService;
+    SOAPBinding binding = (SOAPBinding) bindingProvider.getBinding();
+    binding.setMTOMEnabled(true);
+
+Spring整合WebService
+
+  集成WebService服务端
+  参考: https://docs.spring.io/spring/docs/4.3.13.RELEASE/spring-framework-reference/htmlsingle/#remoting-web-services
+  - Exposing servlet-based web services using JAX-WS
+  - Exporting standalone web services using JAX-WS
+  - Exporting web services using the JAX-WS RI’s Spring support
+
+  集成WebService客户端
+  参考: https://docs.spring.io/spring/docs/4.3.13.RELEASE/spring-framework-reference/htmlsingle/#remoting-web-services-jaxws-access
+  - Accessing web services using JAX-WS
+  - 为JaxWsPortProxyFactoryBean添加handlerRosover解析SOAPHeader
+
+  服务端在WebService实现类中获取HttpServletRequest
+  - 注入WebServiceContext
+    @Resource
+    private WebServiceContext context;
+  - 获取HttpServletRequest
+    MessageContext ctx = context.getMessageContext();
+    HttpServletRequest request = (HttpServletRequest) ctx.get(SOAPMessageContext.SERVLET_REQUEST);
+
+  客户端在Handler中获取验证信息可以使用ThreadLocal变量
+

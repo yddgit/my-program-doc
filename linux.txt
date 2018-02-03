@@ -1,0 +1,199 @@
+unix2dos filename 
+dos2unix filename 
+
+
+poweroff   //直接关机
+
+ls -r/-l...列文件(-开头)、文件夹(d开头)
+cd / cd ..目录切换
+pwd显示当前目录
+mount /dev/cdrom /mnt/cdrom加载光盘
+umount /dev/cdrom卸载光盘
+mkdir建目录
+rmdir删空目录
+rm -r(递归)/-f/-rf 删文件
+touch生成一个空文件或更改文件的时间
+ls -R(树状结构, 也可用tree)
+cp 复制文件或目录(cp -r d1 d2)
+mv (-r)...移动
+vi 命令模式+编辑模式
+   a(append)
+   ESC
+   :(回到命令模式)
+   :w 存盘
+   :q 退出
+   :q! 不存盘退出
+   dd 删除一行
+   dw 删除一单词
+   o  插入一行
+   O  上面插入一行
+vi command/input(a) dd/dw/o...（equal notepad)
+cat/tac(正序/逆序显示文本文档内容)
+more(分页显示文本文件内容)
+head -n(头n行)/tail -n(尾n行)...显示文件内容
+find 查找(可指定名称等项：find /etc -name *local
+whereis commands查找命令来源
+echo $PATH查看PATH环境变量
+ln    复制后建链接(硬链接)
+ln -s 相当于快捷方式(软链接)
+wc 统计文本文档的行数, 字数, 字符数
+useradd username添加用户
+passwd username设定密码
+
+/etc/passwd用户信息
+testuser:x:500:500::/home/testuser:/bin/bash
+username   ID号组号 主目录         shell
+
+/etc/group用户组信息
+创建用户时不指定组, 则默认以该用户名创建一个新组
+
+
+shell负责解释命令并与内核打交道
+csh, bsh, bash, sh
+exit返回上一个指定的shell环境
+
+userdel 删除用户
+groupadd 添加组
+groupdel 删除组
+usermod -g (groupname) (username)更改组
+
+su (switch user) username
+
+[root@localhost yang]# ls -l
+total 8
+-rw-r--r-- 1 root root   54 May 1 20:15 4
+lrwxrwxrwx 1 root root    4 May 1 20:13 5->3.txt
+drwxr-xr-x 2 root root 4096 May 1 19:56 d1
+[root@localhost yang]# _
+
+关于文件权限
+l-rwx-rwx-rwx：
+第一位 d目录 l链接 -文件
+后面有九位，三位一组
+r_read
+w_write
+-_none
+x_excute执行
+第一组：所有者权限
+第二组：所有者同组的其他用户权限
+第三组：其他用户权限
+
+权限更改chmod
+chmod +x/-x 4.txt
+chmod u+x/u-x 4.txt [user]
+chmod g+x/g-x 4.txt [group]
+chmod o+x/o-x 4.txt [other]
+用户权限九位：每位1表示有此权限，0表示无此权限
+rw-r--r--
+110100100=（644）八进制
+故可用：chmod 644 4.txt
+
+chown testuser 4.txt 更改文件的所有者为testuser(chang owner)
+
+grep "hate" 4.txt 在指定文本文件中查找指定的字符串
+
+date 显示和设置日期时间
+stat 显示指定文件的相关信息
+who/w 显示在线的登录用户
+whoami 显示用户自己的身份
+id 显示当前用户的id信息
+hostname 显示主机名称
+uname 显示操作系统信息
+dmesg 显示系统启动信息
+du 显示指定的文件（目录）已使用的磁盘空间的容量
+df 显示文件系统磁盘空间的使用情况
+free 显示当前内存和交换空间的使用情况
+fdisk  -l 显示磁盘信息
+locale 显示当前语言环境
+
+管道：将一个命令的输出传送给下一个命令，作为其输入
+格式：command1|command2|command3|...|commandn
+管道举例：
+ls -Rl /etc | more 分行显示/etc下的目录和文件
+cat /etc/passwd | wc 计算文件行数
+cat /etc/passwd | grep root 查找包含root用户的信息行
+dmesg | grep eth0 显示系统启动信息中有关第一个网卡的信息
+man bash | col -b > bash.txt 将命令bash用man命令得到的帮助信息输出到bash.txt中保存
+
+
+col命令:
+功能说明：过滤控制字符。
+语　法：col [-bfx][-l<缓冲区列数>] 
+补充说明：
+在许多UNIX说明文件里，都有RLF控制字符。当我们运用
+shell特殊字符">"和">>"，把说明文件的内容输出成纯
+文本文件时，控制字符会变成乱码，col指令则能有效滤
+除这些控制字符。
+参　数：
+ 　　-b 过滤掉所有的控制字符，包括RLF和HRLF。
+ 　　-f 滤除RLF字符，但允许将HRLF字符呈现出来。
+ 　　-x 以多个空格字符来表示跳格字符。
+ 　　-l<缓冲区列数> 预设的内存缓冲区有128列，您可以自行指定缓冲区的大小。
+
+
+ls -l | grep "^d" 只显示目录
+ls -l | grep "^-" |wc -l 当前目录下文件数量
+
+wall, --warning all user
+wall aaa 每一个登录的用户收到"aaa"信息的warning
+wall `date` 将date命令的运行结果发送给每一个登录的用户
+
+重定向
+标准输入输出 stdin stdout stderr
+输出重定向  >--输出到文件ls>cmd.txt  >>--追加输出到文件ls>>cmd.txt
+错误重定向 2>--lssss 2> cmd.txt      &>--
+输入重定向 </<<!.....! (wall < aa.txt)
+
+vsftpd:
+
+service vsftpd start
+service iptables stop
+
+user_list中将root注释掉
+ftpusers中将root注释掉
+root用户即可上传和下载
+
+ping 192.168.138.159
+ftp 192.168.138.159
+chkconfig vsftpd on
+chkconfig --list | grep vsftpd
+
+默认命令行启动:
+cd /etc
+more inittab
+id:5:initdefault:(chang 5 to 3)
+
+gzip -d...压缩或解压
+tar -xvf解压
+ps列进程 ps -ef | grep tomcat
+shutdown
+kill (进程ID)关闭进程
+
+
+tomcat包只需解压即可，一般置于根目录下
+jdk直接执行.bin安装包就可以安装
+
+.bin是可执行文件
+
+/etc/profile系统级环境变量
+/etc/bashrc有用户登录才会起作用的环境变量
+为用户单独设环境变量/home/username/.bash_profile
+
+jdk
+/etc/profile末尾加两行
+JAVA_HOME=/usr/java/jdk1.6.0_13
+PATH=$JAVA_HOME/bin:$PATH
+CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export JAVA_HOME
+export PATH
+export CLASSPATH
+
+tomcat
+/etc/rc.local末尾加
+JAVA_HOME=/usr/java/jdk1.6.0_13
+export JAVA_HOME
+/tomcat/bin/startup.sh
+
+MySQL
+先装server
+后装client

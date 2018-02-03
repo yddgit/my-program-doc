@@ -1,4 +1,4 @@
-﻿JavaScript简介
+JavaScript简介
 
 JavaScript符合ECMAScript-262标准
 相对弊端:

@@ -1,0 +1,440 @@
+alter user scott account unlock;
+conn scott/tiger//切换登录用户
+conn sys/yang as sysdba
+grant create table, create view to scott//为scott用户授权创建表和视图
+create view v$_dept_avg_sal_info as (SQL语句);//创建视图
+
+desc emp
+名称                                      是否为空? 类型
+----------------------------------------- -------- ----------------------------
+EMPNO                                     NOT NULL NUMBER(4)
+ENAME                                              VARCHAR2(10)
+JOB                                                VARCHAR2(9)
+MGR                                                NUMBER(4)
+HIREDATE                                           DATE
+SAL                                                NUMBER(7,2)
+COMM                                               NUMBER(7,2)
+DEPTNO                                             NUMBER(2)
+
+select * from emp;
+  雇员号     雇员姓名    工种   经理人雇员号   入职日期        薪水       津贴     部门编号
+     EMPNO ENAME      JOB              MGR HIREDATE              SAL       COMM    DEPTNO
+---------- ---------- --------- ---------- -------------- ---------- ---------- ----------
+      7369 SMITH      CLERK           7902 17-12月-80            800                    20
+      7499 ALLEN      SALESMAN        7698 20-2月 -81           1600        300         30
+      7521 WARD       SALESMAN        7698 22-2月 -81           1250        500         30
+      7566 JONES      MANAGER         7839 02-4月 -81           2975                    20
+      7654 MARTIN     SALESMAN        7698 28-9月 -81           1250       1400         30
+      7698 BLAKE      MANAGER         7839 01-5月 -81           2850                    30
+      7782 CLARK      MANAGER         7839 09-6月 -81           2450                    10
+      7788 SCOTT      ANALYST         7566 19-4月 -87           3000                    20
+      7839 KING       PRESIDENT            17-11月-81           5000                    10
+      7844 TURNER     SALESMAN        7698 08-9月 -81           1500          0         30
+      7876 ADAMS      CLERK           7788 23-5月 -87           1100                    20
+      7900 JAMES      CLERK           7698 03-12月-81            950                    30
+      7902 FORD       ANALYST         7566 03-12月-81           3000                    20
+      7934 MILLER     CLERK           7782 23-1月 -82           1300                    10
+
+desc dept
+名称                                      是否为空? 类型
+----------------------------------------- -------- ----------------------------
+DEPTNO                                    NOT NULL NUMBER(2)
+DNAME                                              VARCHAR2(14)
+LOC                                                VARCHAR2(13)
+
+select * from dept;
+ 部门编号      部门名称     部门所在地
+    DEPTNO DNAME          LOC
+---------- -------------- -------------
+        10 ACCOUNTING     NEW YORK
+        20 RESEARCH       DALLAS
+        30 SALES          CHICAGO
+        40 OPERATIONS     BOSTON
+
+desc salgrade
+名称                                      是否为空? 类型
+----------------------------------------- -------- ----------------------------
+GRADE                                              NUMBER
+LOSAL                                              NUMBER
+HISAL                                              NUMBER
+
+select * from salgrade;
+  薪水等级   最低薪水   最高薪水
+     GRADE      LOSAL      HISAL
+---------- ---------- ----------
+         1        700       1200
+         2       1201       1400
+         3       1401       2000
+         4       2001       3000
+         5       3001       9999
+
+
+select empno, ename, deptno from emp;
+select ename, sal*12 from emp;//年薪
+
+//为sal*12字段起一别名叫做anuual_sal(不能有空格，会将所有小写字母转换为大写)
+select ename, sal*12 anuual_sal from emp;
+
+//为sal*12字段起一别名叫做anuual sal(可以有空格并保持住原格式)
+select ename, sal*12 "anuual sal" from emp;
+
+//任何含有空值(null)的数学表达式，其结果均为空值，如下语句有误，得不到员工一年总薪水数
+select ename, sal*12+comm from emp;
+
+//dual表只有一个数据，用来计算表达式
+desc dual
+名称                                      是否为空? 类型
+----------------------------------------- -------- ----------------------------
+DUMMY                                              VARCHAR2(1)
+
+select * from dual;
+D
+-
+X
+
+select 3*2 from dual;
+       3*2
+----------
+         6
+
+select sysdate from dual;//当前系统时间
+
+//"||"可将几个字段的值转换为字符串连接起来，如下
+select ename||sal from emp;
+
+//又有，''一对单引号用来表示一个字符串，如下
+select ename||'abc' from emp;
+//若字符串内有一个单引号，则用两个单引号代表一个单引号，如下
+select ename||'ab''c' from emp;//所表示字符串为ab'c
+
+//distinct表示选出不重复的项，以下语句distinct修饰两个字段，显示 二者组合 不重复的项
+select distinct deptno, job from emp;
+
+where语句
+select * from emp where ename = 'KING';
+select * from emp where sal = 2000;
+select ename, sal from emp where sal>1500;
+select ename, sal, deptno from emp where deptno <> 10;//<>表示不等于
+select ename, sal from emp where ename > 'CBA';
+select ename, sal from emp where sal between 800 and 1500;//相当于下面一句
+select ename, sal from emp where sal >= 800 and sal <= 1500;
+select ename, sal, comm from emp where comm is(not) null;//空值的处理
+select ename, sal from emp where sal in(800, 1500, 2000);//in()表示选中集合内的元素
+select ename, sal from emp where ename in('SMITH', 'KING', 'CBA');
+select ename, sal, hiredate from emp where hiredate > '20-2月-81';//日期处理
+select ename, sal, hiredate from emp where hiredate > '20-2月-1981';
+select ename, sal, deptno from emp where deptno = 10 and sal > 1000;//and
+select ename, sal, deptno from emp where deptno = 10 or sal > 1000;//or
+select ename, sal from emp where sal not in(800, 1500);//not
+select ename from emp where ename like '%ALL%';//%零个或多个字符
+select ename from emp where ename like '_A%';//_表示一位字符,此语句选出第二个字母是A的员工姓名
+select ename from emp where ename like '%\%%';//\%是转义字符，表示选出字串本身含有%的项
+select ename from emp where ename like '%$%%' escape '$';//自定义$为转义字符,功能与上句相同
+
+order by排序
+select * from dept order by deptno desc;//按照deptno的降序排列
+select empno, ename from emp order by empno asc;//按照empno的升序排列，默认可以不写asc
+select empno, ename from emp order by empno;//和上句功能相同
+select empno, ename from emp where deptno <> 10 order by empno;//where与order by混合使用
+select ename, sal, deptno from emp order by deptno asc, sal desc;//deptno为主要关键字，sal为次要关键字
+
+
+//试分析下句的功能，是对以上语句的大致总结
+select ename, sal*12 anuual_sal from emp where ename not like '_A%' and sal > 800 order by sal desc;
+
+
+select lower(ename) from emp;//转换关键字值为小写
+select upper(ename) from emp;//转换关键字值为大写
+select ename from emp where lower(ename) like '_a%';//把第二个字母为A或a的项选出来
+select ename from emp where ename like '_a%' or ename like '_A%';//等价于上句
+select substr(ename, 1, 3) from emp;//从第一个字母开始，截取三个字母
+select chr(65) from dual;//把65转换为ASCII码对应的字符（这里是A）
+select ascii('A') from dual;//把‘A’转换为其对应的ASCII码（65）
+select round(23.752) from dual;//把23.752四舍五入到个位即24
+select round(23.752, 2) from dual;//把23.752四舍五入到十分位，即23.75
+select round(23.752, -1) from dual;//把23.752四舍五入到十位，即20
+
+select to_char(sal, '$99,999.9999') from emp;//9代表一位数字，如果该位没有数字则不显示，小数点后的显示
+select to_char(sal, 'L99,999.9999') from emp;//L代表本地货币
+select to_char(sal, 'L00,000.0000') from emp;//0代表一位数字，如果该位没有数字，则以0代替
+select to_char(hiredate, 'YYYY-MM-DD HH:MI:SS') from emp;//定义日期格式
+select to_char(sysdate, 'YYYY-MM-DD HH:MI:SS') from dual;
+select to_char(sysdate, 'YYYY-MM-DD HH24:MI:SS') from dual;//使小时部分以24进制显示
+select ename,hiredate from emp where hiredate>to_date('1981-2-20 12:34:56', 'YYYY-MM-DD HH24:MI:SS');
+select ename, sal from emp where sal > to_number('$1,250.00', '$9,999.99');
+select ename, sal*12 + nvl(comm,0) from emp;//nvl(comm,0)将空值用零值代替
+
+组函数
+select max(sal) from emp;//关键字最大值
+select min(sal) from emp;//关键字最小值
+select avg(sal) from emp;//关键字最平均值
+select to_char(avg(sal), '99999999.99') from emp;//结果的格式控制
+select round(avg(sal), 2) from emp;//结果的格式控制
+select sum(sal) from emp;//关键字求和
+select count(*) from emp;//记录计数
+select count(*) from emp where deptno=10;//条件计数
+select count(ename) from emp;//关键字计数
+select count(comm) from emp;//对空值不计入总数内
+select count(distinct deptno) from emp;//无重复值的计数
+
+group by
+在使用group by有一个规则：出现在select列表当中的字段如果没有出现在组函数中，则必须出现在group by字句中
+select deptno, avg(sal) from emp group by deptno;//求出各部门员工的平均工资
+select deptno, job, max(sal) from emp group by deptno, job;//按部门、工种分组统计平均工资
+select ename from emp where sal = (select max(sal) from emp);//求出最高工资者的姓名
+select deptno, max(sal) from emp group by deptno;//求出各部门的最高工资
+
+having//对分组进行限制
+select deptno, avg(sal)from emp group by deptno having avg(sal)>2000;//平均薪水大于2000的部门筛选出来
+
+***单条语句书写顺序
+1 select (*) from emp
+2 where sal > 1000
+3 group by deptno
+4 having
+5 order by
+
+如下：
+选出工资大于1200的员工，将
+他们按部门编号分组，再选出
+平均工资大于1500的组，最后
+按平均工资的降序排列输出
+1  select deptno, avg(sal) from emp
+2  where sal > 1200
+3  group by deptno
+4  having avg(sal) > 1500
+5  order by avg(sal) desc;
+结果如下：
+    DEPTNO   AVG(SAL)
+---------- ----------
+        20 2991.66667
+        10 2916.66667
+        30       1690
+
+子查询
+select ename, sal from emp where sal = (select max(sal) from emp);//显示最高工资者的姓名
+select ename, sal from emp where sal > (select avg(sal) from emp);//显示工资高于平均工资的员工姓名
+
+//表的自连接,选出每个员工的经理人的姓名
+select e1.ename, e2.ename mgr_name from emp e1 join emp e2 on (e1.mgr = e2.empno);//99标准
+select e1.ename, e2.ename mgr_name from emp e1, emp e2 where e1.mgr = e2.empno;//92标准
+结果如下:
+ENAME      MGR_NAME
+---------- ----------
+FORD       JONES
+SCOTT      JONES
+JAMES      BLAKE
+TURNER     BLAKE
+MARTIN     BLAKE
+WARD       BLAKE
+ALLEN      BLAKE
+MILLER     CLARK
+ADAMS      SCOTT
+CLARK      KING
+BLAKE      KING
+JONES      KING
+SMITH      FORD
+
+//选出不是CLERK的员工姓名,部门名和工资等级
+select ename, dname, grade from emp e, dept d, salgrade s
+where e.deptno = d.deptno and e.sal between s.losal and s.hisal
+and job <> 'CLERK';
+
+
+//笛卡尔乘积
+select ename, dname from emp cross join dept;//99标准
+select ename, dname from emp, dept;//92标准
+
+//92标准将数据过滤和表连接条件同放在where语句中
+select ename, dname from emp, dept where emp.deptno = dept.deptno;
+
+//99标准严格分开,where语句中只放数据过滤条件
+select ename,dname from emp join dept on (emp.deptno = dept.deptno);
+select ename,dname from emp join dept using (deptno);//功能与上句相同,"等值连接"时可用,但不推荐
+
+//显示所有员工工资等级
+select ename, grade from emp e join salgrade s on (e.sal between s.losal and s.hisal);
+
+//以下为三张表的连接,显示姓名,部门名,工资等级并且姓名的第二个字母不能为A
+select ename, dname, grade from emp e
+join dept d on (e.deptno = d.deptno)
+join salgrade s on (e.sal between s.losal and s.hisal)
+where ename not like '_A%';
+
+//左外连接(outer可省略)
+//选出不是CLERK的员工姓名,部门名和工资等级,并将不能与e2连接的e1(左边)中的项输出
+select e1.ename, e2.ename from emp e1 left outer join emp e2 on (e1.mgr = e2.empno);
+可与下句结果相比较:
+select e1.ename, e2.ename mgr_name from emp e1 join emp e2 on (e1.mgr = e2.empno);
+
+//右外连接
+select ename,dname from emp e right join dept d on (e.deptno = d.deptno);
+可与下句结果相比较:
+select ename, dname from emp e join dept d on (e.deptno = d.deptno);
+
+//全外连接
+select ename,dname from emp e full join dept d on (e.deptno = d.deptno);
+
+//表连接,求出各部门最高工资者
+select ename, sal from emp
+join (select max(sal) max_sal, deptno from emp group by deptno) t
+on (emp.sal = t.max_sal and emp.deptno = t.deptno);
+
+//求每个部门平均薪水的等级
+select deptno, avg_sal, grade from salgrade
+join (select deptno, avg(sal) avg_sal from emp group by deptno) t
+on (t.avg_sal >= salgrade.losal and t.avg_sal <= salgrade.hisal);
+也可写作:
+select deptno, avg_sal, grade from
+(select deptno, avg(sal) avg_sal from emp group by deptno) t
+join salgrade s on (t.avg_sal between s.losal and s.hisal);
+
+//求各部门的平均薪水等级
+select deptno, avg(grade) from
+(select deptno, grade, ename from emp join salgrade s on
+(emp.sal between s.losal and s.hisal)) t
+group by deptno;
+
+//哪些人是经理人，在经理人mgr一列出现的雇员号均为经理人
+select ename, job, deptno from emp where empno in (select distinct mgr from emp);
+
+//不用组函数，求薪水的最高值（面试题）
+select sal from emp where sal not in
+(select distinct e1.sal from emp e1 join emp e2 on (e1.sal < e2.sal));
+
+//求平均薪水最高的部门的部门编号
+select deptno, avg_sal from
+(select deptno, avg(sal) avg_sal from emp group by deptno)
+where avg_sal =
+(select max(avg_sal) from
+        (select deptno, avg(sal) avg_sal from emp group by deptno)
+);
+
+也可写作：
+//组函数嵌套，最多只能有两层
+select deptno, avg_sal from
+(select deptno, avg(sal) avg_sal from emp group by deptno)
+where avg_sal =
+(select max(avg(sal)) from emp group by deptno);
+
+
+//求平均薪水最高部门的名称
+select dname from dept where deptno =
+(
+   select deptno from
+   (select deptno, avg(sal) avg_sal from emp group by deptno)
+   where avg_sal =
+   (select max(avg_sal) from
+           (select deptno, avg(sal) avg_sal from emp group by deptno)
+   )
+);
+
+//求平均薪水等级最低的部门名称
+select dname from dept where deptno =
+(
+  select deptno from
+  (
+    select deptno, avg(grade) avg_grade from
+    (select deptno, grade, ename from emp join salgrade s on
+    (emp.sal between s.losal and s.hisal)) t
+    group by deptno
+  )
+  where avg_grade =
+  (
+    select min(avg_grade) from
+    (
+      select deptno, avg(grade) avg_grade from
+      (select deptno, grade from emp join salgrade s on
+      (emp.sal between s.losal and s.hisal)) t
+      group by deptno
+    )
+  )
+)
+
+//求平均薪水的等级最低的部门名称
+select dname, t1.deptno, grade, avg_sal from
+(
+   select deptno, grade, avg_sal from
+   (select deptno, avg(sal) avg_sal from emp group by deptno) t
+   join salgrade s on (t.avg_sal between s.losal and s.hisal)
+) t1
+join dept on (t1.deptno = dept.deptno)
+where t1.grade =
+(
+  select min(grade) from
+  (
+    select deptno, grade, avg_sal from
+    (select deptno, avg(sal) avg_sal from emp group by deptno) t
+    join salgrade s on (t.avg_sal between s.losal and s.hisal)
+  )
+)
+
+上例用视图完成：
+
+//先创建视图v$_dept_avg_sal_info
+create view v$_dept_avg_sal_info as
+select deptno, grade, avg_sal from
+(select deptno, avg(sal) avg_sal from emp group by deptno) t
+join salgrade s on (t.avg_sal between s.losal and s.hisal);
+
+//上例的语句可以简化如下
+select dname, t1.deptno, grade, avg_sal from v$_dept_avg_sal_info t1
+join dept on (t1.deptno = dept.deptno)
+where t1.grade = (select min(grade) from v$_dept_avg_sal_info)
+
+//比普通员工的最高薪水还要高的经理人的名称
+select ename from emp
+where empno in (select distinct mgr from emp where mgr is not null)
+and sal >
+(
+  select max(sal) from emp where empno not in
+  (select distinct mgr from emp where mgr is not null)
+)
+
+//比较效率
+select * from emp where deptno = 10 and ename like '%A%';//理论上此句效率高
+select * from emp where ename like '%A%' and deptno = 10;//但如果数据库本身对这类语句做了优化,则可能相同
+
+//select语句选出的子集中，系统默认加一个称为rownum的字段(隐含)，只能<或<=联用
+select empno, ename from emp where rownum <= 5;//选出前5条记录
+//解决rownum的弊端，选出行号大于10的记录，运用子查询
+select ename from (select rownum r, ename from emp) where r > 10;
+
+
+//选出薪水最高的5名员工
+select ename, sal from (select ename, sal from emp order by sal desc) where rownum <=5;
+
+//选出薪水最高的6-10个人
+select ename, sal from
+(
+   select ename, sal, rownum r from
+   (select ename, sal from emp order by sal desc)
+)
+where r >=6 and r <= 10
+
+SQL面试题
+有3个表S, C, SC
+S(SNO, SNAME)代表(学号, 姓名)
+C(CNO,CNAME,CTEACHER)代表(课号, 课名,老师)
+SC(SNO,CNO,SCGRADE)代表(学号, 课号, 成绩)
+问题:
+1. 找出没有选过"黎明"老师的所有学生姓名.
+2. 列出2门以上(含2门)不及格学生姓名及平均成绩.
+3. 即学过1号课程又学过2号课程所有学生的姓名.
+请用标准SQL语言写出答案, 方言也行(请说明是使用什么方言).
+1.
+select sname from s
+join sc on (s.sno = sc.sno)
+join c on (c.cno = sc.cno)
+where c.cteacher <> '黎明';
+2.
+select sname from s where sno in
+(
+  select sno from sc where scgrade < 60 group by sno having count(*)>=2
+);
+3.
+select sname from s where sno in
+(
+  select sno from sc where cno = 1 and sno in 
+      (select distinct sno from sc where cno = 2)
+); 

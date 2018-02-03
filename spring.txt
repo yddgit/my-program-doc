@@ -1,0 +1,217 @@
+Spring3.1.1 + Struts2.3.1.2 + Hibernate3.6.10
+
+课程内容：
+1. 面向接口(抽象)编程的概念与好处
+2. IOC/DI的概念与好处
+   --inversion of control 控制反转
+   --dependency injection 依赖注入
+3. AOP的概念与好处
+4. Spring简介
+5. Spring应用IOC/DI(重要)
+   --XML
+   --Annotation
+6. Spring应用AOP(重要)
+   --XML
+   --Annotation
+7. Struts2.1.6 + Spring2.5.6 + Hibernate3.3.2整合(重要)
+   --opensessionInviewfilter(解决什么问题, 怎么解决)
+
+
+面向接口编程(面向抽象编程)
+1. Spring_0100_AbstractOrientedProgramming
+2. 好处: 灵活
+
+
+什么是IOC(DI), 有什么好处
+1. 把自己new的东西改为由容器提供
+   --初始化具体值
+   --装配
+2. 好处: 灵活配置
+
+
+Spring简介
+
+1. 环境搭建
+   --只用IOC
+   --spring.jar, commons-logging.jar
+2. IOC容器
+   --实例化具体bean
+   --动态装配
+3. AOP支持
+   --安全检查
+   --管理transaction
+
+
+Spring IOC配置与应用
+
+1. FAQ: 不给提示:
+   --window-->preferences-->myeclipse-->xml-->xml catalog
+   --User Specified Entries -- add
+     --Loaction: spring-framework-2.5.6.SEC03\dist\resources\spring-beans-2.5.xsd
+     --URI: file:///...../spring-beans-2.5.xsd
+     --Key Type: Schema Location
+     --Key: http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+2. 注入类型:
+   --setter(重要)
+   --构造方法
+   --接口注入(可以忘记)
+3. id vs. name
+   --name可以用特殊字符
+4. 简单属性的注入
+   <property name="..." value="...">
+5. <bean 中的scope属性
+   --singleton单例
+   --prototype每次创建新的对象
+6. 集合注入
+   --很少用, 不生要, 参考程序
+7. 自动装配
+   --byName(按属性名)
+   --byType(按类型, 但指定类型的bean只能有一个)
+   --如果所有的bean都用同一种, 可以使用beans的属性:
+     default-autowire=""(此时在bean中指定autowire="default")
+8. 生命周期
+   --lazy-init(不重要, 不随Context容器一起初始化, 等到getBean()时才初始化)
+   --init-method, destroy-method不要和prototype一起用(了解)
+9. Annotationt第一步:
+   --修改xml文件: 参考<context:annotation-config />
+10.@Autowired
+   --默认按类型byType
+   --如果想用byName, 使用@Qualifier: setUserDAO(@Qualifier("u") UserDAO userDAO)
+   --写在private field(第三种注入形式)(不建议, 破坏封闭)
+   --如果写在set上, @Qualifier需要写在参数上
+11.@Resource(重要)
+   --加入: JavaEE/commons-annotations.jar
+   --默认按名称, 名称找不到, 按类型
+   --可以指定特定名称
+   --推荐使用
+   --如果没有源码, 就无法运用annotation, 只能使用xml
+12.@Component, @Repository, @Service, @Controller
+   --初始化的名字默认为类名首字母小写
+   --可以指定初始化bean的名字
+13.@Scope
+14.@PostConstruct = init-method
+   @PreDestroy = destroy-method
+
+什么是AOP
+
+1. 面向切面编程Aspect-Oriented-Programming
+   --是对面向对象的思维方式的有力补充
+2. Spring_1300_AOP_introduction
+3. 好处: 可以动态的添加和删除在切面上的逻辑而不影响原来的执行代码
+   --Filter
+   --Struts2的intercepter
+4. 概念:
+   --JoinPoint: 连接点(从左向右看: ---┼----)
+   --PointCut
+   --Aspect(切面) @Aspect
+   --Advice       @Before
+   --Target
+   --Weave
+
+Spring AOP配置与应用
+
+1. 两种方式: 使用Annotation, 使用XML
+2. Annotation
+   --AOP的Annotation对于spring3.0要引入如下jar包
+     --aspectjrt.jar (aspectjrt的发行jar包中的lib目录下获得)
+     --aspectjweaver.jar (aspectjrt的发行jar包中的lib目录下获得)
+     --com.springsource.org.aopalliance-1.0.0.jar (spring的dependency包中获得)
+     --com.springsource.net.sf.cglib-2.2.0.jar (spring的dependency包中获得)
+   --加上对应的xsd文件spring-aop-x.x.xsd
+   --beans.xml
+     <aop:aspectj-autoproxy />
+   --此时就可以解析对应的Annotation了
+   --建立自己的拦截类
+   --用@Aspect, @Component注解这个类
+   --建立处理方法
+   --用@Before来注解方法
+   --写明白切入点(execution...)
+   --注: 让spring对我们的拦截器类进行管理一定要加@Component
+3. 常见的Annotation:
+   --@Pointcut
+   --@Before
+   --@AfterReturning
+   --@AfterThrowing
+   --@After
+   --@Around
+4. 织入点语法
+   --void !void
+   --参考文档(*..)
+5. XML配置AOP
+   --把interceptor对象初始化<bean...
+   --<aop:config...
+       <aop:pointcut...
+         <aop:before
+
+
+Spring整合Hibernate
+
+1. Spring指定datasource
+   --对于spring3.0要加入:
+     --com.springsource.org.apache.commons.dbcp-1.2.2.osgi.jar
+     --com.springsource.org.apache.commons.pool-1.5.3.jar
+     --数据库驱动jar包
+   --参考文档: dbcp.BasicDataSource
+     --c3p0
+     --dbcp
+     --proxool
+   --在DAO或者Service中注入dataSource
+   --在Spring中可以使用PropertyPlaceHolderConfigure来读Properties文件的内容
+2. Spring整合Hibernate
+   --<bean ... AnnotationSessionFactoryBean>
+       <property dataSource..
+       <annotatedClasses...
+   --引入hibernate系列jar包
+   --User上加Annotation
+   --UserDAO或者UserService注入SessionFactory
+   --jar包问题一个一个解决
+3. 声明式事务管理
+   --事务加在DAO层还是Service层
+   --annotation
+     --加入annotation.xsd
+     --加入txManager bean
+     --加入<tx:annotation-driven
+     --在需要事务的方法上加: @Transactional
+     --需要注意: 使用SessionFactory.getCurrentSession, 不要使用openSession
+   --@Transactional详解
+     --什么时候rollback
+       --运行异常, 非运行期异常不会触发rollback
+       --必须uncheck(没有catch)
+       --不管什么异常, 只要catch了, spring就会放弃管理
+       --事务传播特性: propagation_required
+       --read_only
+   --XML(推荐, 可以同时配置好多方法)
+     --<bean txmanager...
+     --<aop:config...
+         <aop:pointcut...
+         <aop:advisor pointcut-ref advice-ref...
+     --<tx:advice: id transaction-manager=...
+   --HibernateTemplate, HibernateCallback, HibernateDaoSupport(不重要)介绍
+     --设计模式: Template Method
+     --Callback: 回调/钩子函数
+     --第一种: (建议)
+       --在Spring中初始化HibernateTemplate, 注入SessionFactory
+       --DAO里注入HibernateTemplate
+       --save写getHibernateTemplate.save();
+     --第二种:
+       --从HibernateDaoSupport继承
+       --必须写在XML文件中, 无法使用Annotation, 因为set方法在父类中, 而且是final的
+   --Spring整合Hibernate的时候使用packagesToScan属性
+     可以让Spring自动扫描对应包下面的实体类
+
+Some examples of common pointcut expressions are given below.
+
+--the execution of any public method:
+  execution(public * *(..))
+
+--the execution of any method with a name beginning with "set":
+  execution(* set*(..))
+
+--the execution of any method defined by the AccountService interface:
+  execution(* com.xyz.service.AccountService.*(..))
+
+--the execution of any method defined in the service package:
+  execution(* com.xyz.service.*.*(..))
+
+--the execution of any method defined in the service package or a sub-package:
+  execution(* com.xyz.service..*.*(..))
