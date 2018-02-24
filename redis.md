@@ -46,9 +46,11 @@ auth <password>
 ping
 ```
 
-## 常用命令（http://redis.io/commands）
+## 常用命令
 
 ```sh
+# http://redis.io/commands
+
 # 基本使用
 SET <key> <value>
 GET <key>
