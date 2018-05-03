@@ -51,6 +51,37 @@ Required:
 
     如果确认已经安装了，仍然出现上述错误，则需要执行`yum update`更新系统
 
+## 修改docker镜像地址
+
+```bash
+vim /etc/docker/daemon.json
+```
+```json
+{
+    "registry-mirrors":["https://registry.docker-cn.com"]
+}
+```
+
+## 安装docker-compose
+
+1. 下载最新的版本Docker Compose
+   ```bash
+   sudo curl -L https://github.com/docker/compose/releases/download/1.21.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+   ```
+
+2. 为docker-compose文件赋予可执行权限
+
+   ```bash
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```
+
+3. 测试安装结果
+
+   ```bash
+   $ docker-compose --version
+   docker-compose version 1.21.0, build 5920eb0
+   ```
+
 ## 为docker设置http代理
 
  1. 创建目录
