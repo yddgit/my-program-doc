@@ -65,5 +65,30 @@ echo "new data" >> test.txt
 * Producer API用于发布消息到一个或多个topic
 * Consumer API用于订阅一个或多个topic消费数据
 * Streams API使应用做为一个流处理器，消费输入消息，转换处理后输出消息
-* Connector API建立一个可利用的producer和consumer，用于连接现有的topic和应用程序。比如连接关系数据据获取表的所有变更数据
+* Connector API建立一个可利用的producer和consumer，用于连接现有的topic和应用程序。比如连接关系数据库获取表的所有变更数据
 
+## Producer API
+
+```java
+Properties props = new Properties();
+props.put("bootstrap.servers", "localhost:9092");
+props.put("acks", "all");
+props.put("retries", 0);
+props.put("batch.size", 16384);
+props.put("linger.ms", 1);
+props.put("buffer.memory", 33554432);
+props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+Producer<String, String> producer = new KafkaProducer<>(props);
+for (int i = 0; i < 100; i++) {
+    producer.send(new ProducerRecord<String, String>("my-topic", Integer.toString(i), Integer.toString(i)));
+}
+
+producer.close();
+```
+
+1. Producer会缓存还未发送到cluster的数据，如果没有成功关闭producer会导致内存泄露。
+2. `send()`方法是异步的，调用后会将数据添加到buffer中然后返回，这样producer就可以进行批量提交，提高效率
+3. `ack`配置何种情况认为请求已完成，`all`表示所有记录都要确认提交，请求才算完成，是最慢但是最常用的设置
+4. 请求失败后，producer会自动重试，除非`retries`设为0，允许重试可能会导致重复提交
