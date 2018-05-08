@@ -271,3 +271,142 @@ try {
 
 #### Manual Partition Assignment
 
+在有些场合下，需要更好的控制特定partition的分配，如：
+
+* 如果处理包含关联partition的一些本地状态，就需要从partition的本地磁盘获取数据
+
+* 如果处理程序是支持HA的，当结点失效后会自动重启，这时就不需要kafka检测失效并重新分配partition，因为consumer会自动在别一台机器上重启并接管其原来分配到的partition。
+
+使用这种模型，不需要调用subscribe()方法，只需要直接调用`assign(Collection)`方法，方法参数指定需要消费的partition列表。
+
+```java
+String topic = "foo";
+TopicPartition partition0 = new TopicPartition(topic, 0);
+TopicPartition partition1 = new TopicPartition(topic, 1);
+consumer.assign(Arrays.asList(partition0, partition1));
+```
+
+一旦分配成功，就可以循环调用poll()方法，与之前消费数据的操作类似。consumer指定的group仍然可以提交offset，但修改partition只能再次调用assign()方法。手动分配之后，就不会使用consumer group的自动分配了，consumer失效也不会导致rebalance。每个consumer虽然在同一个group中但却相互独立。为了防止offset提交冲突，通常应该保证每个consumer的group.id是唯一的。
+
+注意：不能将手动分配partition和自动分配partition混合使用。
+
+#### Storing Offsets Outside Kafka
+
+Consumer程序可以不使用kafka内置的offset存储，它可以将offset存储在其他地方。这一功能主要的使用场景是允许应用程序在同一个系统中以原子方式存储offset和消费结果。如果可以，就可以保证消费的原子性，保证exactly once的消息投递。这比Kafka提供的offset提交功能更健壮。
+
+* 如果消费结果存储在关系数据库中，那么offset也可以在同一个事务中被提交到数据库。从而要么事务成功提交，offset根据已消费记录的位置被更新；要么事务失败回滚，消费结果不会保存，offset也不会更新。
+
+* 如果消费结果保存在本地，那offset也可以保存在本地。例如：可以通过订阅特定的partition，基于offset和数据构建查询索引。如果这是一个原子操作，那么通常即使程序崩溃导致非同步数据丢失，存量数据里总是有对应的offset的。这时恢复索引数据就只需要从最后一次提交的offset开始恢复即可。
+
+每条消息都有一个offset，手动管理offset需要做如下操作：
+
+* `enable.auto.commit=false`
+* 使用每个`ConsumerRecord`提供的offset保存位置
+* Consumer重启恢复时调用`seek(TopicPartition, long)`方法
+
+这是手动分配partition时最简单的一种用法。如果partition是自动分配的，那就要关注partition分配的变化，可以通过在调用`subsribe(Collection, ConsumerRebalanceListener)`和`subsribe(Pattern, ConsumerRebalanceListener)`方法传入一个`ConsumerRebalanceListener`实例来实现。例如：当一个partition被从一个consumer转移到另一个consumer时要提交该partition的offset，就要实现`ConsumerRebalanceListener.onPartitionsRevoked(Collection)`方法。当partition被分配到一个consumer上时，consumer想要查询这些新partition的offset以正确初始化consumer的offset，就要实现`ConsumerRebalanceListener.onPartitionsAssigned(Collection)`方法。
+
+另一个ConsumerRebalanceListener的用法是刷新应用程序管理的partition的缓存数据。
+
+#### Controlling The Consumer's Position
+
+大多数情况下，consumer只是简单的从头到尾的消费数据，周期性的提交自已的offset（不管是自动还是手动）。Kafka允许consumer手动控制自己的offset，在一个partition内自由向前或向后移动。这意味着consumer可以重新消费已经消费过的数据，或者跳过中间记录，直接消费最近的消息。
+
+有几个手动控制offset的consumer实例可能会有一定的作用。
+
+对于对时间敏感的消息处理程序，如果已经落后了很多条消息，而且也不想处理所有的数据记录，那就直接跳到最近的消息位置即可。
+
+还有一个场景是应用程序维护了一些本地状态，这类应用需要在启动时就从本地存储中初始化position。同样如果本地状态被销毁(如磁盘数据丢失)，那可以在新的机器上重新消费所有数据重建本地状态(假设Kakfa保留了足够的历史数据)
+
+Kafka使用`seek(TopicPartition, long)`方法指定新的position。特别的，跳转到开始/最新的offset使用如下两个方法：`seekToBeginning(Collection)`和`seekToEnd(Collection)`
+
+#### Consumption Flow Control
+
+如果一个consumer分配了多个partition，就会试图在同一时间消费所有partition的数据，给所的partition以相同的消费优先级。但有时consumer希望对于某一部分partition给予更快的处理速度，只有当这些partition数据很少或已全部消费完才会消费其他partition的数据。
+
+其中的一种场景就是流处理，处理器从两个topic获取数据，然后将这两个数据流进行合并。当其中一个topic远远落后于另外一个时，处理器会希望暂停后者，先处理落后的topic以赶上进度。
+
+还有一个例子是consumer启动时，有很多的历史数据需要处理，应用程序通常要在处理其他topic前先获取某些topic的最新数据。
+
+Kafka支持通过`pause(Collection)`和`resume(Collection)`方法动态控制消费流，暂停消费或恢复已暂停的topic(在下一次调用`poll(long)`方法时)
+
+### Reading Transactional Message
+
+Transaction在Kafka 0.11.0中介绍过，应用可以以原子方式写多个topic或partition。为此，consumer从这些partition读取数据时就需要配置为只读取已提交的数据。
+
+```js
+// 客户端配置
+isolation.level: read_committed
+```
+
+在`read_committed`模式下，consumer会只读取到已成功提交的事务数据，然后继续读取无事务的消息数据。这种模式下client端没有buffer，最后的offset就是已打开事务内的第一条消息的位置，这个offset被称为“Last Stable Offset(LSO)”
+
+一个`read_committed`的consumer读到LSO时会过滤掉所有被中止的事务消息。LSO还会影响consumer的`seekToEnd(Collection)`和`endOffsets(Collection)`方法。最后获取数据的延迟也与LSO相关。
+
+包含事务数据的partition会包含commit和abort的标记，以指示事务的执行结果。这些标记不会返回给应用程序，但是会占用一个offset。因此，消费事务数据时会发现offset有不连续(see gaps)。这些缺失的消息就是那些事务标记。同时，使用`read_committed`的consumer在事务被中止的时候也会看到不连续的offset。因为那些消息不会返回给consumer但他们占用了一个offset。
+
+### Multi-threaded Processing
+
+Kafka的consumer不是线程安全的，所有网络IO都会在应用线程中发起。用户需要保证多线程下的同步访问。非同步访问会导致`ConcurrentModifiactionException`。
+
+唯一的例外是`wakeup()`方法，它可以被外部线程安全调用以打断一个active operation。这种情况下，如果线程阻塞在这个operation上，会抛出一个`WakeupException`。它可以用来从另一个线程关闭consumer。
+
+```java
+public class KafkaConsumerRunner implements Runnable {
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final KafkaConsumer consumer;
+
+    public void run() {
+        try {
+            consumer.subscribe(Arrays.asList("topic"));
+            while (!closed.get()) {
+                ConsumerRecords records = consumer.poll(10000);
+                // Handle new records
+            }
+        } catch (WakeupException e) {
+            // Ignore exception if closing
+            if (!closed.get()) throw e;
+        } finally {
+            consumer.close();
+        }
+    }
+
+    // Shutdown hook which can be called from a separate thread
+    public void shutdown() {
+        closed.set(true);
+        consumer.wakeup();
+    }
+}
+```
+
+然后在另一个线程中，可以通过设置closed标志并wakeup来关闭consumer。
+
+```java
+closed.set(true);
+consumer.wakeup();
+```
+
+注意：也可以使用线程的interrupt方法中止阻塞的operation(这时会抛出`InterruptException`)。Kafka不鼓励这样做，因为这会导致consumer clean shutdown被中止。interrupt通常用于无法使用wakeup的场景，如consumer线程无法感知到kafka client的情况。
+
+Kafka有意避免实现一个详细的线程模型去处理消息，给多线程处理消息的实现以更多的选择。
+
+#### One Consumer Per Thread
+
+简单的可以一个线程一个consumer实例，这里列出一些优缺点：
+* **PRO**：实现简单
+* **PRO**：的确是无线程交互的最快的实现
+* **PRO**：使得每个partition按顺序处理消息实现非常容易（每个线程只需要按照接收消息的顺序处理消息就可以了）
+* **CON**：Consumer越多，意味着集群TCP连接数越多，但Kafka处理连接效率很高，基本上损失很小
+* **CON**：Consumer越多发送到服务器的请求数越多，略微减小了数据batch，这会导致IO吞吐量下降
+* **CON**：所有进程中的全部线程数受限于partition的总数量
+
+#### Decouple Consumption and Processing
+
+另一个可选方案是启动一个或多个线程去做所有的数据消费工作，将消费到的`ConsumerRecord`实例存入一个处理线程池的阻塞队列中，由处理线程池中的线程去做具体的消息处理。这个方法同样有一些优缺点：
+
+* **PRO**：可以独立的扩展consumer和processor的数量，也可以一个consumer匹配多个processor，避免partition的限制
+* **CON**：要保证多个processor之间的处理顺序，需要特别关注，因为各个线程独立运行，最先消费到的数据可能最后被处理。但对于没有顺序要求的场合这不是问题
+* **CON**：手动提交offset很难实现，这需要所有线程互相协调，确保partition上的处理已完成。
+
+这种方案也会有很多其他可能的实现，比如每个processor线程可以有一个自己的队列，consumer线程可以分partition将消息发送到不同的队列来保证消费的顺序性，简化offset提交。
+
