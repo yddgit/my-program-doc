@@ -410,3 +410,30 @@ Kafka有意避免实现一个详细的线程模型去处理消息，给多线程
 
 这种方案也会有很多其他可能的实现，比如每个processor线程可以有一个自己的队列，consumer线程可以分partition将消息发送到不同的队列来保证消费的顺序性，简化offset提交。
 
+## Stream API(java)
+
+Kafka客户端可以持续消费从一个或多个topic发送过来的输入数据，然后输出数据到0个、1个或多个topic
+
+消费数据的逻辑可以通过使用`Topology`定义一个processor的有向无环图来实现，也可以使用`StreamBuilder`提供的高级DSL去定义转换规则。
+
+一个`KafkaStreams`实例可以包含一个或多个配置好的线程，来执行处理工作。
+
+一个`KafkaStreams`实例可以通过`application ID`与其他实例交互，不论是同一进程还是不同机器上的不同进程。这就可以形成一个(可能是分布式的)单一的流处理程序。这些实例之间会基于输入topic的partition的分配情况拆分工作，从而保证所有partition都被消费。如果有新实例加入或实例挂掉，现有存活实例会进行rebalance，重新分配partition以均衡负载确保所有输入topic的partition能够被处理。
+
+`KafkaStreams`内部包含一个普通的`KafkaProducer`和`KafkaConsumer`实例，用于读入和写出数据。如下是一个简单的示例：
+
+```java
+Map<String, Object> props = new HashMap<>();
+props.put(StreamsConfig.APPLICATION_ID_CONFIG, "my-stream-processing-application");
+props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+StreamsConfig config = new StreamsConfig(props);
+
+StreamsBuilder builder = new StreamsBuilder();
+builder.<String, String>stream("my-input-topic").mapValues(value -> value.length().toString()).to("my-output-topic");
+
+KafkaStreams streams = new KafkaStreams(builder.build(), config);
+streams.start();
+```
+
