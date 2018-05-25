@@ -107,7 +107,7 @@ enable.idempotence: true
 retries: Integer.MAX_VALUE
 ack: "all"
 ```
-目前的API不需要特别设置，默认就是Idempotent producer。需要注意的是，一定要避免应用层面的消息重发，这对于kafka来说是没办法去重的。如果应用本身支持消息幂等性，那就不要设置`retries`参数，让它默认为`Integer.MAX_VALUE`。同时如果send()方法返回错误，建议关闭producer实例，检查最后一次生产的数据确保不会重复。Producer只能在单个session中保证消息的幂等性。
+需要注意的是，一定要避免应用层面的消息重发，这对于kafka来说是没办法去重的。如果应用本身支持消息幂等性，那就不要设置`retries`参数，让它默认为`Integer.MAX_VALUE`。同时如果send()方法返回错误，建议关闭producer实例，检查最后一次生产的数据确保不会重复。Producer只能在单个session中保证消息的幂等性。
 
 ### Transactional producer
 
