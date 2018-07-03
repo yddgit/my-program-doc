@@ -295,7 +295,7 @@ Trigger也有很多可以自定义的功能，Quartz提供了多种不同类型�
 
 如果在自己的项目中使用Quartz，需要熟悉自己使用的Trigger的"misfire instruction"，可以参考Quartz的Javadoc和官方文档。
 
-## Calendar with Triggers
+## Triggers with Calendar
 
 Quartz的Calendar对象在Trigger被定义和存入调度器时被关联到Trigger上。Calendar可以用于排除某些不需要触发Job执行的时间段。如：可以创建一个每周工作日早上9:30的Trigger，然后再加一个Calendar对象，将公休日排除掉。
 
@@ -343,4 +343,108 @@ Trigger t2 = newTrigger()
 ```
 
 Quartz的`org.quartz.impl.calendar`包下提供了一些内置的Calendar实现可以直接使用。
+
+## Simple Trigger
+
+SimpleTrigger用于在特定时刻执行一次或特定时刻开始以固定的时间间隔重复执行的场景。如：在2018-07-03 16:33:20执行一次，或者在这之后，每10秒执行一次，重复5次。
+
+因此SimpleTrigger包含startTime、endTime、repeatCount、repeatInterval这几个属性，其他属性都好理解，只有endTime稍有不同。
+
+* startTime开始时间
+* repeatCount可以为0或一个正integer或静态常量`SimpleTrigger.REPEAT_INDEFINITELY`。
+* repeatInterval必须为0或一个正long，单位是毫秒。如果repeatInterval设为0，则repeatCount指定数量的Trigger会被同时触发，或者说接近同时的被调度器触发。
+* endTime如果指定了值，会**覆盖**repeatCount属性的值。这样可以用于创建一个类似于<每10秒钟运行一次直到某一特定时刻结束>的Trigger。此时也无需计算startTime和endTime之间的repeatCount，只需要指定endTime，repeatCount=REPEAT_INDEFINITELY(或者指定一个比实际重复的次数大的数)即可。
+
+这里就会用到Quartz提供的DataBuilder类，它可以很方便的基于开始时间或结束时间来计算并创建触发时间。
+
+SimpleTrigger实例可以使用TriggerBuilder和SimpleScheduleBuilder来创建：
+
+```java
+import static org.quartz.TriggerBuilder.*;
+import static org.quartz.SimpleScheduleBuilder.*;
+import static org.quartz.DateBuilder.*;
+```
+
+如下，是一些示例：
+
+1. 特定时间触发，不重复执行
+   ```java
+   SimpleTrigger trigger = (SimpleTrigger) newTrigger()
+       .withIdentity("trigger1", "group1")
+       .startAt(myStartTime) // some Date
+       .forJob("job1", "group1") // identify job with name, group strings
+       .build();
+   ```
+2. 特定时间触发，每10秒执行一次，重复10次
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger3", "group1")
+       .startAt(myTimeToStartFiring)  // if a start time is not given (if this line were omitted), "now" is implied
+       .withSchedule(simpleSchedule()
+           .withIntervalInSeconds(10)
+           .withRepeatCount(10)) // note that 10 repeats will give a total of 11 firings
+       .forJob(myJob) // identify job with handle to its JobDetail itself                   
+       .build();
+   ```
+3. 从现在开始5分钟后执行一次
+   ```java
+   trigger = (SimpleTrigger) newTrigger()
+       .withIdentity("trigger5", "group1")
+       .startAt(futureDate(5, IntervalUnit.MINUTE)) // use DateBuilder to create a date in the future
+       .forJob(myJobKey) // identify job with its JobKey
+       .build();
+   ```
+4. 从现在开始执行，每5分钟执行一次，直到22:00
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger7", "group1")
+       .withSchedule(simpleSchedule()
+           .withIntervalInMinutes(5)
+           .repeatForever())
+       .endAt(dateOf(22, 0, 0))
+       .build();
+   ```
+5. 从下一个偶数整点开始，每2小时运行一次，不停止
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger8") // because group is not specified, "trigger8" will be in the default group
+       .startAt(evenHourDate(null)) // get the next even-hour (minutes and seconds zero ("00:00"))
+       .withSchedule(simpleSchedule()
+           .withIntervalInHours(2)
+           .repeatForever())
+       // note that in this example, 'forJob(..)' is not called
+       //  - which is valid if the trigger is passed to the scheduler along with the job  
+       .build();
+
+   scheduler.scheduleJob(trigger, job);
+   ```
+
+可以参考Quartz Javadoc，熟悉一下`TriggerBuilder`和`SimpleScheduleBuilder`类提供的方法。**Quartz提供的Builder类，如果没有明确的调用某个方法设置属性值，通常都会默认设置一个合理的值。**
+
+SimpleTrigger的"misfire instruction"有很多，都作为常量定义在了SimpleTrigger类中。
+
+```
+MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY
+MISFIRE_INSTRUCTION_FIRE_NOW
+MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT
+MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT
+MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT
+MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT
+```
+
+上文提到过，所有Trigger默认"misfire instruction"都是`Trigger.MISFIRE_INSTRUCTION_SMART_POLICY`。
+
+如果"smart policy"用于SimpleTrigger，它会基于Trigger实例的配置和状态动态的在已有的instruction中选择一个。`SimpleTrigger.updateAfterMisfire()`方法的代码说明了动态选择的过程。
+
+创建SimpleTrigger时，可以在simpleSchedule()部分指定指定"misfire instruction"：
+
+```java
+trigger = newTrigger()
+    .withIdentity("trigger7", "group1")
+    .withSchedule(simpleSchedule()
+        .withIntervalInMinutes(5)
+        .repeatForever()
+        .withMisfireHandlingInstructionNextWithExistingCount())
+    .build();
+```
 
