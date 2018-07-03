@@ -24,7 +24,7 @@ org.quartz.jobStore.class=org.quartz.simpl.RAMJobStore
 ```java
 public class QuartzSample {
 
-	public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         try {
             // Grab the Scheduler instance from the Factory
             Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
@@ -59,12 +59,12 @@ public class QuartzSample {
         }
     }
 
-	public static class HelloJob implements Job {
-		@Override
-		public void execute(JobExecutionContext context) throws JobExecutionException {
-			System.out.println("HelloJob is executed.");
-		}
-	}
+    public static class HelloJob implements Job {
+        @Override
+        public void execute(JobExecutionContext context) throws JobExecutionException {
+            System.out.println("HelloJob is executed.");
+        }
+    }
 }
 ```
 
@@ -221,29 +221,29 @@ public class DumbJob implements Job {
     public DumbJob() { }
 
     public void execute(JobExecutionContext context) throws JobExecutionException {
-		JobKey key = context.getJobDetail().getKey();
-		JobDataMap dataMap = context.getMergedJobDataMap();  // Note the difference from the previous example
-		state.add(new Date());
-		System.err.println("Instance " + key + " of DumbJob says: " + jobSays + ", and val is: " + myFloatValue);
+        JobKey key = context.getJobDetail().getKey();
+        JobDataMap dataMap = context.getMergedJobDataMap();  // Note the difference from the previous example
+        state.add(new Date());
+        System.err.println("Instance " + key + " of DumbJob says: " + jobSays + ", and val is: " + myFloatValue);
     }
 
     public void setJobSays(String jobSays) {
-		this.jobSays = jobSays;
+        this.jobSays = jobSays;
     }
 
     public void setMyFloatValue(float myFloatValue) {
-		this.myFloatValue = myFloatValue;
+        this.myFloatValue = myFloatValue;
     }
 
     public void setState(ArrayList state) {
-		this.state = state;
+        this.state = state;
     }
 }
 ```
 
 ## Job "Instances"
 
-对于Job实例的理解。可以创建一个Job实现类，然后创建多个JobDetail实例来将不同的数据通过JobDataMap对象传递给Job。如：创建一个`SalesReportJob`实现类，它需要从JobDataMap接收销售人员的名字做为参数来生成该他的报表。这时只需要创建不同的JobDetail实例，如`SalesReportForJoe`/`SalesReportForMike`，通过JobDataMap将"joe"或"mike"参数传递给Job实例即可。
+对于Job实例的理解。可以创建一个Job实现类，然后创建多个JobDetail实例来将不同的数据通过JobDataMap对象传递给Job。如：创建一个`SalesReportJob`实现类，它需要从JobDataMap接收销售人员的名字做为参数来生成他的报表。这时只需要创建不同的JobDetail实例，如`SalesReportForJoe`/`SalesReportForMike`，通过JobDataMap将"joe"或"mike"参数传递给Job实例即可。
 
 当Trigger被触发，JobDetail会被加载，Job实现类会被`JobFactory`实例化(通过调用class对象的newInstance()方法)，并通过set方法将JobDataMap中匹配的数据传递给Job对象。当然，也可以使用自已的JobFactory实现，如使用IoC容器的依赖注入功能。
 
@@ -270,3 +270,77 @@ public class DumbJob implements Job {
 ## JobExecutionException
 
 Job实现类的execute()方法只能抛出JobExecutionException。因此可以将execute()方法的所有代码包到try-catch块中，参考[Quartz Javadoc](http://www.quartz-scheduler.org/api/2.2.1/index.html)中`org.quartz.JobExecutionException`类的API，可以为调度器提供有关如何处理异常的各种指令。
+
+## Common Trigger Attributes
+
+Trigger也有很多可以自定义的功能，Quartz提供了多种不同类型的Trigger用于不同的调度场景。Trigger有一些共同的属性，如：`TriggerKey`，这些属性可以在创建Trigger实例时使用`TriggerBuilder`类的方法进行设置：
+
+* `jobKey`指定了Trigger被触发时要执行的Job实例的标识。
+* `startTime`指定了Trigger第一次被触发生效的时间。是一个`java.util.Date`对象。有些Trigger是启动就被触发了，有些是启动时标记了执行时间，这意味着可以通过日程安排存储Trigger。
+* `endTime`指定了Trigger何时失效。如果一个Trigger指定为每月5天执行，endTime设为7月1日，那么Trigger最后一次被触发的时间将是6月5日。
+
+## Trigger Priority
+
+有时候，有多个Trigger在同一时间被触发，但此时Quartz没有足够的资源来处理(如线程池空闲线程数不足)，就需要对这些Trigger进行优先级排序。创建Trigger对象时可以指定其`priority`属性，如果有N个Trigger同时触发，但只有Z个工作线程可用，那么优先级最高的Z个Trigger就会被优先执行。如果不设置，`priority`默认值是5，`priority`的值可以是任意整数，正值或负值都可以。
+
+**Note**：优先级比较仅在同一时刻触发的Trigger间发生，10:59的Trigger永远会在11:00的Trigger之前被触发。
+
+**Note**：如果检测到Job是"require recovery"的，那么恢复时的优先级与原优先级一致。
+
+## Trigger Misfire Instructions
+
+"misfire instruction"是Trigger的另一个重要属性。一个持久存储的Trigger错过了触发时间，可能是由于调度器关闭了，或者线程池没有足够的线程去执行Job了。
+
+不同类型的Trigger有不同的"misfire instruction"，默认使用一个"smart policy"的策略，它会基于Trigger的类型和配置动态调整。调度器启动时，它首先查询所有misfire的Trigger，根据各自misfire的配置更新这些Trigger。
+
+如果在自己的项目中使用Quartz，需要熟悉自己使用的Trigger的"misfire instruction"，可以参考Quartz的Javadoc和官方文档。
+
+## Calendar with Triggers
+
+Quartz的Calendar对象在Trigger被定义和存入调度器时被关联到Trigger上。Calendar可以用于排除某些不需要触发Job执行的时间段。如：可以创建一个每周工作日早上9:30的Trigger，然后再加一个Calendar对象，将公休日排除掉。
+
+Calendar可以是任意一个实现了Calendar接口的可被序列化的对象：
+
+```java
+package org.quartz;
+
+public interface Calendar {
+    public boolean isTimeIncluded(long timeStamp);
+    public long getNextIncludedTime(long timeStamp);
+}
+```
+
+注意到上面两个方法的参数都是毫秒时间戳，也就是可以进行毫秒级别的过滤。但大部分情况下，都是要排除掉一整天，因此为了方便操作，Quartz提供了一个`org.quartz.impl.HolidayCalendar`类。
+
+Calendar必须实例化，并通过`addCalendar(..)`方法注册到调度器上。如果使用`HolidayCalendar`，在实例化之后，需要调用其`addExcludedDate(Date date)`方法将想要排除的日期排除掉。
+
+同一个Calendar实例可以被多个Trigger使用。
+
+```java
+HolidayCalendar cal = new HolidayCalendar();
+cal.addExcludedDate( someDate );
+cal.addExcludedDate( someOtherDate );
+
+sched.addCalendar("myHolidays", cal, false);
+
+Trigger t = newTrigger()
+    .withIdentity("myTrigger")
+    .forJob("myJob")
+    .withSchedule(dailyAtHourAndMinute(9, 30)) // execute job daily at 9:30
+    .modifiedByCalendar("myHolidays") // but not on holidays
+    .build();
+
+// .. schedule job with trigger
+
+Trigger t2 = newTrigger()
+    .withIdentity("myTrigger2")
+    .forJob("myJob2")
+    .withSchedule(dailyAtHourAndMinute(11, 30)) // execute job daily at 11:30
+    .modifiedByCalendar("myHolidays") // but not on holidays
+    .build();
+
+// .. schedule job with trigger2
+```
+
+Quartz的`org.quartz.impl.calendar`包下提供了一些内置的Calendar实现可以直接使用。
+
