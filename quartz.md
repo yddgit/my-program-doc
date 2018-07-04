@@ -711,3 +711,75 @@ SchedulerListener可以是任何实现了`org.quartz.SchedulerListener`接口的
    scheduler.getListenerManager().removeSchedulerListener(mySchedListener);
    ```
 
+## Job Store
+
+JobStore是保存并跟踪传递给Scheduler的所有数据：Job、Trigger、Calendar等。选择合适的JobStore非常重要，而且只要理解了不同JobStore的区别也很容易选择。JobStore需要在配置文件或代码里进行指定，它最终会传递给SchedulerFactory用于创建Scheduler实例。
+
+**注意**：不要在代码里直接使用JobStore的实例，它是Quartz内部使用的一个对象，用户只需要告诉Quartz使用哪个JobStore，剩下的事件交给框架处理就好了。
+
+### RAMJobStore
+
+RAMJobStore是最简单，也是最高效的JobStore，它将所有数据存放在内存当中。缺点是程序关闭后，所有的调度信息都会丢失，它无法实现Job和Trigger的非易失性(non-volatility)设置。有些应用希望如此，但有些应用则不然。
+
+配置非常简单，只需要指定JobStore的类名为RAMJobStore即可：
+```properties
+org.quartz.jobStore.class=org.quartz.simpl.RAMJobStore
+```
+
+### JDBCJobStore
+
+JDBCJobStore将所有数据存储在数据库中。因此配置相对RAMJobStore复杂一些，而且也会慢一些，但性能影响不大，尤其是为数据库表创建了主键索引之后。网络状况良好的情况下，检索和更新Trigger的延时在10ms以内。
+
+JDBCJobStore可以支持多种类型的数据库：Oracle/PostgreSQL/MySQL/MSSQL/HSQLDB/DB2。使用JDBCJobStore之前需要先创建Quartz的相关表，数据库脚本在发布包的`docs/dbTables`目录下可以找到。如果没有找到匹配的数据库脚本可以找一个类似的脚本修改一下来用。有一点需要注意，所有的表名都带有`QRTZ_`的前缀，这个前缀可以根据需要进行修改，但相应的也要修改Quartz的配置。不同的前缀可以用来在同一数据库中区分不同Scheduler实例的数据。
+
+数据库表建好之后，还需要添加一些必要的配置来激活JDBCJobStore。需要确定应用程序采用哪种事务类型：
+
+* 如果不需要将调度指令关联到其他事务中，就要配置为`JobStoreTX`
+* 如果要将调度指令关联到应用的事务中，就要配置为`JobStoreCMT`，这时Quartz会让应用程序来管理事务
+
+最后就是要设置一个数据源，有几种不同的方式：一种是Quartz自己创建和管理数据源，此时需要提供所有数据库连接信息。另一种是使用应用程序提供的数据源，这时只需要提供数据源的JNDI名称即可。详细的配置可以参考Quartz官方示例。
+
+使用JDBCJobStore(假设使用的是StdSchedulerFactory)首先要选择一个JobStore类：
+
+* `org.quartz.impl.jdbcjobstore.JobStoreTX`
+* `org.quartz.impl.jdbcjobstore.JobStoreCMT`
+
+然后选择一个DriverDelegate，不同的数据库配置可能不同，这些实现类都在`org.quartz.impl.jdbcjobstore`包里可以找到。
+
+* `StdJDBCDelegate`是一个通用的配置，Quartz仅为使用`StdJDBCDelegate`有问题的数据库创建了专用的delegate。
+* `DB2v6Delegate`适用于DB2 V6以及之前的版本
+* `HSQLDBDelegate`适用于HSQLDB
+* `MSSQLDelegate`适用于Microsoft SQLServer
+* `PostgreSQLDelegate`适用于PostgreSQL
+* `WeblogicDelegate`适用于WebLogic的JDBC Driver
+* `OracleDelegate`适用于Oracle
+
+最后就是配置表名前缀和数据源。如下，是一些示例：
+
+```properties
+#============================================================================
+# Configure JobStore  
+#============================================================================
+
+org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX
+org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+org.quartz.jobStore.useProperties=false
+org.quartz.jobStore.dataSource=myDS
+org.quartz.jobStore.tablePrefix=QRTZ_
+org.quartz.jobStore.isClustered=false
+
+#============================================================================
+# Configure Datasources  
+#============================================================================
+
+org.quartz.dataSource.myDS.driver=org.postgresql.Driver
+org.quartz.dataSource.myDS.URL=jdbc:postgresql://localhost/dev
+org.quartz.dataSource.myDS.user=postgre
+org.quartz.dataSource.myDS.password=postgre
+org.quartz.dataSource.myDS.maxConnections=5
+```
+
+**注意**：
+* 如果调度器很繁忙(几乎每时每刻都有与线程池内线程数相等的Job在运行)，那需要将数据源的连接数配置为：`线程数+2`。
+* 如果将`org.quartz.jobStore.useProperties`配置设为`true`，则JDBCJobStore会将JobDataMap里所有value当作String，这样就能将这些数据存储为键-值对，而无需序列为二进制数据存储为BLOB类型。从长远来看，这样更安全。
+
