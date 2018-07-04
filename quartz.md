@@ -566,3 +566,148 @@ trigger = newTrigger()
     .build();
 ```
 
+## TriggerListener and JobListener
+
+Listener对象用于调度过程中某一事件发生后执行用户自定义的动作。
+
+Trigger相关的事件有：
+* Trigger firings(Trigger被触发)
+* Trigger mis-firings(Trigger由于调度器关闭或线程数不足错过了触发时机)
+* Trigger completions(Trigger触发的Job执行结束了)
+
+```java
+public interface TriggerListener {
+    public String getName();
+    public void triggerFired(Trigger trigger, JobExecutionContext context);
+    public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context);
+    public void triggerMisfired(Trigger trigger);
+    public void triggerComplete(Trigger trigger, JobExecutionContext context, int triggerInstructionCode);
+}
+```
+
+Job相关的事件有：
+* Job即将被执行
+* Job执行结束
+
+```java
+public interface JobListener {
+    public String getName();
+    public void jobToBeExecuted(JobExecutionContext context);
+    public void jobExecutionVetoed(JobExecutionContext context);
+    public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException);
+}
+```
+
+创建Listener只需要实现`org.quartz.TriggerListener`或`org.quartz.JobListener`接口，然后注册到调度器即可。每个Listener必须有一个name，可以通过`getName()`方法返回这个name。
+
+在通过调度器的ListenerManager注册Listener时，还需要添加一个Matcher，用来描述要监听哪些Job/Trigger。
+
+**注意**：Listener是在运行时期间注册到调度器的，它不会跟随Job和Trigger存储在JobStore中。因为Listener通常是与应用程序集成的，所以每次程序运行时都需要重新注册Listener。
+
+如下，是一些示例：
+
+import语句：
+
+```java
+import static org.quartz.JobKey.*;
+import static org.quartz.impl.matchers.KeyMatcher.*;
+import static org.quartz.impl.matchers.GroupMatcher.*;
+import static org.quartz.impl.matchers.AndMatcher.*;
+import static org.quartz.impl.matchers.OrMatcher.*;
+import static org.quartz.impl.matchers.EverythingMatcher.*;
+```
+
+1. 给指定的Job添加一个JobListener
+   ```java
+   scheduler.getListenerManager()
+       .addJobListener(
+           myJobListener,
+           KeyMatcher.jobKeyEquals(
+               new JobKey("myJobName", "myJobGroup")
+           )
+       );
+   ```
+   或
+   ```java
+   scheduler.getListenerManager()
+       .addJobListener(
+           myJobListener,
+           jobKeyEquals(
+               jobKey("myJobName", "myJobGroup")
+           )
+       );
+   ```
+
+2. 给指定Group下的所有Job添加一个Listener
+   ```java
+   scheduler.getListenerManager()
+       .addJobListener(
+           myJobListener,
+           jobGroupEquals("myJobGroup")
+       );
+   ```
+
+3. 给指定的两个Group下的所有Job添加一个Listener
+   ```java
+   scheduler.getListenerManager()
+       .addJobListener(
+           myJobListener,
+           or(
+               jobGroupEquals("myJobGroup"),
+               jobGroupEquals("yourGroup")
+           )
+       );
+   ```
+
+4. 给所有Job添加一个Listener
+   ```java
+   scheduler.getListenerManager()
+       .addJobListener(
+           myJobListener,
+           allJobs()
+       );
+   ```
+
+TriggerListener添加方式类似JobListener。
+
+Listener并不是很常用，但当程序需要创建事件通知时，Job本身不用显式的通知应用程序，还是很方便的。
+
+## SchedulerListener
+
+SchedulerListener与TriggerListener/JobListener类似，接收Scheduler自己的事件通知。
+
+Scheduler相关的事件有：
+* 添加Job/Trigger
+* 移除Job/Trigger
+* scheduler发生严重错误
+* scheduler关闭等
+
+```java
+public interface SchedulerListener {
+    public void jobScheduled(Trigger trigger);
+    public void jobUnscheduled(String triggerName, String triggerGroup);
+    public void triggerFinalized(Trigger trigger);
+    public void triggersPaused(String triggerName, String triggerGroup);
+    public void triggersResumed(String triggerName, String triggerGroup);
+    public void jobsPaused(String jobName, String jobGroup);
+    public void jobsResumed(String jobName, String jobGroup);
+    public void schedulerError(String msg, SchedulerException cause);
+    public void schedulerStarted();
+    public void schedulerInStandbyMode();
+    public void schedulerShutdown();
+    public void schedulingDataCleared();
+}
+```
+
+SchedulerListener可以是任何实现了`org.quartz.SchedulerListener`接口的类的对象，通过scheduler的ListenerManager注册。
+
+1. 添加SchedulerListener
+   ```java
+   scheduler.getListenerManager().addSchedulerListener(mySchedListener);
+   ```
+
+2. 移除SchedulerListener
+   ```java
+   scheduler.getListenerManager().removeSchedulerListener(mySchedListener);
+   ```
+
