@@ -436,7 +436,7 @@ MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT
 
 如果"smart policy"用于SimpleTrigger，它会基于Trigger实例的配置和状态动态的在已有的instruction中选择一个。`SimpleTrigger.updateAfterMisfire()`方法的代码说明了动态选择的过程。
 
-创建SimpleTrigger时，可以在simpleSchedule()部分指定指定"misfire instruction"：
+创建SimpleTrigger时，可以在simpleSchedule()部分指定"misfire instruction"：
 
 ```java
 trigger = newTrigger()
@@ -454,6 +454,8 @@ CronTrigger用于基于日历时间的任务调度的场景。如：每周5下�
 
 CronTrigger也有startTime属性指定何时开始，endTime(可选)属性指定何时停止。
 
+### Cron表达式
+
 Cron表达式是用来配置CronTrigger实例的，它实际上是一个由7个子表达式组成的字符串，描述了调度时间的详情信息。7个子表达式由空格分开，分别代表：
 
 * 秒
@@ -466,4 +468,101 @@ Cron表达式是用来配置CronTrigger实例的，它实际上是一个由7个�
 
 例如：表达式`0 0 12 ? * WED`表示每周三的12:00
 
-单个子表达式，可以包含范围或(和)列表描述。
+1. 单个子表达式，可以包含范围或(和)列表描述。如：星期这个字段，可以写成`MON-FRI`、`MON,WED,FRI`或`MON-WED,SAT`。
+2. 通配符指该字段的所有值都满足条件，因此上例中月份字段的`*`号就表示每个月，而星期字段的`*`就表示周内的每一天。
+3. 每个字段都有取值范围，`秒`和`分`字段取值0-59，`时`字段取值0-23，`日期`字段取值1-31(要考虑到不是每个月都有31号)，`月份`字段取值0-11或JAN/FEB/MAR/APR/MAY/JUN/JUL/AUG/SEP/OCT/NOV/DEC，`星期`字段取值1-7(1=周日)或SUN/MON/TUE/WED/THU/FRI/SAT。
+4. `/`表达每X单位一次。如：在`分`字段，`0/15`表示从第0分开始每15分钟执行一次，`3/20`表示从第3分钟开始每20分钟执行一次(相当于配置为`3,23,43`)。**注意**：`/35`不是指每35分钟执行一次，而是从第0分钟开始每35分钟执行一次，相当于配置为`0,35`。
+5. `?`只允许在`日期`和`星期`字段使用，意思是不指定值，主要用于只需要指定这两个字段中的一个而不指定另一个的场合。
+6. `L`只允许在`日期`和`星期`字段使用，意思是最后一天，它在这两个字段的含义略有不同。`月份`字段`L`表示每个月的最后一天(1月31号/平年2月28号/闰年2月29号等)。`星期`字段`L`表示7或SAT，但是如果是`星期+L`，则表示每个月的最后一个周几的意思，如：`星期`字段的`6L`或`FRIL`表示每个月的最后一个周五。`L`也可以添加偏移量，如`L-3`表示距离最后一天还有3天的时刻。**注意**：如果使用了`L`，就不要再指定列表或范围值了。
+7. `W`指的是最接近指定日期的工作日，如：`日期`字段`15W`表示距离每月15号最近的工作日。
+8. `#`指的是每月第N个周几，如：`星期`字段`6#3`或`FRI#3`表示每个月的第3个周五。
+
+如下，是一个示例(也可以参考`org.quartz.CronExpression`的Javadoc获取更多示例)：
+
+1. `0 0/5 * * * ?`：每5分钟执行一次
+2. `10 0/5 * * * ?`：每5分钟的第10秒的时候执行一次，如：10:00:10, 10:05:10 ...
+3. `0 30 10-13 ? * WED,FRI`：每周三和周五的10:30/11:30/12:30/13:30执行
+4. `0 0/30 8-9 5,20 * ?`：每月5号和20号的8:00/8:30/9:00/9:30执行
+
+**注意**：对于比较复杂的场景，如：每天9-10点间每5钟执行一次，同时13-22点间每20分钟执行一次，建议配置两个Trigger，然后注册到同一个Job实例上。
+
+### Building CronTriggers
+
+CronTrigger实例可以使用TriggerBuilder和CronScheduleBuilder来创建：
+
+```java
+import static org.quartz.TriggerBuilder.*;
+import static org.quartz.CronScheduleBuilder.*;
+import static org.quartz.DateBuilder.*;
+```
+
+如下，是一些示例：
+
+1. 每天的8-17点每隔一分钟执行一次
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger3", "group1")
+       .withSchedule(cronSchedule("0 0/2 8-17 * * ?"))
+       .forJob("myJob", "group1")
+       .build();
+   ```
+
+2. 每天的10:42执行一次
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger3", "group1")
+       .withSchedule(dailyAtHourAndMinute(10, 42))
+       .forJob(myJobKey)
+       .build();
+   ```
+   或
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger3", "group1")
+       .withSchedule(cronSchedule("0 42 10 * * ?"))
+       .forJob(myJobKey)
+       .build();
+   ```
+
+3. 在指定时区的每周三的10:42执行一次
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger3", "group1")
+       .withSchedule(weeklyOnDayAndHourAndMinute(DateBuilder.WEDNESDAY, 10, 42))
+       .forJob(myJobKey)
+       .inTimeZone(TimeZone.getTimeZone("America/Los_Angeles"))
+       .build();
+   ```
+   或
+   ```java
+   trigger = newTrigger()
+       .withIdentity("trigger3", "group1")
+       .withSchedule(cronSchedule("0 42 10 ? * WED"))
+       .inTimeZone(TimeZone.getTimeZone("America/Los_Angeles"))
+       .forJob(myJobKey)
+       .build();
+   ```
+
+### CronTrigger Misfire Instructions
+
+CronTrigger的"misfire instruction"都作为常量定义在了CronTrigger类中。
+
+```
+MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY
+MISFIRE_INSTRUCTION_DO_NOTHING
+MISFIRE_INSTRUCTION_FIRE_NOW
+```
+
+所有Trigger默认"misfire instruction"都是`Trigger.MISFIRE_INSTRUCTION_SMART_POLICY`。如果"smart policy"用于CronTrigger，它会选择`MISFIRE_INSTRUCTION_FIRE_NOW`。`CronTrigger.updateAfterMisfire()`方法的代码说明了选择的过程。
+
+创建CronTrigger时，可以在cronSchedule()部分指定"misfire instruction"：
+
+```java
+trigger = newTrigger()
+    .withIdentity("trigger3", "group1")
+    .withSchedule(cronSchedule("0 0/2 8-17 * * ?")
+        .withMisfireHandlingInstructionFireAndProceed())
+    .forJob("myJob", "group1")
+    .build();
+```
+
