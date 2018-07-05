@@ -543,6 +543,8 @@ import static org.quartz.DateBuilder.*;
        .build();
    ```
 
+参考[Cron Maker](http://www.cronmaker.com/ "A utility helps you to build cron expressions")可以快速创建Cron表达式。
+
 ### CronTrigger Misfire Instructions
 
 CronTrigger的"misfire instruction"都作为常量定义在了CronTrigger类中。
@@ -782,4 +784,57 @@ org.quartz.dataSource.myDS.maxConnections=5
 **注意**：
 * 如果调度器很繁忙(几乎每时每刻都有与线程池内线程数相等的Job在运行)，那需要将数据源的连接数配置为：`线程数+2`。
 * 如果将`org.quartz.jobStore.useProperties`配置设为`true`，则JDBCJobStore会将JobDataMap里所有value当作String，这样就能将这些数据存储为键-值对，而无需序列为二进制数据存储为BLOB类型。从长远来看，这样更安全。
+
+### TerracottaJobStore
+
+TerracottaJobStore无需数据库即可提供扩展性和健壮性，支持集群模式或非集群模式下运行，为Job数据提供存储介质，性能比JDBCJobStore要好，但比RAMJobStore慢一些。
+
+使用如下配置启用TerracottaJobStore：
+
+```properties
+# JobStore类名
+org.quartz.jobStore.class=org.terracotta.quartz.TerracottaJobStore
+# Terracotta Server的地址
+org.quartz.jobStore.tcConfigUrl=localhost:9510
+```
+
+## Configuration
+
+Quartz是模块化的，需要将这些模块整合起来才能工作。主要的几个模块有：
+* ThreadPool 线程池
+* JobStore Job数据存储方式
+* DataSource 根据需要进行配置
+* Scheduler 调度器本身
+
+ThreadPool线程池提供了用于Quartz执行Job的线程，线程数越多，同时运行的Job越多，但过多的线程可能会拖慢系统。
+* 任意特定时间的Job数量都不到100个，通常不是同时运行，而且执行很快的情况下，5个线程就足够了。
+* 当有数万个不同时间表的Trigger，任意给定时刻平均有10-100个Job在运行时，就需要10/15/50甚至100个线程了。
+
+线程数的确定完全依赖于调度器程序的内容，没有准则，但保持线程数尽量小(但要保证有足够的线程用于Job正常运行)。
+
+**注意**：如果Trigger的触发时间到了，但没有空闲线程可用时，Quartz会block(pause)直到有空闲的线程可用，Job才会执行，这会比Job本来应该执行的时刻晚几毫秒。如果在Scheduler配置的"misfire threshold"时间内仍然没有可用线程，则会导致Trigger misfire。
+
+ThreadPool接口定义在`org.quartz.spi`包下，用户可以编写自己的ThreadPool实现。Quartz默认提供了一个简单的线程池`org.quartz.simpl.SimpleThreadPool`，是固定线程数的，不会增长也不会减少，但经过了全面测试且十分健壮，几乎所有用户都会使用这个线程池。
+
+JobStore和DataSource上文已经提到过了，所有的JobStore都实现了`org.quartz.spi.JobStore`接口，如果Quartz提供的JobStore不能满足要求用户也可以编写自己的JobStore实现。
+
+最后就是创建一个Scheduler实例，需要为Scheduler指定一个名字，设置RMI参数，并传递JobStore和ThreadPool实例。RMI参数包括是否启动RMI服务(使用Scheduler自身用于远程连接)及要使用的主机和端口等。StdSchedulerFactory (discussed below) can also produce Scheduler instances that are actually proxies (RMI stubs) to Schedulers created in remote processes.
+
+### StdSchedulerFactory
+
+StdSchedulerFactory是`org.quartz.SchedulerFactory`接口的实现类。它使用一组属性配置(`java.util.Properties`)去创建和初始化Scheduler。这些属性可以从配置文件加载也可以在代码中直接传递。简单的调用`getScheduler()`方法即可创建、初始化(ThreadPool/JobStore/DataSource)并返回Scheduler实例。
+
+Quartz的详细配置可参考[这里](http://www.quartz-scheduler.org/documentation/quartz-2.2.x/configuration/ "Quartz Configuration Reference")，也可以在发布包里找到一些配置示例。
+
+### DirectSchedulerFactory
+
+DirectSchedulerFactory是另一个SchedulerFactory实现，它用于以编码方式创建Scheduler实例的场合。不建议使用的原因有两点：
+* 用户必须更好的理解自己正在做什么
+* 不允许声明式的配置，必须硬编码所有的设置
+
+### Logging
+
+Quartz使用SLF4J框架记录日志，如果要获取Trigger触发和Job执行相关的额外信息，可以启用这两个插件：
+* `org.quartz.plugins.history.LoggingJobHistoryPlugin`
+* `org.quartz.plugins.history.LoggingTriggerHistoryPlugin`
 
