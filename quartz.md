@@ -838,3 +838,49 @@ Quartz使用SLF4J框架记录日志，如果要获取Trigger触发和Job执行�
 * `org.quartz.plugins.history.LoggingJobHistoryPlugin`
 * `org.quartz.plugins.history.LoggingTriggerHistoryPlugin`
 
+## Clustering
+
+Cluster模式目前需要配合JDBC-JobStore(JobStoreTX or JObStoreCMT)或TerracottaJobStore使用，包括负载均衡和Job的故障恢复(如果JobDetail的"request recovery"设置为true)特性。
+
+* 使用JobStoreTX和JobStoreCMT时，需要添加如下设置来启用Cluster模式
+
+  ```properties
+  org.quartz.jobStore.isClustered=true
+  ```
+
+  集群内的所有结点需要使用相同的配置文件，但如下配置可以不同：
+  * Threadpool的大小。
+  * `org.quartz.scheduler.instanceId`配置项的值。每个结点的instanceId必须唯一，为了方便，只需要将这个配置项的值设为`AUTO`即可。
+
+  Cluster模式不要跨机器运行，除非这些机器之间的时间是同步的(时钟差异在1秒以内)。非Cluster模式的结点不要共用同一组数据库表，否则会导致数据不一致和系统不稳定。
+
+  每次触发只会有一个结点执行Job，这意味着，如果一个Job配置为每10秒钟执行一次，那12:00:00会有一个结点执行该Job，12:00:10会有一个结点执行该Job，这两个结点可以是不同的结点，是随机选择的。对于非常繁忙的调度器(Trigger非常多)，负载均衡机制会随机分配，但对于不太繁忙的情况(如一两个Trigger)可能会是在同一结点上。
+
+* 使用TerracottaJobStore时，默认就是Cluster模式运行。但要考虑Terracotta Server的持久化和HA的问题。企业版的TerracottaJobStore提供了Quartz的高级功能，可以智能的将Job分配到集群结点上。
+
+## JTA Transaction
+
+JobStoreCMT允许Quartz的调度操作运行在一个大的JTA事务里。如果有如下配置，那Job也可以运行在一个JTA事务里：
+
+```properties
+org.quartz.scheduler.wrapJobExecutionInUserTransaction=true
+```
+
+事务的`begin()`方法会在执行Job的`execute()`方法之前调用，`commit()`方法会在`execute()`方法执行完之后被调用，所有Job都是如此。如果要指定单个Job是否要包含在一个事务里，可以在Job实现类上使用`@ExecuteInJTATransaction`注解。
+
+当使用JobStoreCMT时，除了Job的执行，对于Scheduler接口方法的调用也会加入到事务里。所以要确保在调用Scheduler的方法之前开启事务。
+
+## Plug-Ins
+
+Quartz提供了一个接口`org.quartz.spi.SchedulerPlugin`用于实现插件功能。Quartz内置提供了很多实用的插件在`org.quartz.plugins`包下，提供了诸如启动时自动调度Job、记录Job和Trigger日志、调度器在JVM退出时干净的关闭等功能。
+
+## JobFactory
+
+Trigger触发时，Scheduler配置的JobFactory会创建Job实例，默认的JobFactory会调用class对象的`newInstance()`方法来创建实例。除此之外，也可以创建自己的JobFactory实现，使用Ioc容器的DI功能去创建和初始化Job实例。
+
+参考：`org.quartz.spi.JobFactory`接口和`Scheduler.setJobFactory(fact)`方法
+
+## "Factory-Shipped" Jobs
+
+Quartz也提供了很多实用的Job，如发送邮件、调用EJB等，这些开箱即用的Job在`org.quartz.jobs`包下面。
+
