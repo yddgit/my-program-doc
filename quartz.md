@@ -1,5 +1,9 @@
 # Quartz
 
+Quartz是一个功能丰富的开源任务调度库，可以与任意Java应用集成，小到独立应用，大到电商平台。它可以用于创建简单或复杂的任务计划，以执行数十、数百甚至数万个任务。所有任务都是标准的Java组件，可以任意编写代码实现。Quartz的调度器还支持很多企业级特性，如JTA事务和集群。
+
+Quartz可以免费使用，使用Apache 2.0 License进行授权。
+
 ## Download and Install
 
 Download URL: http://www.quartz-scheduler.org/downloads/
