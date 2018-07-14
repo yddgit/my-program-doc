@@ -1,5 +1,17 @@
 # Hive的安装和简单配置
 
+Hive架构
+
+![hive-architectruce](https://github.com/yddgit/my-program-doc/raw/master/images/hive-architectruce1.png "hive-architectruce")
+
+![hive-architectruce](https://github.com/yddgit/my-program-doc/raw/master/images/hive-architectruce2.png "hive-architectruce")
+
+Hive Metastore 配置方式
+
+![hive-metastore-configuration](https://github.com/yddgit/my-program-doc/raw/master/images/hive-metastore-configuration.png "hive-metastore-configuration")
+
+下面以Remote Metastore方式配置和安装Hive:
+
 ## 安装MySQL并创建hive数据库
 
 ```sql

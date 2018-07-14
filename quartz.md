@@ -766,7 +766,6 @@ JDBCJobStore可以支持多种类型的数据库：Oracle/PostgreSQL/MySQL/MSSQL
 #============================================================================
 # Configure JobStore  
 #============================================================================
-
 org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX
 org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
 org.quartz.jobStore.useProperties=false
@@ -777,7 +776,6 @@ org.quartz.jobStore.isClustered=false
 #============================================================================
 # Configure Datasources  
 #============================================================================
-
 org.quartz.dataSource.myDS.driver=org.postgresql.Driver
 org.quartz.dataSource.myDS.URL=jdbc:postgresql://localhost/dev
 org.quartz.dataSource.myDS.user=postgre
