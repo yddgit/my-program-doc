@@ -102,7 +102,7 @@ import static org.quartz.TriggerBuilder.*;
 import static org.quartz.DateBuilder.*;
 ```
 
-这里有很多ScheduleBuilder用于创建不同类型的Scheduler。`DateBuilder`包含一些简便的方法用于创建特定时点的`java.util.Date`实例。如：下一个偶数小时或者下一个整点时刻等。
+这里有很多ScheduleBuilder用于创建不同类型的Scheduler。`DateBuilder`包含一些简便的方法用于创建特定时点的`java.util.Date`实例。如：下一个整点小时或者下一个整点时刻等。
 
 ## Jobs and Triggers
 
@@ -408,7 +408,7 @@ import static org.quartz.DateBuilder.*;
        .endAt(dateOf(22, 0, 0))
        .build();
    ```
-5. 从下一个偶数整点开始，每2小时运行一次，不停止
+5. 从下一个整点开始，每2小时运行一次，不停止
    ```java
    trigger = newTrigger()
        .withIdentity("trigger8") // because group is not specified, "trigger8" will be in the default group
