@@ -658,3 +658,74 @@ FROM image-name
 
 # 8. Docker搭建本地私有registry
 
+1. 启动一个本地仓库
+
+   ```bash
+   # 启动registry
+   docker run -d -p 5000:5000 --restart=always --name registry registry:2
+   # 从docker hub上拉一个镜像
+   docker pull ubuntu:16.04
+   # 给镜像打一个tag
+   docker tag ubuntu:16.04 localhost:5000/my-ubuntu
+   # 把镜像push到仓库
+   docker push localhost:5000/my-ubuntu
+   # 可以删除本地镜像然后从本地仓库拉取
+   docker image remove ubuntu:16.04
+   docker image remove localhost:5000/my-ubuntu
+   docker pull localhost:5000/my-ubuntu
+   ```
+
+2. 停止本地仓库
+
+   ```bash
+   docker container stop registry
+   docker container stop registry && docker container rm -v registry
+   ```
+
+3. 对以上启动registry的docker命令的说明
+
+   * -p 5000:5000 映射端口
+   * --restart=always 让容器自动启动
+   * -v /mnt/registry:/var/lib/registry 映射存储目录
+
+4. 使用docker-compose部署registry
+
+   ```yml
+   # docker-compose.yml
+   registry:
+     restart: always
+     image: registry:2
+     environment:
+       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+     ports:
+       - 127.0.0.1:5000:5000
+     volumes:
+       - /opt/docker/registry:/var/lib/registry
+   ```
+
+   ```bash
+   # 启动registry容器
+   docker-compose up -d
+   # 对应的docker命令
+   docker run -d \
+     -e REGISTRY_HTTP_ADDR=0.0.0.0:5000 \
+     -p 127.0.0.1:5000:5000 \
+     --restart=always \
+     --name registry \
+     -v /opt/docker/registry:/var/lib/registry \
+     registry:2
+   ```
+
+5. 如果是使用主机名和默认80端口访问registry, 则需要修改`/etc/docker/daemon.json`, 在`insecure-registries`中添加registry的地址
+
+   ```json
+   {
+       "registry-mirrors": [
+           "https://registry.docker-cn.com"
+       ],
+       "insecure-registries": [
+           "http://docker.local"
+       ]
+   }
+   ```
+
