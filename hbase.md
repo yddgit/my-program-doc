@@ -139,6 +139,10 @@ ssh-copy-id node2
     <name>hbase.zookeeper.quorum</name>
     <value>node0,node1,node2</value>
   </property>
+  <property>
+    <name>hbase.unsafe.stream.capability.enforce</name>
+    <value>false</value>
+  </property>
   ```
 * 将node0的配置copy到node1和node2
 * 启动集群: 在node0上执行bin/start-hbase.sh
