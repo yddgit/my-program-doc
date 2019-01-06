@@ -21,7 +21,7 @@ create database hive default charset latin1 collate latin1_swedish_ci;
 --创建用户
 create user if not exists 'hive'@'%' identified by 'password';
 --分配权限
-grant all privileges on hive.* to 'hive'@'%' identified by 'password';
+grant all privileges on hive.* to 'hive'@'%' identified by 'password' with grant option;
 flush privileges;
 ```
 
