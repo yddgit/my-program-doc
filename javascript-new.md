@@ -471,8 +471,8 @@
   ```javascript
   function foo() {
     var 
-      x = 1; // x初始化为1
-      y = x + 1; // y初始化为2
+      x = 1, // x初始化为1
+      y = x + 1, // y初始化为2
       z, i; // z和i为undefined
     // ...
     for(i=0; i<100; i++) {
@@ -963,4 +963,215 @@
     }
   };
   obj.getAge(2015); // 25
+  ```
+
+* generator（**ES6**规范）
+
+  ES6的generator标准借鉴了Python的概念和语法，与函数很像，定义如下
+
+  ```javascript
+  function* foo(x) {
+    yield x + 1;
+    yield x + 2;
+    return x + 3;
+  }
+  ```
+
+  generator与函数不同的是，generator由`function*`定义，并且除了`return`语句，还可以用`yield`返回多次
+
+  以斐波那契数列为例，它由`0`，`1`开头：`0 1 1 2 3 5 8 13 21 34 ...`，要编写一个产生斐波那契数列的函数，可以这么写：
+
+  ```javascript
+  function fib(max) {
+    var
+      t,
+      a = 0,
+      b = 1,
+      arr = [0, 1];
+    while(arr.length < max) {
+      [a, b] = [b, a+b];
+      arr.push(b);
+    }
+    return arr;
+  }
+
+  fib(10); // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+  ```
+
+  函数只能返回一次，所以必须返回一个`Array`，但是generator可以一次返回一个数，不断返回多次：
+
+  ```javascript
+  function* fib(max) {
+    var
+      t,
+      a = 0,
+      b = 1,
+      n = 0;
+    while(n < max) {
+      yield a;
+      [a, b] = [b, a+b];
+      n++;
+    }
+    return;
+  }
+
+  fib(5); // fib {[[GeneratorStatus]]: "suspended", [[GeneratorReceiver]]: Window}
+  ```
+
+  直接调用一个generator和调用函数不一样，`fib(5)`仅仅是创建了一个generator对象，还没有去执行它
+  
+  调用generator对象有两个方法：
+  
+  1. 不断地调用next()方法
+
+     ```javascript
+     var f = fib(5);
+     f.next(); // {value: 0, done: false}
+     f.next(); // {value: 1, done: false}
+     f.next(); // {value: 1, done: false}
+     f.next(); // {value: 2, done: false}
+     f.next(); // {value: 3, done: false}
+     f.next(); // {value: undefined, done: true} 
+     ```
+  
+     `next()`方法会执行generator代码，当遇到`yield x;`，就返回一个对象`{value: x, done: true/false}`，然后“暂停”，返回的`value`就是`yield`的返回值，`done`表示这个generator是否已经执行结束了。
+
+     如果`done`为true，则`value`就是`return`的返回值。这时generator对象就已经全部执行完毕了，不要再继续调用next()了。
+
+  2. 用`for ... of`循环迭代generator对象，这种方法不需要自己判断done
+
+     ```javascript
+     for( var x of fib(10)) {
+       console.log(x); // 0, 1, 1, 2, 3, ...
+     }
+     ```
+
+  generator可以在执行过程中多次返回，看上去像一个可以记住执行状态的函数，利用这一点就可以实现需要用面向对象才能实现的功能。如，用一个对象来保存状态，就得这么写：
+
+  ```javascript
+  var fib = {
+    a: 0,
+    b: 1,
+    n: 0,
+    max: 5,
+    next: function() {
+      var
+        r = this.a,
+        t = this.a + this.b;
+      this.a = this.b;
+      this.b = t;
+      if(this.n < this.max) {
+        this.n++;
+        return r;
+      } else {
+        return undefined;
+      }
+    }
+  }
+  ```
+
+  使用generator实现一个计数器
+
+  ```javascript
+  'use strict';
+
+  function* next_id() {
+    var x = 1;
+    while(true) yield x++;
+  }
+
+  var g = next_id();
+  g.next(); // 1
+  g.next(); // 2
+  ```
+
+* 标准对象
+
+  1. 不要使用`new Number()`、`new Boolean`、`new String`创建包装对象
+     ```javascript
+     // number, boolean, string都有包装对象
+     var n = new Number(123);
+     var b = new Boolean(true);
+     var s = new String('str');
+     // 包装对象的类型是object，与原始值用===比较会返回false
+     typeof new Number(123); // 'object'
+     new Number(123) === 123; // false
+     typeof new Boolean(true); // 'object'
+     new Boolean(true) === true; // false
+     typeof new String('str'); // 'object'
+     new String('str') === 'str'; // false
+     // 如果不写new，Number()、Boolean()和String()被当做普通函数，把任何类型的数据转换为number、boolean和string类型（注意不是其包装类型）：
+     typeof Number('123'); // 'number', 相当于parseInt()或parseFloat()
+     typeof Boolean('true'); // 'boolean' true
+     var b1 = Boolean('false'); // true
+     var b2 = Boolean(''); // false
+     typeof String(123.45); // 'string'
+     ```
+  2. 用`parseInt`或`parseFloat`来转换任意类型到`number`
+  3. 用`String()`来转换任意类型到`string`，或者直接调用某个对象的`toString()`方法
+     * 不是任何对象都有`toString()`方法，`null`和`undefined`就没有
+     * `number`对象调用`toString()`会报语法错误
+       ```javascript
+       123.toString(); // SyntaxError
+       // 此时需要特殊处理一下
+       123..toString(); // '123', 注意是两个点
+       (123).toString(); // '123'
+       ```
+  4. 通常不必把任意类型转换为boolean再判断，因为可以直接写`if (myVar) {...}`
+  5. `typeof`操作符可以判断出`number`、`boolean`、`string`、`function`和`undefined`
+     ```javascript
+     typeof 123; // 'number'
+     typeof NaN; // 'number'
+     typeof 'str'; // 'string'
+     typeof true; // 'boolean'
+     typeof undefined; // 'undefined'
+     typeof Math.abs; // 'function'
+     typeof null; // 'object'
+     typeof []; // 'object'
+     typeof {}; // 'object'
+     ```
+  6. 判断`Array`要使用`Array.isArray(arr)`
+  7. 判断`null`请使用`myVar === null`
+  8. 判断某个全局变量是否存在用`typeof window.myVar === 'undefined'`
+  9. 函数内部判断某个变量是否存在用`typeof myVar === 'undefined'`
+
+* Date
+
+  ```javascript
+  // 获取系统当前时间(本机操作系统时间)
+  var now = new Date();
+  now; // Thu Jan 10 2019 16:34:07 GMT+0800 (China Standard Time)
+  now.getFullYear(); // 2019, 年份
+  now.getMonth(); // 0, 月份0~11, 0表示1月
+  now.getDate(); // 10, 表示10号
+  now.getDay(); // 4, 表示星期四
+  now.getHours(); // 16, 24小时制
+  now.getMinutes(); // 34, 分钟
+  now.getSeconds(); // 7, 秒
+  now.getMilliseconds(); // 522, 毫秒数
+  now.getTime(); // 1547109247522, 以number形式表示的时间戳
+
+  // 创建一个指定日期和时间的Date对象
+  var d = new Date(2015, 5, 19, 20, 15, 30, 123);
+  d; // Fri Jun 19 2015 20:15:30 GMT+0800 (China Standard Time)
+  
+  // 通过解析一个符合ISO 8601格式的字符串来创建Date对象
+  var d = Date.parse('2015-06-24T19:49:22.875+08:00');
+  d; // 1435146562875
+  // 不过它返回的是一个时间戳，可以很容易地转换为一个Date
+  var d = new Date(1435146562875);
+  d; // Wed Jun 24 2015 19:49:22 GMT+0800 (China Standard Time)
+  d.getMonth(); // 5, 使用Date.parse()时传入的字符串使用实际月份01~12, 转换为Date对象后getMonth()为0~11
+
+  // 使用时间戳创建Date()就不需要关心时区转换的问题
+  var d = new Date(1435146562875);
+  d.toLocaleString(); // '6/24/2015, 7:49:22 PM'
+  d.toUTCString(); // 'Wed, 24 Jun 2015 11:49:22 GMT'
+
+  // 获取当前时间戳
+  if(Date.now) {
+    console.log(Date.now()); // 老版本IE没有now()方法
+  } else {
+    console.log(new Date().getTime());
+  }
   ```
