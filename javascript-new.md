@@ -1175,3 +1175,80 @@
     console.log(new Date().getTime());
   }
   ```
+
+* RegExp
+
+  JavaScript有两种方式创建一个正则表达式：
+
+  1. 直接通过`/正则表达式/`写出来
+  2. 通过`new RegExp('正则表达式')`创建RegExp对象
+
+  ```javascript
+  var re1 = /ABC\-001/;
+  var re2 = new RegExp('ABC\\-001'); // 注意字符串转义
+
+  // 测试给定的字符串是否匹配：test()
+  var re = /^\d{3}\-\d{3,8}$/;
+  re.test('010-12345'); // true
+  re.test('010-1234x'); // false
+  re.test('010 12345'); // false
+
+  // 切分字符串
+  'a b   c'.split(' '); // ['a', 'b', '', '', 'c']
+  'a b   c'.split(/\s+/); // ['a', 'b', 'c']
+  'a,b, c  d'.split(/[\s\,]+/); // ['a', 'b', 'c', 'd']
+  'a,b;; c  d'.split(/[\s\,\;]+/); // ['a', 'b', 'c', 'd']
+  ```
+
+  提取子串，用`()`表示要提取的分组（Group）
+
+  ```javascript
+  var re = /^(\d{3})-(\d{3,8})$/;
+  re.exec('010-12345'); // ['010-12345', '010', '12345']
+  re.exec('010 12345'); // null
+  ```
+
+  如果正则表达式定义了组，可以在RegExp对象上用exec()方法提取出子串来
+  * exec()方法匹配成功后，会返回一个Array，第一个元素是正则表达式匹配到的整个字符串，后面的字符串表示匹配成功的子串
+  * exec()方法匹配失败时返回null
+
+  ```javascript
+  var re = /^(0[0-9]|1[0-9]|2[0-3]|[0-9])\:(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|[0-9])\:(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|[0-9])$/;
+  re.exec('19:05:30'); // ['19:05:30', '19', '05', '30']
+  ```
+
+  正则匹配默认是贪婪匹配，加个`?`就可以采用非贪婪匹配
+
+  ```javascript
+  // 贪婪匹配
+  var re = /^(\d+)(0*)$/;
+  re.exec('102300'); // ['102300', '102300', '']
+  // 非贪婪匹配
+  var re = /^(\d+?)(0*)$/;
+  re.exec('102300'); // ['102300', '1023', '00']
+  ```
+
+  JavaScript的正则表达式还有几个特殊的标志，最常用的是`g`，表示全局匹配
+
+  ```javascript
+  var r1 = /test/g;
+  // 等价于
+  var r2 = new RegExp('test', 'g');
+  ```
+
+  全局匹配可以多次执行`exec()`方法来搜索一个字符串，每次执行`exec()`，正则表达式本身会更新`lastIndex`属性，表示上次匹配到的最后索引
+
+  ```javascript
+  var s = 'JavaScript, VBScript, JScript and ECMAScript';
+  var re = /[a-zA-Z]+Script/g;
+
+  re.exec(s); // ['JavaScript']
+  re.lastIndex; // 10
+  re.exec(s); // ['VBScript']
+  re.lastIndex; // 20
+  re.exec(s); // ['JScript']
+  re.lastIndex; // 29
+  re.exec(s); // ['ECMAScript']
+  re.lastIndex; // 44
+  re.exec(s); // null
+  ```
