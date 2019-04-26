@@ -308,6 +308,8 @@
   });
   ```
 
+## 函数
+
 * 函数参数
 
   未传入的参数，函数内将收到`undefined`，为此可以对参数进行检查：
@@ -1085,7 +1087,7 @@
   g.next(); // 2
   ```
 
-* 标准对象
+## 标准对象
 
   1. 不要使用`new Number()`、`new Boolean`、`new String`创建包装对象
      ```javascript
@@ -1236,7 +1238,7 @@
   var r2 = new RegExp('test', 'g');
   ```
 
-  全局匹配可以多次执行`exec()`方法来搜索一个字符串，每次执行`exec()`，正则表达式本身会更新`lastIndex`属性，表示上次匹配到的最后索引
+  全局匹配可以多次执行`exec()`方法来搜索一个字符串，当指定了`g`标志后，每次执行`exec()`，正则表达式本身会更新`lastIndex`属性，表示上次匹配到的最后索引
 
   ```javascript
   var s = 'JavaScript, VBScript, JScript and ECMAScript';
@@ -1252,3 +1254,210 @@
   re.lastIndex; // 44
   re.exec(s); // null
   ```
+
+  全局匹配类似搜索，因此不能使用`/^...$/`，那样只会最多匹配一次。正则表达式还可以指定`i`标志，表示忽略大小写，`m`标志，表示执行多行匹配
+
+* JSON
+
+  JSON - JavaScript Object Notation
+
+  JSON中的数据类型：
+
+  - number：即JavaScript中的`number`
+  - boolean：即JavaScript中的`true`或`false`
+  - string：即JavaScript中的`string`
+  - null：即JavaScript中的`null`
+  - array：JavaScript中`Array`的表示方式`[]`
+  - object：即JavaScript中的`{...}`表示方式
+
+  JSON字符集必须是`UTF-8`，字符串必须用双引号`""`，Object的key也必须用双引号`""`
+
+  **序列化**
+
+  ```javascript
+  'use strict';
+  var xiaoming = {
+    name: '小明',
+    age: 14,
+    gender: true,
+    height: 1.65,
+    grade: null,
+    'middle-school': '\"W3C\" Middle School',
+    skills: ['JavaScript', 'Java', 'Python', 'Lisp']
+  };
+  var s = JSON.stringify(xiaoming);
+  console.log(s);
+  // {"name":"小明","age":14,"gender":true,"height":1.65,"grade":null,"middle-school":"\"W3C\" Middle School","skills":["JavaScript","Java","Python","Lisp"]}
+
+  // 缩进输出
+  s = JSON.stringify(xiaoming, null, '  ');
+  console.log(s);
+  /*
+  {
+    "name": "小明",
+    "age": 14,
+    "gender": true,
+    "height": 1.65,
+    "grade": null,
+    "middle-school": "\"W3C\" Middle School",
+    "skills": [
+      "JavaScript",
+      "Java",
+      "Python",
+      "Lisp"
+    ]
+  }
+  */
+
+  // 第二个参数用于控制如何筛选对象的key，如：只输出指定的属性
+  s = JSON.stringify(xiaoming, ['name', 'skills'], '  ');
+  console.log(s);
+  /*
+  {
+    "name": "小明",
+    "skills": [
+      "JavaScript",
+      "Java",
+      "Python",
+      "Lisp"
+    ]
+  }
+  */
+  // 还可以传入一个函数，这样对象的每个key-value都会被函数先处理(递归的)
+  // 如：把所有属性值都变成大写
+  function convert(key, value) {
+    if(typeof value === 'string') {
+      return value.toUpperCase();
+    }
+    return value;
+  }
+  s = JSON.stringify(xiaoming, convert, '  ');
+  console.log(s);
+  /*
+  {
+    "name": "小明",
+    "age": 14,
+    "gender": true,
+    "height": 1.65,
+    "grade": null,
+    "middle-school": "\"W3C\" MIDDLE SCHOOL",
+    "skills": [
+      "JAVASCRIPT",
+      "JAVA",
+      "PYTHON",
+      "LISP"
+    ]
+  }
+  */
+
+  // 可以定义toJSON()方法精确控制序列化
+  xiaoming.toJSON = function() {
+    return {
+      'Name': this.name,
+      'Age': this.age
+    }
+  }
+  s = JSON.stringify(xiaoming);
+  console.log(s);
+  // {"Name":"小明","Age":14}
+  ```
+
+  **反序列化**
+
+  使用`JSON.parse()`将JSON格式的字符串变成一个JavaScript对象
+
+  ```javascript
+  JSON.parse('[1,2,3,true]'); // [1, 2, 3, true]
+  JSON.parse('{"name":"小明","age":14}'); // {name: "小明", age: 14}
+  JSON.parse('true'); // true
+  JSON.parse('123.45'); // 123.45
+
+  // JSON.parse()还可以接收一个函数用来转换解析出的属性
+  var obj = JSON.parse('{"name":"小明","age":14}', function(key, value) {
+    if(key === 'name') {
+      return value + '同学';
+    }
+    return value;
+  });
+  console.log(JSON.stringify(obj));
+  // {"name":"小明同学","age":14}
+  ```
+
+## 面向对象编程
+
+与`Java`、`C#`等面向对象语言中的类和实例的概念不同，JavaScript通过原型(prototype)来实现面向对象编程。原型是指当我们要创建`xiaoming`这个具体的学生时，并没有一个`Student`类型可用。但有一个现成的对象：
+
+```javascript
+var robot = {
+  name: 'Robot',
+  height: 1.6,
+  run: function() {
+    console.log(this.name + ' is running...');
+  }
+};
+```
+
+这个`robot`对象有名字、身高，还会跑，有点像小明，就用它来“创建”小明吧
+
+```javascript
+var Student = {
+  name: 'Robot',
+  height: 1.2,
+  run: function() {
+    console.log(this.name + ' is running...');
+  }
+}
+
+var xiaoming = {
+  name: '小明'
+};
+
+// 把xiaoming的原型指向对象Student
+xiaoming.__proto__ = Student;
+xiaoming.name; // '小明'
+xiaoming.run(); // 小明 is running...
+```
+
+`xiaoming`有自己的`name`属性，但并没有定义`run()`方法，但由于是从`Student`继承而来，只要`Student`有`run()`方法，`xiaoming`也可以调用
+
+JavaScript的原型链和Java的Class区别就在，它没有“Class”的概念，所有对象都是实例，所谓继承关系不过是把一个对象的原型指向另一个对象而已
+
+如果把`xiaoming`的原型指向其他对象：
+
+```javascript
+var Bird = {
+  fly: function() {
+    console.log(this.name + ' is flying...');
+  }
+};
+
+xiaoming.__proto__ = Bird;
+
+// 现在xiaoming无法run()了
+xiaoming.fly(); // 小明 is flying...
+```
+
+在JavaScript代码运行时期，可以把xiaoming从Student变成Bird，或者变成任何对象
+
+**注意**：不要直接用`obj.__proto__`去改变一个对象的原型，而且低版本的IE也无法使用`__proto__`。`Object.create()`方法可以传入一个原型对象，并创建一个基于该原型的新对象，但新对象什么属性都没有
+
+```javascript
+var Student = {
+  name: 'Robot',
+  height: 1.2,
+  run: function() {
+    console.log(this.name + ' is running...');
+  }
+};
+
+function createStudent(name) {
+  var s = Object.create(Student);
+  s.name = name;
+  return s;
+}
+
+var xiaoming = createStudent('小明');
+xiaoming.run(); // 小明 is running...
+xiaoming.__proto__ === Student; // true
+```
+
