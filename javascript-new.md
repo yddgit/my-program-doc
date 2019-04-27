@@ -1461,3 +1461,271 @@ xiaoming.run(); // 小明 is running...
 xiaoming.__proto__ === Student; // true
 ```
 
+* 创建对象
+
+  当用`obj.xxx`访问一个对象属性时，JavaScript引擎先在当前对象上查找该属性，如果没有找到，就到其原型对象上找，如果还没有找到，就一直上溯到`Object.prototype`对象，最后，如果还没有找到，就只能返回`undefined`
+
+  ```javascript
+  // 创建一个Array对象
+  var arr = [1, 2, 3];
+  // 原型链：arr ----> Array.prototype ----> Object.prototype ----> null
+  // Array.prototype定义了indexOf()、shift()等方法，因此可以在所有的Array对象上直接调用这些方法
+
+  // 创建一个函数
+  function foo() {
+    return 0;
+  }
+  // 原型链：foo ----> Function.prototype ----> Object.prototype ----> null
+  // Function.prototype定义了apply()方法，因此所有函数都可以调用apply()方法
+  ```
+
+  因此，如果原型链很长，那么访问一个对象的属性就会因为花更多时间查找而变得更慢，因此不要把原型链搞得太长
+
+* 构造函数
+
+  除了直接用`{...}`创建一个对象外，JavaScript还可以用一种构造函数的方法来创建对象。它的用法是，先定义一个构造函数：
+
+  ```javascript
+  // 看起来就是一个普通函数
+  function Student(name) {
+    this.name = name;
+    this.hello = function() {
+      alert('Hello, ' + this.name + '!');
+    }
+  }
+  // 但在JavaScript中，可以用关键字new来调用这个函数，并返回一个对象
+  var xiaoming = new Student('小明');
+  xiaoming.name; // 小明
+  xiaoming.hello(); // Hello, 小明
+  ```
+
+  注意：如果不写`new`，它就是一个普通函数，它返回`undefined`。但是，如果写了`new`，它就变成了一个构造函数，它绑定的`this`指向新创建的对象，并默认返回`this`，也就是说，不需要在最后写`return this;`
+
+  新创建的`xiaoming`的原型链：`xiaoming ----> Student.prototype ----> Object.prototype ----> null`
+
+  如果又创建了`xiaohong`、`xiaojun`，那么其原型与xiaoming是一样的
+
+  用`new Student()`创建的对象还从原型上获得了一个`constructor`属性，它指向函数Student本身：
+
+  ```javascript
+  xiaoming.constructor === Student.prototype.constructor; // true
+  Student.prototype.constructor === Student; // true
+  Object.getPrototypeOf(xiaoming) === Student.prototype; // true
+  xiaoming instanceof Student; // true
+  ```
+
+  用一张图来表示上面的关系就是：
+
+  ![javascript-prototype-constructor-1](https://github.com/yddgit/my-program-doc/raw/master/images/javascript-prototype-constructor-1.png "javascript-prototype-constructor-1")
+
+  红色箭头是原型链。注意，`Student.prototype`指向的对象就是`xiaoming`、`xiaohong`的原型对象，这个原型对象自己还有个属性`constructor`，指向`Student`函数本身。但是`xiaoming`、`xiaohong`这些对象可没有`prototype`这个属性，不过可以用`__proto__`这个非标准用法来查看。现在我们就认为`xiaoming`、`xiaohong`这些对象“继承”自`Student`
+
+  不过有个问题：
+
+  ```javascript
+  xiaoming.name; // 小明
+  xiaohong.name; // 小红
+  xiaoming.hello; // function: Student.hello()
+  xioahong.hello; // function: Student.hello()
+  xiaoming.hello === xiaohong.hello; // false
+  ```
+
+  `xiaoming`和`xiaohong`各自的name不同，这是对的，它们各自的`hello`是一个函数，但它们是两个不同的函数，虽然函数名和代码都相同。如果通过`new Student`创建了很多对象，这些对象的`hello`函数实际上只需要共享同一个函数就可以了，这样可以节省很多内存
+
+  要让创建的对象共享一个`hello`函数，根据对象的属性查找原则，我们只要把`hello`函数移到`xiaoming`、`xiaohong`这些对象共同的原型上就可以了，也就是`Student.prototype`
+
+  ![javascript-prototype-constructor-2](https://github.com/yddgit/my-program-doc/raw/master/images/javascript-prototype-constructor-2.png "javascript-prototype-constructor-2")
+
+  ```javascript
+  function Student(name) {
+    this.name = name;
+  }
+
+  Student.prototype.hello = function() {
+    alert('Hello, ' + this.name + '!');
+  }
+  ```
+
+* 忘记写`new`怎么办
+
+  如果一个函数被定义为用地创建对象的构造函数，但是调用时忘记了写`new`会出现什么问题？
+
+  在strict模式下，`this.name = name`将报错，因为`this`绑定为`undefined`，在非strict模式下，`this.name = name`不报错，因为`this`绑定为`window`，于是无意间创建了全局变量`name`，并且返回`undefined`，这个结果更糟糕。所以调用构造函数千万不要忘记写`new`。为了区分普通函数和构造函数，按照约定，构造函数首字母应当大写，而普通函数首字母应当小写
+
+  一个常用的编程模式是：
+
+  ```javascript
+  function Student(props) {
+    this.name = props.name || '匿名';
+    this.grade = props.grade || 1;
+  }
+
+  Student.prototype.hello = function() {
+    alert('Hello, ' + this.name + '!');
+  };
+
+  //这个函数的优点：1.不需要new来调用，2.参数非常灵活
+  function createStudent(props) {
+    return new Student(props || {});
+  }
+
+  // 如果创建的对象有很多属性，我们只需要传递需要的某些属性，剩下的属性可以用默认值
+  // 由于参数是Object，无需记忆参数的顺序，如果恰好从JSON拿到了一个对象，就可以直接创建出xiaoming
+  var xiaoming = createStudent({
+    name: '小明'
+  });
+  xiaoming.grade; // 1
+  ```
+
+* 原型继承
+
+  `Student`构造函数
+
+  ```javascript
+  function Student(props) {
+    this.name = props.name || 'Unnamed';
+  }
+
+  Student.prototype.hello = function () {
+    alert('Hello, ' + this.name + '!');
+  }
+  ```
+
+  `Student`原型链
+
+  ![javascript-prototype-constructor-2](https://github.com/yddgit/my-program-doc/raw/master/images/javascript-prototype-constructor-2.png "javascript-prototype-constructor-2")
+
+  现在，要基于`Student`扩展出`PrimaryStudent`，可以先定义出`PrimaryStudent`：
+
+  ```javascript
+  function PrimaryStudent(props) {
+    Student.call(this, props); // 调用Student构造函数，绑定this变量
+    this.grade = props.grade || 1;
+  }
+  ```
+
+  但是，调用`Student`构造函数不等于继承了`Student`，`PrimaryStudent`创建的对象的原型是：
+
+  `new PrimaryStudent ----> PrimaryStudent.prototype ----> Object.prototype ----> null`
+
+  必须想办法把原型链修改为：
+
+  `new PrimaryStudent ----> PrimaryStudent.prototype ----> Student.prototype ----> Object.prototype ----> null`
+
+  如下的做法是不行的：
+
+  ```javascript
+  PrimaryStudent.prototype = Student.prototype;
+  ```
+
+  此时，`PrimaryStudent`和`Student`共享一个原型对象，定义`PrimaryStudent`就没意义了
+
+  必须借助一个中间对象来实现正确的原型链，这个中间对象的原型要指向`Student.prototype`
+
+  ```javascript
+  // PrimaryStudent构造函数
+  function PrimaryStudent(props) {
+    Student.call(this, props);
+    this.grade = props.grade || 1;
+  }
+  // 空函数
+  function F() {}
+  // 把F的原型指向Student.prototype
+  F.prototype = Student.prototype
+  // 把PrimaryStudent的原型指向一个新的F对象，F对象的原型正好指向Student.prototype
+  PrimaryStudent.prototype = new F();
+  // 把PrimaryStudent原型的构造函数恢复为PrimaryStudent
+  PrimaryStudent.prototype.constructor = PrimaryStudent;
+  // 继续在PrimaryStudent原型(即new F()对象)上定义方法
+  PrimaryStudent.prototype.getGrade = function() {
+    return this.grade;
+  }
+
+  var xiaoming = new PrimaryStudent({
+    name: '小明',
+    grade: 2
+  });
+  xiaoming.name; // 小明
+  xiaoming.grade; // 2
+
+  xiaoming.__proto__ === PrimaryStudent.prototype; // true
+  xiaoming.__proto__.__proto__ === Student.prototype; // true
+  xiaoming instanceof PrimaryStudent; // true
+  xiaoming instanceof Student; // true
+  ```
+
+  新的原型链：
+
+  ![javascript-inherits](https://github.com/yddgit/my-program-doc/raw/master/images/javascript-inherits.png "javascript-inherits")
+
+  注意：函数`F`仅用于桥接，仅创建了一个`new F()`实例，而没有改变原有的`Student`定义的原型链。可以把继承这个动作用一个函数`inherits()`封装起来：
+
+  ```javascript
+  function inherits(Child, Parent) {
+    var F = function() {};
+    F.prototype = Parent.prototype;
+    Child.prototype = new F();
+    Child.prototype.constructor = Child;
+  }
+
+  // 这个inherits()函数可以复用
+  function Student(props) {
+    this.name = props.name || 'Unnamed';
+  }
+  Student.prototype.hello = function() {
+    alert('Hello, ' + this.name + '!');
+  }
+  function PrimaryStudent(props) {
+    Student.call(this, props);
+    this.grade = props.grade || 1;
+  }
+  inherits(PrimaryStudent, Student);
+  PrimaryStudent.prototype.getGrade = function() {
+    return this.grade;
+  };
+  ```
+
+  总结一下原型继承实现方式：
+
+  * 定义新的构造函数，并在内部用`call()`调用希望“继承”的构造函数，并绑定`this`
+  * 借助中间函数`F`实现原型链继承，最好通过封装的`inherits`函数完成
+  * 继续在新的构造函数的原型上定义新方法
+
+* class继承
+
+  新的关键字`class`从**ES6**开始正式被引入到JavaScript中，目的就是定义类更简单
+
+  上文用函数实现的`Student`，用新的`class`关键字来编写：
+
+  ```javascript
+  class Student {
+    constructor(name) {
+      this.name = name;
+    }
+    // 注意没有function关键字
+    hello() {
+      alert('Hello, ' + this.name + '!');
+    }
+  }
+  var xiaoming = new Student('小明');
+  xiaoming.hello();
+  ```
+
+  用`class`定义对象的另一个巨大的好处是继承更方便了，直接用`extends`来实现：
+
+  ```javascript
+  // PrimaryStudent的定义也是class关键字实现的，而extends则表示原型链对象来自Student
+  class PrimaryStudent extends Student {
+    // 子类的构造函数可能与父类不太相同，并且需要通过super(name)来调用父类的构造函数，否则父类的name属性无法正常初始化
+    constructor(name, grade) {
+      super(name);
+      this.grade = grade;
+    }
+    // 自动获得父类的hello方法，定义新的myGrade方法
+    myGrade() {
+      alert('I am at grade ' + this.grade);
+    }
+  }
+  ```
+
+  `class`和原有的JavaScript原型继承没有任何区别，其作用就是让JavaScript引擎去实现原来需要我们自己编写的原型链代码。但并不是所有浏览器都支持`class`，如果一定要用，需要用工具把`class`代码转换为传统的`prototype`代码，如[Babel](https://babeljs.io/ "Babel")
