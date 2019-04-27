@@ -1729,3 +1729,155 @@ xiaoming.__proto__ === Student; // true
   ```
 
   `class`和原有的JavaScript原型继承没有任何区别，其作用就是让JavaScript引擎去实现原来需要我们自己编写的原型链代码。但并不是所有浏览器都支持`class`，如果一定要用，需要用工具把`class`代码转换为传统的`prototype`代码，如[Babel](https://babeljs.io/ "Babel")
+
+## 浏览器
+
+目前主流的浏览器：
+
+1. IE6~11，历来对W3C标准支持最差，从IE10开始支持ES6标准
+2. Chrome，Google出品的基于Webkit内核浏览器，内置JavaScript引擎-V8，支持ES6
+3. Safari，Mac系统自带的基于Webkit内核的浏览器，从OS X 10.7 Lion自带6.1版本开始支持ES6
+4. Firefox，Mozilla自己研制的Gecko内核和JavaScript引擎OdinMonkey
+5. 移动设备Apple的Safari和Google的Chrome，均支持ES6
+
+* 浏览器对象
+
+  * `window`，不但充当全局作用域，而且表示浏览器窗口
+    
+    `window`对象的`innerWidth`和`innerHeight`属性，可以获取浏览器窗口的内部宽度和高度；`outerWidth`和`outerHeight`属性可以获取浏览器窗口的整个宽高。
+
+  * `navigator`对象表示浏览器的信息，常用属性：
+
+    * `navigator.appName`：浏览器名称
+    * `navigator.appVersion`：浏览器版本
+    * `navigator.language`：浏览器设置的语言
+    * `navigator.platform`：操作系统类型
+    * `navigator.userAgent`：浏览器设定的`User-Agent`字符串
+
+    注意：`navigator`的信息可以很容易被用户修改，所以JavaScript读取的值不一定正确。所以不要用`if`判断浏览器版本，正确的方法是充分利用JavaScript对不存在的属性返回`undefined`的特性，直接用`||`计算：
+
+    ```javascript
+    // 不建议
+    var width;
+    if(getIEVersion(navigator.userAgent) < 9) {
+      width = document.body.clientWidth;
+    } else {
+      width = window.innerWidth;
+    }
+    // 推荐
+    var width = window.innerWidth || document.body.clientWidth;
+    ```
+
+  * `screen`对象表示屏幕信息，常用属性：
+
+    * `screen.width`：屏幕宽度，以像素为单位
+    * `screen.height`：屏幕高度，以像素为单位
+    * `screen.colorDepth`：返回颜色位数，如8、16、24
+  
+  * `location`对象表示当前页面的URL信息
+
+    如：`http://www.example.com:8080/path/index.html?a=1&b=2#TOP`
+
+    ```javascript
+    location.href; // http://www.example.com:8080/path/index.html?a=1&b=2#TOP
+    location.protocol; // http
+    location.host; // www.example.com
+    location.port; // 8080
+    location.pathname; // /path/index.html
+    location.search; // ?a=1&b=2
+    location.hash; // #TOP
+    location.assign(); // 加载一个新页面
+    location.reload(); // 重新加载当前页面
+    ```
+
+  * `document`对象表示当前页面，由于HTML以DOM形式表示为树形结构，`document`就是整个DOM树的根节点
+
+    `document`有一个`cookie`属性，可以获取当前页面的`cookie`。
+
+    ```javascript
+    document.cookie; // v=123; remember=true; prefer=zh
+    ```
+
+    HTTP协议是无状态的，服务器使用Cookie来区分到底是哪个用户发过来的请求。JavaScript能够读取页面Cookie，而用户登录信息通常也存在Cookie中，这就存在巨大的安全隐患。如果页面引入的第三方JavaScript存在恶意代码，那用户登录信息将会泄漏。
+
+    为了解决这个问题，服务器在设置Cookie时可以使用`httpOnly`，设定了`httpOnly`的Cookie将不能被JavaScript读取，这个行为由浏览器实现，主流浏览器均支持，IE6从SP1开始支持。服务器端应该始终坚持使用`httpOnly`
+
+  * `history`对象保存了浏览器的历史记录。`back()`或`forward()`相当于用户点击了“后退”或“前进”按钮
+
+* 操作DOM
+
+  ```javascript
+  var test = document.getElementById('test');
+  var trs = document.getElementById('test-table').getElementsByTagName('tr');
+  var reds = document.getElementById('test-div').getElementsByClassName('red');
+  var cs = test.children; // 获取所有直属子节点
+  var first = test.firstElementChild;
+  var last = test.lastElementChild;
+  var q1 = document.querySelector('#q1');
+  var ps = q1.querySelectorAll('div.highlighted > p');
+  // IE<8不支持querySelector和querySelectorAll，IE8仅有限支持
+
+  // 更新DOM
+
+  var p = document.getElementById('p-id');
+  p.innerHTML = 'ABC';
+  p.innerHTML = 'ABC <span style="color:red">RED</span> XYZ';
+  p.innerText = '<script>alert("Hi");</script>'; // 自动进行HTML编码
+  p.textContent; // innerText不返回隐藏元素的文本，textContent返回所有文本，IE<9不支持textContent
+  // 修改CSS
+  p.style.color = '#ff0000';
+  p.style.fontSize = '20px';
+  p.style.paddingTop = '2em';
+
+  // 插入DOM
+
+  p.innerHTML = '<span>child</span>'; // 相当于插入，但会直接替换掉原来的所有子节点
+
+  // HTML结构：
+  // <p id="js">JavaScript</p>
+  // <div id="list">
+  //   <p id="java">Java</p>
+  //   <p id="python">Python</p>
+  //   <p id="scheme">Scheme</p>
+  // </div>
+  var js = document.getElementById('js');
+  var list = document.getElementById('list');
+  list.appendChild(js);
+  // HTML结构变成了：
+  // <div id="list">
+  //   <p id="java">Java</p>
+  //   <p id="python">Python</p>
+  //   <p id="scheme">Scheme</p>
+  //   <p id="js">JavaScript</p>
+  // </div>
+  // 因为我们插入的js节点已经存在于当前的文档树，因此这个节点首先会从原先的位置删除，再插入到新的位置
+  
+  // 更多的时候会创建一个新的结点插入到指定位置
+  var haskell = document.createElement('p');
+  haskell.id = 'haskell';
+  haskell.innerText = 'Haskell';
+  list.appendChild(haskell);
+  // <div id="list">
+  //   <p id="java">Java</p>
+  //   <p id="python">Python</p>
+  //   <p id="scheme">Scheme</p>
+  //   <p id="haskell">Haskell</p>
+  // </div>
+
+  // 动态创建节点可以实现很多功能，如：动态创建一个style节点，然后添加到head节点末尾，就动态的给文档添加了新的CSS样式
+  var d = document.createElement('style');
+  d.setAttribute('type', 'text/css');
+  d.innerHTML = 'p { color: red; }';
+  document.getElementsByTagName('head')[0].appendChild(d);
+
+  // insertBefore
+  parentElement.insertBefore(newElement, referenceElement); // 子节点会插入到referenceElement之前
+
+  // 删除DOM
+
+  var self = document.getElementById('to-be-removed');
+  var parent = self.parentElement;
+  var removed = parent.removeChild(self);
+  removed === self; // true
+  ```
+
