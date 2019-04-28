@@ -1881,3 +1881,218 @@ xiaoming.__proto__ === Student; // true
   removed === self; // true
   ```
 
+* 操作表单
+
+  * 文本框：`<input type="text">`
+  * 密码框：`<input type="password">`
+  * 单选框：`<input type="radio">`
+  * 复选框：`<input type="checkbox">`
+  * 下拉框：`<select>`
+  * 隐藏域：`<input type="hidden">`
+
+  ```javascript
+  // 获取值
+  // <input type="text" id="email">
+  var input = document.getElementById('email');
+  input.value; // 用户输入的值
+  // 以上方式可用于text、password、hidden、select
+  // 对于单选框和复选框，要用checked判断
+  // <label><input type="radio" name="weekday" id="monday" value="1">Monday</label>
+  // <label><input type="radio" name="weekday" id="tuesday" value="2">Tuesday</label>
+  var mon = document.getElementById("monday");
+  var tue = document getElementById("tuesday");
+  mon.value; // 1
+  tue.value; // 2
+  mon.checked; // true或false
+  tue.checked; // true或false
+
+  // 设置值
+  // <input type="text" id="email">
+  var input = document.getElementById("email");
+  input.value = 'test@example.com';
+  // 对于单选框和复选框，设置checked为true或false即可
+
+  // HTML5
+  // date、datetime、datetime-local、color
+  // <input type="date" value="2019-04-28">
+  // <input type="datetime-local" value="2019-04-28T19:56:04">
+  // <input type="color" value="#ff0000">
+  // 不支持HTML5的浏览器会将其做为text显示
+
+  // 提交表单的两种方式
+
+  // 1. 通过<form>元素的submit()方法提交，缺点是扰乱了浏览器对form的正常提交
+  // <form id="test-form">
+  //   <input type="text" name="test">
+  //   <button type="button" onclick="doSubmitForm()">Submit</button>
+  // </form>
+  function doSubmitForm() {
+    var form = document.getElementById('test-form');
+    // 修改form的input...
+    form.submit();
+  }
+
+  // 2. 响应<form>的onsubmit事件
+  // <form id="test-form" onsubmit="return checkForm()">
+  //   <input type="text" name="test">
+  //   <button type="submit">Submit</button>
+  // </form>
+  function checkForm() {
+    var form = document.getElementById('test-form');
+    // 修改校验...
+    return true; // true继续提交，false终止提交
+  }
+
+  // 检查和修改<input>时要充分利用<input type="hidden">来传递数据
+  // <form>
+  //   <input type="text" id="username" name="username">
+  //   <input type="password" id="input-password">
+  //   <input type="hidden" id="md5-password" name="password">
+  //   <button type="submit">Submit</button>
+  // </form>
+  function checkForm() {
+    var input_pwd = document.getElementById('input-password');
+    var md5_pwd = document.getElementById('md5-password');
+    md5_pwd.value = toMD5(input_pwd.value);
+    return true
+  }
+
+  // 注意到id为md5-password的<input>标记了name="password"，而用户输入的id为input-password的<input>没有name属性。没有name属性的<input>的数据不会被提交
+  ```
+
+* 操作文件
+
+  HTML表单中唯一可以上传文件的控制`<input type="file">`，`method`必须为`post`，`enctype`必须为`multipart/form-data`
+
+  ```html
+  <form id="test-form" method="post" enctype="multipart/form-data">
+    <input type="file" name="avatar">
+  </form>
+  ```
+
+  只允许点击选择本地文件，对`<input type="file">`的`value`赋值没有任何效果，JavaScript也无法获得该文件的真实路径
+
+  ```javascript
+  var f = document.getElementById('test-file-upload');
+  var filename = f.value; // C:\fakepath\test.png
+  if(!filename || !(filename.endsWith('.jpg') || filename.endsWith('.png') || filename.endsWith('.gif'))) {
+    alert('Can only upload image file');
+    return false;
+  }
+  ```
+
+  HTML5新增`File API`允许JavaScript读取文件内容
+
+  ```javascript
+  var
+    fileInput = document.getElementById('test-image-file'),
+    info = document.getElementById('test-file-info'),
+    preview = document.getElementById('test-image-preview');
+  // 监听change事件
+  fileInput.addEventListener('change', function() {
+    // 清除背景图片
+    preview.style.backgroundImage = '';
+    // 检查文件是否选择
+    if(!fileInput.value) {
+      info.innerHTML = '没有选择文件';
+      return;
+    }
+    // 获取File引用
+    var file = fileInput.files[0];
+    // 获取File信息
+    info.innerHTML = '文件：' + file.name + '<br>' +
+                     '大小：' + file.size + '<br>' +
+                     '修改：' + file.lastModifiedDate;
+    if(file.type !== 'image/jpeg' && file.type !== 'image/png' && file.type !== 'image/gif') {
+      alert('不是有效的图片文件');
+      return;
+    }
+    // 读取文件
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var
+        data = e.target.result; // data:image/png;base64,iVBORw0KGgoAAAAN...
+      preview.style.backgroundImage = 'url(' + data + ')';
+    };
+    // 以DataURL的形式读取文件，读到的文件是一个字符串，类似data:image/jpeg;base64,iVBOR...常用于设置图像
+    reader.readAsDataURL(file);
+  });
+
+  // 上面的代码还演示了JavaScript一个重要特性：单线程执行模式
+  // 在JavaScript中执行多任务实际上都是异步调用，所以对于读取文件内容这种异步操作需要先设置一个回调函数
+  reader.onload = function(e) {
+    // 文件读取完成后自动调用此函数...
+  };
+  ```
+
+* AJAX
+
+  ```javascript
+  'use strict';
+  function success(text) {
+    var textarea = document.getElementById('test-response-text');
+    textarea.value = text;
+  }
+  function fail(code) {
+    var textarea = document.getElementById('text-response-text');
+    textarea.value = 'Error code: ' + code;
+  }
+
+  // 新建XMLHttpRequest对象
+  var request;
+  if(window.XMLHttpRequest) {
+    request = new XMLHttpRequest;
+  } else {
+    request = new ActiveXObject('Microsoft.XMLHTTP'); // 兼容低版本的IE
+  }
+
+  request.onreadystatechange = function() { // 状态发生变化时，函数被回调
+    if(request.readyState === 4) { // 成功完成
+      // 判断响应结果
+      if(request.status === 200) {
+        return success(request.responseText);
+      } else {
+        return fail(request.status);
+      }
+    } else {
+      // HTTP请求还在继续
+    }
+  }
+  // 发送请求
+  request.open('GET', '/api/categories'); // open()还有第3个参数指定是否异步，默认true
+  request.send();
+  alert('请求已发送，请等待响应...');
+  ```
+
+  AJAX不能跨域请求，跨域请求实现方式：
+
+  * 通过Flash插件发送HTTP请求，但必须安装Flash
+  * 在同源域名下架设一个代理服务器来转发，但需要服务端额外做开发
+  * JSONP，只能用GET请求，并且要求返回JavaScript。实际是利用了浏览器允许跨域引用JavaScript资源，如：返回JavaScript内容为`foo('data')`，我们在页面上先准备好`foo()`函数，然后给页面动态加个`<script>`节点，相当于动态读取外域的JavaScript资源，最后就等着接收回调了
+
+  HTML5则有新的跨域策略：CORS(Cross-Origin Resource Sharing)
+
+  Origin表示本域，当JavaScript向外域发起请求后，浏览器收到响应后，首先检查`Access-Control-Allow-Origin`是否包含本域，如果是，则此次跨域请求成功，如果不是，则请求失败，JavaScript将无法获取到响应的任何数据。`Access-Control-Allow-Origin: *`表示接受所有跨域请求
+
+  以上这种跨域称为“简单请求”：`GET`、`HEAD`、`POST`(`Content-Type`仅限`application/x-www-form-urlencoded`、`multipart/form-data`和`text/plain`)，且不能出现任何自定义头(如：`X-Custom: 12345`)
+
+  对于`PUT`、`DELETE`以及其他类型如`application/json`的POST请求，发送AJAX请求之前，浏览器会先送一个`OPTIONS`请求(称为preflignted请求)到这个URL上，询问目标服务器是否接受
+
+  ```
+  OPTIONS /path/to/resource HTTP/1.1
+  Host: bar.com
+  Origin: http://my.com
+  Access-Control-Request-Method: POST
+  ```
+
+  服务器必须响应并明确指出允许的Method
+
+  ```
+  HTTP/1.1 200 OK
+  Access-Control-Allow-Origin: http://my.com
+  Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS
+  Access-Control-Max-Age: 86400
+  ```
+
+  浏览器确认服务器响应的`Access-Control-Allow-Methods`确实包含要发送的AJAX请求后的Method才会继续发送请求
+
