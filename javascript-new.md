@@ -2096,3 +2096,53 @@ xiaoming.__proto__ === Student; // true
 
   浏览器确认服务器响应的`Access-Control-Allow-Methods`确实包含要发送的AJAX请求后的Method才会继续发送请求
 
+* Promise
+
+  “承诺将来会执行”对象在JavaScript中称为Promise对象，Promise有各种开源实现，在**ES6**中由浏览器直接支持
+
+  ```javascript
+  // 生成0-2之间的随机数，如果小于1，则等待一段时间后返回成功，否则返回失败
+  function test(resolve, reject) {
+    console.log('start new Promise...');
+    var timeOut = Math.random() * 2;
+    console.log('set timeout to: ' + timeOut + ' seconds.');
+    setTimeout(function() {
+      if(timeOut < 1) {
+        console.log('call resolve()...');
+        resolve('200 OK');
+      } else {
+        console.log('call reject()...');
+        reject('timeout in ' + timeOut + ' seconds.');
+      }
+    }, timeOut * 1000);
+  }
+
+  // 以上test()函数只关心自身逻辑，并不关心具体的resolve和reject函数将如何处理结果
+  // 有了执行函数，就可以用一个Promise对象来执行它，并在将来某个时刻获得成功或失败的结果
+
+  // Promise对象负责执行test函数
+  var p1 = new Promise(test);
+  // 如果成功，执行这个函数
+  var p2 = p1.then(function(result) {
+    console.log('Done: ' + result);
+  });
+  // 如果失败，执行这个函数
+  var p3 = p2.catch(function(reason) {
+    console.log('Failed: ' + reason);
+  });
+
+  // 简化的写法：
+  new Promise(test).then(function(result) {
+    console.log('Done: ' + result);
+  }).catch(function (reason) {
+    console.log('Failed: ' + reason);
+  });
+  ```
+
+  可见Promise最大的好处是在异步执行的流程中，把执行代码和处理结果的代码清晰的分离。Promise还可以做更多的事情，如：执行要串行执行的异步任务：
+
+  ```javascript
+  // job1, job2, job3都是Promise对象
+  job1.then(job2).then(job3).catch(handleError);
+  ```
+
