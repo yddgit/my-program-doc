@@ -2146,3 +2146,86 @@ xiaoming.__proto__ === Student; // true
   job1.then(job2).then(job3).catch(handleError);
   ```
 
+  ```javascript
+  // 0.5秒后返回input*input的结果
+  function multiply(input) {
+    return new Promise(function(resolve, reject) {
+      console.log('calculating ' + input + ' x ' + input + '...');
+      setTimeout(resolve, 500, input * input);
+    });
+  }
+  // 0.5秒后返回input+input的计算结果
+  function add(input) {
+    return new Promise(function(resolve, reject) {
+      console.log('calculating ' + input + ' + ' + input + '...');
+      setTimeout(resolve, 500, input + input);
+    });
+  }
+  var p = new Promise(function(resolve, reject) {
+    console.log('start new Promise...');
+    resolve(123);
+  });
+  p.then(multiply).then(add).then(multiply).then(add).then(function(result){
+    console.log('Got value: ' + result);
+  });
+  ```
+
+  ```javascript
+  // 将AJAX程序转换为Promise对象
+  'use strict';
+  function ajax(method, url, data) {
+    var request = new XMLHttpRequest();
+    return new Promise(function(resolve, reject) {
+      request.onreadystatechange = function() {
+        if(request.readyState === 4) {
+          if(request.status === 200) {
+            resolve(request.responseText);
+          } else {
+            reject(request.status);
+          }
+        }
+      };
+      request.open(method, url);
+      request.send(data);
+    });
+  }
+  var p = ajax('GET', 'https://www.liaoxuefeng.com/api/categories');
+  p.then(function(text) {
+    console.log(text);
+  }).catch(function(status) {
+    console.log('ERROR: ' + status);
+  });
+  ```
+
+  除了串行执行若干异步任务外，Promise还可以并行执行异步任务
+
+  如：从两个不同的URL分别获取用户的个人信息和好友列表，两个任务是可以并行执行的，用`Promise.all()`实现
+
+  ```javascript
+  var p1 = new Promise(function(resolve, reject) {
+    setTimeout(resolve, 500, 'P1');
+  });
+  var p2 = new Promise(function(resolve, reject) {
+    setTimeout(resolve, 600, 'P2');
+  });
+  // 同时执行p1和p2，并在它们都完成后执行then
+  Promise.all([p1, p2]).then(function(results) {
+    console.log(results); // 获取一个Array: ['P1', 'P2']
+  });
+  ```
+
+  有时，多个异步任务是为了容错。如：同时向两个URL读取用户信息，只要获得先返回的结果即可，可以用`Promise.race()`实现
+
+  ```javascript
+  var p1 = new Promise(function(resolve, reject) {
+    setTimeout(resolve, 500, 'P1');
+  });
+  var p2 = new Promise(function(resolve, reject) {
+    setTimeout(resolve, 600, 'P2');
+  });
+  // 由于p1执行较快，Promise的then()将获得结果'P1'，p2仍在继续执行，但结果将被丢弃
+  Promise.race([p1, p2]).then(function(result) {
+    console.log(result); // 'P1'
+  });
+  ```
+
