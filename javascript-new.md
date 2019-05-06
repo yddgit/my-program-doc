@@ -2307,3 +2307,86 @@ jQuery帮我们做了这些事情：
 
   两个主要版本`1.x`和`2.x`，区别在于`2.x`移除了对古老的IE6、7、8的支持
 
+* `attr()`和`prop()`方法
+
+  两者功能类似，都用于操作DOM节点的属性，但是HTML5规定有一种属性在DOM节点中可以没有值，只有出现与不出现两种：
+
+  ```html
+  <input id="test-radio" type="radio" name="test" checked value="1">
+  <!--等价于-->
+  <input id="test-radio" type="radio" name="test" checkec="checked" value="1">
+  ```
+
+  `attr()`和`prop()`对于属性`checked`处理有所不同：
+
+  ```javascript
+  var radio = $('#test-radio');
+  radio.attr('checked'); // 'checked'
+  radio.prop('checked'); // true
+  // prop()返回值更合理一些，不过，用is()方法判断更好
+  radio.is(':checked'); // true
+  // 类似的属性还有selected，处理时最好用is(':selected')
+  ```
+
+* jQuery能够绑定的事件
+
+  * 鼠标事件
+    * click: 单击时触发
+    * dblclick: 双击时触发
+    * mouseenter: 鼠标进入时触发
+    * mouseleave: 鼠标移出时触发
+    * mousemove: 鼠标在DOM内移动时触发
+    * hover: 鼠标进入和退出时触发两个函数
+  * 键盘事件：键盘事件仅作用在当前焦点的DOM上，通常是`<input>`和`<textarea>`
+    * keydown：键盘按下时触发
+    * keyup：键盘松开时触发
+    * keypress：按一次键后触发
+  * 其他事件
+    * focus：当DOM获得焦点时触发
+    * blur：当DOM失去焦点时触发
+    * change：当`<input>`、`<select>`或`<textarea>`的内容改变时触发
+    * submit：当`<form>`提交时触发
+    * ready：当页面被载入并且DOM树完成初始化后触发，仅作用于`document`对象，只触发一次，非常适合用来写初始化代码
+      ```html
+      <html>
+      <head>
+        <script>
+          $(document).on('ready', function() {
+            $('#testForm').on('submit', function() {
+              alert('submit');
+            });
+          });
+          //或者
+          $(function() {
+            // ...
+          });
+        </script>
+      </head>
+      <body>
+        <form id="testForm">
+          ...
+        </form>
+      </body>
+      </html>
+      ```
+  * 取消绑定：通过`off('click', function)`取消绑定的事件，`off('click')`一次性移除已绑定的所有`click`事件，`off()`一次性移除已绑定的所有类型的事件
+    ```javascript
+    function hello() {
+      alert('hello!');
+    }
+    a.click(hello); // 绑定事件
+    // 10秒后解除绑定
+    setTimeout(function() {
+      a.off('click', hello);
+    }, 10000);
+    ```
+  * 事件触发条件：用户在文本框输入时会触发`change`事件，但用JavaScript代码去改动文本框的值，将**不会**触发`change`事件。但有时我们希望用代码触发`change`事件，可以直接调用无参的`change()`方法：
+    ```javascript
+    var input = $('#test-input');
+    input.val('change it!');
+    input.change(); // 触发change事件
+    // 相当于
+    input.trigger('change');
+    ```
+  * 浏览器的安全限制：有些JavaScript代码只有在用户触发下才能执行，如`window.open()`函数
+
