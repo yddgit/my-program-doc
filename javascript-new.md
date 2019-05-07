@@ -2390,3 +2390,183 @@ jQuery帮我们做了这些事情：
     ```
   * 浏览器的安全限制：有些JavaScript代码只有在用户触发下才能执行，如`window.open()`函数
 
+* jQuery动画
+
+  ```javascript
+  // show/hide/toggle：从左上角逐渐展开或收缩
+  var div = $('#test-show-hide');
+  div.hide(3000); // 3秒内逐渐消失
+  div.show('fast');
+  div.show('slow'); // 0.6秒内逐渐显示
+  div.toggle(); // 根据当前状态决定是show()还是hide()
+  // slideUp/slideDown/slideToggle：在垂直方向逐渐展开或收缩
+  var div = $('#test-slide');
+  div.slideUp(3000);
+  // fadeIn/fadeOut/fadeToggle：淡入淡出，通过不断设置opacity属性来实现
+  var div = $('#test-fade');
+  div.fadeOut('slow');
+
+  // animate()，实现任意动画效果，只需要传入DOM元素最终CSS状态和时间，jQuery在时间段内不断调整CSS直到达到设定的值
+  var div = $('#test-animate');
+  div.animate({
+    opacity: 0.25,
+    width: '256px',
+    height: '256px'
+  }, 3000); // 在3秒内CSS过渡到设定值
+
+  // animate()还可以再传入一个函数，当动画结束时被调用。这个回调函数对基本动画也适用
+  div.animate({
+    opacity: 0.25,
+    width: '256px',
+    height: '256px'
+  }, 3000, function(){
+    console.log('动画已结束');
+    // 恢复至初始状态
+    $(this).css('opacity', '1.0').css('width', '128px').css('height', '128px');
+  });
+
+  // 串行动画，通过delay()方法实现暂停
+  var div = $('#test-animates');
+  // slideDown-暂停-放大-暂停-缩小
+  div.slideDown(2000)
+    .delay(1000)
+    .animate({
+      width: '256px',
+      height: '256px'
+    }, 2000)
+    .delay(1000)
+    .animate({
+      width: '128px',
+      height: '128px'
+    }, 2000);
+  // 因为动画执行需要一段时间，所以jQuery必须不断返回新的Promise对象才能后续执行操作
+
+  // 有些动画，如slideUp()根据没效果，这是因为jQuery动画原理是逐渐改变CSS的值，很多不是block性质的DOM元素，对它们设置height根本不起作用，所以动画也就没有效果。jQuery也没有实现对background-color的动画效果，这种情况下可以使用CSS3的transition实现动画效果
+  ```
+
+* AJAX
+
+  `$.ajax(url, setting)`，常用的选项：
+
+  * async：是否异步执行，默认为`true`
+  * method：缺省为`GET`，可以指定为`POST`、`PUT`等
+  * contentType：发送POST请求的格式，默认值为`application/x-www-form-urlencoded; charset=UTF-8`，也可以指定为`text/plain`、`application/json`
+  * data：发送的数据，可以是字符串、数组或object，如果是GET请求，data将被转换成query附加到URL上，如果是POST请求，根据contentType把data序列化成合适的格式
+  * headers：发送额外的HTTP头，必须是一个object
+  * dataType：接收数据格式，可以指定为`html`、`xml`、`json`、`text`等，缺省根据响应的`Content-Type`推断
+  * jsonp：实现JSONP跨域加载数据
+
+  ```javascript
+  $.ajax('/api/categories', {
+    dataType: 'json'
+  }).done(function(data) {
+    console.log('成功：' + JSON.stirngify(data));
+  }).fail(function(xhr, status) {
+    console.log('失败：' + xhr.status + '，原因：' + status);
+  }).always(function() {
+    console.log('请求完成：无论成功失败都会调用');
+  });
+
+  // get
+  $.get('/path/to/resource', {
+    name: 'Bob Lee',
+    check: 1
+  });
+  // post
+  $.post('/path/to/resource', {
+    name: 'Bob Lee',
+    check: 1
+  });
+  // getJSON
+  $.getJSON('/path/to/resource', {
+    name: 'Bob Lee',
+    check: 1
+  }).done(function(data) {
+    // data已经被解析为JSON对象了
+  });
+  ```
+
+* jQuery扩展
+
+  给jQuery对象绑定一个新方法是通过扩展`$.fn`对象实现的，编写jQuery插件的原则：
+
+  * 给`$.fn`绑定函数，实现插件的代码逻辑
+  * 插件函数最后要`return this;`以支持支持链式调用
+  * 插件函数要有默认值，绑定在`$.fn.<pluginName>.defaults`上
+  * 用户在调用时可传入设定值以便覆盖默认值
+
+  ```javascript
+  $.fn.highlight = function(options) {
+    // 合并默认值和用户设定的值，$.extend(target, obj1, obj2, ...)把多个object对象的属性合并到第一个target对象中，遇到同名属性，总是使用靠后的对象的值，越往后优先级越高
+    var opts = $.extend({}, $.fn.highlight.defaults, options);
+    // this绑定为jQuery对象，所以函数内部代码可以正常调用所有jQuery对象的方法
+    this.css('backgroundColor', opts.backgroundColor).css('color', opts.color);
+    return this;
+  }
+  // 设定默认值
+  $.fn.highlight.defaults = {
+    color: '#d85030',
+    backgroundColor: '#fff8de'
+  }
+
+  // 使用时，只需要一次性设置默认值，然后就可以简单的调用highlight()了
+  $.fn.highlight.defaults.color = '#fff';
+  $.fn.highlight.defaults.backgroundColor = '#000';
+  ```
+
+  对如下HTML结构：
+
+  ```html
+  <div id="tets-highlight">
+    <p>如何编写<span>jQuery</span> <span>Plugin</span></p>
+    <p>编写<span>jQuery</span> <span>Plugin</span>，要设置<span>默认值<span>，并允许用户修改<span>默认值</span>，或者运行时传入<span>其他值<span>。</p>
+  </div>
+  ```
+
+  ```javascript
+  'use strict';
+  $.fn.highlight.defaults.color = '#659f13';
+  $.fn.highlight.defaults.backgroundColor = '#f2fae3';
+  $('#test-highlight p:first-child span').highlight();
+  $('#test-highlight p:last-child span').highlight({
+    color: '#dd1144'
+  });
+  ```
+
+  针对特定元素的扩展，如`submit()`只针对`form`，可以用`filter()`来过滤。如：要给指向**外链**的超链接加上跳转提示
+
+  ```javascript
+  $.fn.external = function() {
+    // return返回的each()返回结果，支持链式调用
+    return this.filter('a').each(function() {
+      // 注意：each()内部的回调函数的this绑定为DOM本身
+      var a = $(this);
+      var url = a.attr('href');
+      if(url && (url.indexOf('http://') === 0 || url.indexOf('https://') === 0)) {
+        a.attr('href', '#0')
+          .removeAttr('target')
+          .append(' <i class="uk-icon-external-link"></i>')
+          .click(function() {
+            if(confirm('你确定要前往' + url + '？')) {
+              window.open(url);
+            }
+          });
+      }
+    });
+  };
+  ```
+
+  对如下HTML结构
+
+  ```html
+  <div id="test-external">
+    <p>如何学习<a href="http://jquery.com">jQuery</a>？</p>
+    <p>首先，你要学习<a href="/wiki/1022910821149312">JavaScript</a>，并了解基本的<a href="https://developer.mozilla.org/en-US/docs/Web/HTML">HTML</a>。</p>
+  </div>
+  ```
+
+  ```javascript
+  'use strict';
+  $('#test-external a').external();
+  ```
+
