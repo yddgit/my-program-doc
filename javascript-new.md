@@ -308,6 +308,45 @@
   });
   ```
 
+* [展开语法](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Spread_syntax "Spread syntax")`...`
+
+  在函数调用/数据构造时，将数组表达式或者string在语法层面展开；还可以在构造字面量（如`[1, 2, 3]`或`{name: 'mdn'}`）对象时，将对象表达式按key-value的方式展开
+
+  ```javascript
+  // 在函数调用时使用展开语法
+  function sum(x, y, z) {
+    return x + y + z;
+  }
+  var args = [1, 2, 3];
+  sum(...args);
+  // 在new表达式中应用
+  var dateFields = [1970, 0, 1];
+  var d = new Date(...dateFields);
+  // 构造字面量数组时使用展开语法
+  var parts = ['shoulders', 'knees'];
+  var lyrics = ['head', ...parts, 'and', 'toes'];
+  // 数组拷贝
+  var arr = [1, 2, 3];
+  var arr2 = [...arr];
+  arr2.push(4);
+  arr2; // [1, 2, 3, 4]
+  arr; // [1, 2, 3]
+  // 展开语法和Object.assign()行为一致，都是浅拷贝（只遍历一层）
+  var a = [[1], [2], [3]];
+  var b = [...a];
+  b.shift().shift();
+  a; // [[], [2], [3]]
+  // 连接多个数组
+  var arr1 = [0, 1, 2];
+  var arr2 = [3, 4, 5];
+  var arr3 = [...arr1, ...arr2];
+  // 构造字面量对象时使用展开语法
+  var obj1 = {foo: 'bar', x: 42};
+  var obj2 = {foo: 'baz', y: 13};
+  var clonedObj = {...obj1}; // {foo: 'bar', x: 42}
+  var mergedObj = {...obj1, ...obj2}; // {foo: 'baz', x: 42, y: 13}
+  ```
+
 ## 函数
 
 * 函数参数
@@ -2568,5 +2607,298 @@ jQuery帮我们做了这些事情：
   ```javascript
   'use strict';
   $('#test-external a').external();
+  ```
+
+## 错误处理
+
+```javascript
+'use strict';
+var
+  r1,
+  r2,
+  s = null;
+try {
+  r1 = s.length; // 此处应产生错误
+  r2 = 100; // 该语句不会执行
+} catch (e) {
+  console.log('出错了：' + e);
+} finally {
+  console.log('finally');
+}
+console.log('r1 = ' + r1); // r1应为undefined
+console.log('r2 = ' + r2); // r2应为undefined
+```
+
+JavaScript有一个标准的`Error`对象表示错误，从`Error`派生的`TypeError`、`ReferenceError`等错误对象
+
+```javascript
+try {
+  // ...
+} catch(e) {
+  if(e instanceof TypeError) {
+    alert('Type error!');
+  } else if(e instanceof Error) {
+    alert(e.message);
+  } else {
+    alert('Error: ' + e);
+  }
+}
+```
+
+抛出错误，使用`throw`语句，JavaScript允许抛出任意对象，包括数字、字符串，但最好还是抛出一个Error对象
+
+```javascript
+'use strict';
+var r, n, s;
+try {
+  s = prompt('请输入一个数字');
+  n = parseInt(s);
+  if(isNaN(n)) {
+    throw new Error('输入错误');
+  }
+  // 计算平方
+  r = n * n;
+  console.log(n + ' * ' + n + ' = ' + r);
+} catch(e) {
+  console.log('出错了：' + e);
+}
+```
+
+如果一个函数内部发生了错误，它自身没有捕获，错误就会被抛到外层调用函数，如果外层函数也没有捕获，该错误会一直沿着函数调用链向上抛出，直到被JavaScript引擎捕获，代码终止执行
+
+JavaScript引擎是一个事件驱动的执行引擎，代码总是以单线程执行，而回调函数的执行需要等到下一个满足条件的事件出现后，才会被执行。所以，涉及到异步代码，无法在调用时捕获，因为在捕获的当时，回调函数并未执行。类似的，我们处理一个事件时，在绑定事件的代码处，无法捕获事件处理函数的错误
+
+```javascript
+// 如下代码是有问题的：
+try {
+  $btn.click(function () {
+    var
+      x = parseFloat($('#x').val()),
+      y = parseFloat($('#y').val()),
+      r;
+    if (isNaN(x) || isNaN(y)) {
+      throw new Error('输入有误');
+    }
+    r = x + y;
+    alert('计算结果：' + r);
+  });
+} catch (e) {
+  alert('输入有误！');
+}
+```
+
+## underscore
+
+[underscore](https://underscorejs.org/# "Underscore")提供了一套完善的函数式编程的接口，可以让我们方便的在低版本的浏览器，甚至Object上实现函数式编程。underscore把自身绑定到唯一的全局变量`_`上
+
+```javascript
+'use strict';
+_.map([1, 2, 3], (x) => x * x);
+_.map({a: 1, b: 2, c: 3}, (v, k) => k + '=' + v); // map()还可以作用于Object
+```
+
+* Collections
+
+  ```javascript
+  'use strict';
+  var obj = {
+    name: 'bob',
+    school: 'No.1 middle school',
+    address: 'xueyuan road'
+  };
+
+  // map/filter
+  var upper = _.map(obj, function(value, key) {
+    return value.toUpperCase();
+  }); // 返回Array
+  var upper = _.mapObject(obj, function(value, key) {
+    return value.toUpperCase();
+  }); // 返回Object
+
+  // every/some
+  // every：集合所有元素都满足条件时返回true
+  _.every([1, 4, 7, -3, -9], (x) => x > 0); // false
+  // some：集合至少一个元素都满足条件时返回true
+  _.some([1, 4, 7, -3, -9], (x) => x > 0); // true
+
+  // max/min
+  _.max([3, 5, 7, 9]); // 9
+  _.min([3, 5, 7, 9]); // 3
+  // 要判断集合不为空
+  _.max([]); // -Infinity
+  _.min([]); // Infinity
+  // 如果是Object，只作用于value，忽略掉key
+  _.max({a: 1, b: 2, c: 3}); // 3
+
+  // groupBy
+  // 把集合元素按照key归类
+  var scores = [20, 81, 75, 40, 91, 59, 77, 66, 72, 88, 99];
+  var groups = _.groupBy(scores, function(x) {
+    if(x < 60) {
+      return 'C';
+    } else if(x < 80) {
+      return 'B';
+    } else {
+      return 'A';
+    }
+  });
+  // {"C":[20,40,59],"A":[81,91,88,99],"B":[75,77,66,72]}
+
+  // shuffle/sample
+  // shuffle()用洗牌算法随机打乱一个集合
+  _.shuffle([1, 2, 3, 4, 5, 6]);
+  // sample()随机选择一个或多个元素
+  _.sample([1, 2, 3, 4, 5, 6]); // 随机选一个
+  _.sample([1, 2, 3, 4, 5, 6], 3); // 随机选三个
+  ```
+
+* [Arrays](http://underscorejs.org/#arrays "Arrays")
+
+  ```javascript
+  'use strict';
+  _.first([2, 4, 6, 8]); // 2
+  _.last([2, 4, 6, 8]); // 8
+  _.flatten([1, [2], [3, [[4], [5]]]]); // [1, 2, 3, 4, 5]
+  _.zip(['Adam', 'Lisa', 'Bart'], [85, 92, 59]); // [['Adam', 85], ['Lisa', 92], ['Bart', 59]]
+  _.unzip([['Adam', 85], ['Lisa', 92], ['Bart', 59]]); // [['Adam', 'Lisa', 'Bart'], [85, 92, 59]]
+  _.object(['Adam', 'Lisa', 'Bart'], [85, 92, 59]); // {Adam: 85, Lisa: 92, Bart: 59}
+  _.range(10); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  _.range(1, 11); // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  _.range(0, 30, 5); // [0, 5, 10, 15, 20, 25]
+  _.range(0, -10, -1); // [0, -1, -2, -3, -4, -5, -6, -7, -8, -9]
+  ```
+
+* [Functions](http://underscorejs.org/#functions "Functions")
+
+  ```javascript
+  'use strict';
+
+  // bind
+  // 反例
+  var s = '  Hello  ';
+  s.trim(); // 'Hello'
+  var fn = s.trim;
+  fn(); // Uncaught TypeError: String.prototype.trim called on null or undefined
+  // 用bind将s绑定到fn()的this指针上
+  var fn = _.bind(s.trim, s);
+  fn(); // 'Hello'
+  // 当用一个变量fn指向一个对象的方法时，直接调用fn()是不行的，因为丢失了this对象的引用，用bind可以修复这个问题
+
+  // partial
+  // 计算x^y
+  Math.pow(x, y);
+  // 计算2^y，创建一个Math.pow的偏函数，固定住第一个参数始终为2
+  var pow2N = _.partial(Math.pow, 2);
+  pow2N(3); // 8
+  // 计算x^3，创建一个Math.pow的偏函数，固定住第二个参数始终为3，第一个参数用_作占位符
+  var cube = _.partial(Math.pow, _, 3);
+  cube(3); // 27
+
+  // memoize
+  // 如果一个函数调用开销很大，可能希望把结果缓存下来，如：计算阶乘
+  var factorial = _.memoize(function(n) {
+    // console.log('start calculate ' + n + '!...');
+    // var s = 1, i = n;
+    // while(i>1) {
+    //   s = s * i;
+    //   i--;
+    // }
+    // console.log(n + '! = ' + s);
+    // return s;
+
+    // 递归调用可缓存更多的计算结果
+    console.log('start calculate ' + n + '!...');
+    if(n < 2) {
+      return 1;
+    }
+    return n * factorial(n - 1);
+  });
+  // 第一次调用
+  factorial(10); // 3628800
+  // 控制台输出：
+  // start calculate 10!...
+  // 10! = 3628800
+  // 第二次调用
+  factorial(10); // 3628800
+  // 控制台没有输出
+
+  // once
+  // 保证某个函数执行且仅执行一次
+  var register = _.once(function() {
+    alert('Register ok!');
+  });
+
+  // delay
+  // 可以让一个函数延迟执行
+  _.delay(alert, 2000); // 两秒后调用alert
+  // 如果函数有参数，也可以把参数传进去
+  var log = _.bind(console.log, console);
+  _.delay(log, 2000, 'Hello', 'world!');
+  ```
+
+* [Objects](http://underscorejs.org/#objects "Objects")
+
+  ```javascript
+  'use strict';
+
+  // keys/allKeys
+  // keys返回一个object自身所有的key，但不包括从原型链上继承下来的
+  // allKeys除了object自身的key，还包括从原型链继承下来的
+  function Student(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+  Student.prototype.school = 'No.1 Middle School';
+  var xiaoming = new Student('小明', 20);
+  _.keys(xiaoming); // ['name', 'age']
+  _.allKeys(xiaoming); // ['name', 'age', 'school']
+
+  // values
+  // 返回object自身但不包含原型链继承的所有值，没有allValues()
+  _.values(xiaoming); // ['小明', 20]
+
+  // mapObject
+  _.mapObject({a:1, b:2, c:3}, (v, k) => 100 + v); // {a: 101, b: 102, c: 103}
+
+  // invert
+  // 把object的每个key-value交换，key变成value，value变成key
+  _.invert({Adam: 90, Lisa: 85, Bart: 59}); // {59: 'Bart', 85: 'Lisa', 90: 'Adam'}
+
+  // extend/extendOwn
+  // 把多个object的key-value合并到第一个object并返回，相同的key，后面的object覆盖前面的
+  _.extend({name: 'Bob', age: 20}, {age: 15}, {age: 88, city: 'Beijing'}); // {name: 'Bob', age: 88, city: 'Beijing'}
+  // extendOwn()和extend()类似，但获取属性时忽略从原型链继承下来的属性
+
+  // clone
+  // 将原有对象的所有属性都复制到新的对象中，属于浅拷贝，即相同key引用的value是同一对象
+  var source = {
+    name: '小明',
+    age: 20,
+    skills: ['JavaScript', 'CSS', 'HTML']
+  };
+  var copied = _.clone(source);
+  source.skills === copied.skills; // true
+
+  // isEqual
+  // 对两个object进行深度比较，如果内容完全相同，则返回true，对Array也可以比较
+  var o1 = {name:'Bob', skills: {Java: 90, JavaScript: 99}};
+  var o2 = {name:'Bob', skills: {JavaScript: 99, Java: 90}};
+  o1 === o2; // false
+  _.isEqual(o1, o2); // true
+  var o1 = ['Bob', {skills: ['Java', 'JavaScript']}];
+  var o2 = ['Bob', {skills: ['Java', 'JavaScript']}];
+  _.isEqual(o1, o2);
+  ```
+
+* Chaining
+
+  underscore提供了把对象包装成能进行链式调用的方法：`chain()`
+
+  ```javascript
+  var r = _.chain([1, 4, 9, 16, 25])
+           .map(Math.sqrt)
+           .filter(x => x % 2 === 1)
+           .value(); // [1, 3, 5]
+  // 因为每一步返回的都是包装对象，所以最后一步需要调用value()获得最终结果
   ```
 
