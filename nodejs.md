@@ -66,6 +66,34 @@ node --use_strict calc.js
 
 ## 模块
 
+编写一个`hello.js`文件，这个`hello.js`文件就是一个模块，模块名字就是文件名（去掉`.js`后缀），所以`hello.js`文件就是名为`hello`的模块
+
+```javascript
+'use strict';
+
+var s = 'Hello';
+function greet(name) {
+    console.log(s + ', ' + name + '!');
+}
+module.exports = greet; // 将函数greet作业模块的输出暴露出去
+```
+
+在另外一个js文件中使用模块
+
+```javascript
+'use strict';
+
+var greet = require('./hello'); // 引入hello模块
+var s = 'Alex';
+greet(s); // Hello, Alex!
+```
+
+`require()`引入模块时，注意使用相对路径，如果只写模块名`hello`，则Node会在内置模块、全局模块和当前模块下查找`hello.js`
+
+* CommonJS规范
+
+  以上这种模块加载机制称为CommonJS规范，每个js文件都是一个模块，内部各自的变量名和函数名都互不冲突。一个模块想要对外暴露变量，可以用`module.exports = variable;`，一个模块要引用其他模块暴露的变量，用`var ref = require('module_name');`就拿到了引用模块的变量
+
 ## 基本模块
 
 * fs
