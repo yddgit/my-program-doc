@@ -96,6 +96,83 @@ greet(s); // Hello, Alex!
 
 ## 基本模块
 
+因为Node.js是运行在服务器端的，没有浏览器的安全限制，而且服务器程序必须能够接收网络请求，读写文件，处理二进制内容，所以Node.js内置的常用模块就是为了实现基本的服务器功能。这些模块在浏览器环境中是无法被执行的，因为它们的底层代码是用C/C++在Node.js运行环境中实现的
+
+1. global
+
+   `global`是Node.js中唯一的全局变量（类似浏览器中的window），进入Node.js交互环境，直接输入
+
+   ```javascript
+   > global.console
+   Console {
+     log: [Function: bound consoleCall],
+     info: [Function: bound consoleCall],
+     warn: [Function: bound consoleCall],
+     error: [Function: bound consoleCall],
+     dir: [Function: bound consoleCall],
+     ...
+   }
+   ```
+
+2. process
+
+   `process`也是Node.js提供的一个对象，它代表当前Node.js进程
+
+   ```javascript
+   > process === global.process
+   true
+   > process.version
+   'v8.9.4'
+   > process.platform
+   'win32'
+   > process.arch
+   'x64'
+   > process.cwd() // 返回当前工作目录
+   'E:\\path\\to\\current'
+   > process.chdir('/tmp'); // 切换当前工作目录
+   undefined
+   > process.cwd()
+   'E:\\tmp'
+   ```
+
+   JavaScript程序是事件驱动执行的单线程模型，Node.js也是，Node.js不断执行响应事件的JavaScript函数，直到没有任何响应事件的函数可以执行时，Node.js就退出了。如果想要在下一次事件响应中执行代码，可以调用`process.nextTick()`
+
+   ```javascript
+   // test.js
+   process.nextTick(function() {
+       console.log('nextTick callback!');
+   });
+   console.log('nextTick was set!');
+   ```
+
+   用Node执行上面的代码`node test.js`，输出：
+
+   ```
+   nextTick was set!
+   nextTick callback!
+   ```
+
+   这说明传入`process.nextTick()`的函数不是立刻执行，而是要等到下一次事件循环。Node.js进程本身的事件就是由`process`对象来处理。如果我们响应`exit`事件，就可以在程序即将退出时执行某个回调函数
+
+   ```javascript
+   // 程序即将退出时的回调函数
+   process.on('exit', function(code) {
+       console.log('about to exit with code: ' + code);
+   });
+   ```
+
+3. 判断JavaScript执行环境
+
+   有很多JavaScript代码能在浏览器中执行，也能在Node.js环境执行，程序本身需要判断自己到底是在什么环境下执行的，常用的方式就是根据浏览器和Node环境提供的全局变量名来判断
+
+   ```javascript
+   if(typeof(window) === 'undefined') {
+       console.log('node.js');
+   } else {
+       console.log('browser');
+   }
+   ```
+
 * fs
 
 * stream
