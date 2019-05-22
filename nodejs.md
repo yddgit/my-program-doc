@@ -326,7 +326,140 @@ greet(s); // Hello, Alex!
 
 * http
 
+  Node.js自带`http`模块实现了HTTP协议，提供了`request`和`response`对象：
+
+  * `request`对象封装了HTTP请求，我们调用`request`对象的属性和方法就可以拿到所有HTTP请求的信息
+  * `response`对象封装了HTTP响应，我们操作`response`对象的方法，就可以把HTTP响应返回给浏览器
+
+  Node.js实现一个HTTP服务器：
+
+  ```javascript
+  'use strict';
+
+  var http = require('http');
+  // 创建http server，并传入回调函数
+  var server = http.createServer(function (request, response) {
+    // 获得HTTP请求的method和url
+    console.log(request.method + ': ' + request.url);
+    // 将HTTP响应200写和response，同时设置Content-Type: text/html
+    response.writeHead(200, {'Content-Type': 'text/html'});
+    // 将HTTP响应的HTML内容写入response
+    response.end('<h1>Hello World!</h1>');
+  });
+
+  // 让服务器监听8080端口
+  server.listen(8080);
+  console.log('Server is running at http://localhost:8080/');
+  ```
+
 * crypto
+
+  crypto模块的目的是为了提供通用的加密和哈希算法，用C/C++实现这些算法，通过crypto模块暴露为JavaScript接口，这样用起来方便，运行速度也快。常用的有：
+
+  * MD5/SHA1
+
+    ```javascript
+    'use strict';
+    const crypto = require('crypto');
+
+    const hash = crypto.createHash('md5'); // md5/sha1/sha256/sha512
+    // 可任意多次调用update()，默认字符编码为UTF-8，也可以传入Buffer
+    hash.update('Hello world!');
+    hash.update('Hello nodejs!');
+    console.log(hash.digest('hex')); // e7ccbe87d78713fb925afbb15a1f9485
+    ```
+
+  * Hmac
+
+    ```javascript
+    const hmac = crypto.createHmac('sha256', 'secret-key');
+    hmac.update('Hello world!');
+    hmac.update('Hello nodejs!');
+    console.log(hmac.digest('hex')); // 1b71dc8ab352f594ca1c6050976d4ab90677d377dee855d704c7b87cac871923
+    ```
+
+  * AES
+
+    ```javascript
+    function aesEcrypt(data, key) {
+        const cipher = crypto.createCipher('aes192', key);
+        var crypted = cipher.update(data, 'utf8', 'hex');
+        crypted += cipher.final('hex');
+        return crypted;
+    }
+
+    function aesDecrypt(encrypted, key) {
+        const decipher = crypto.createDecipher('aes192', key);
+        var decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
+
+    var data = 'Hello, this is a secret message';
+    var key = 'Password!';
+    var encrypted = aesEcrypt(data, key);
+    var decrypted = aesDecrypt(encrypted, key);
+    console.log('Plain text: ' + data);
+    console.log('Encrypted text: ' + encrypted);
+    console.log('Decrypted text: ' + decrypted);
+    ```
+
+  * Diffie-Hellman
+
+    ```javascript
+    var ming = crypto.createDiffieHellman(512);
+    var ming_keys = ming.generateKeys();
+
+    var prime = ming.getPrime();
+    var generator = ming.getGenerator();
+
+    console.log('Prime: ' + prime.toString('hex'));
+    console.log('Generator: ' + generator.toString('hex'));
+
+    var hong = crypto.createDiffieHellman(prime, generator);
+    var hong_keys = hong.generateKeys();
+
+    var ming_secret = ming.computeSecret(hong_keys);
+    var hong_secret = hong.computeSecret(ming_keys);
+
+    console.log('Secret of xiao ming: ' + ming_secret.toString('hex'));
+    console.log('Secret of xiao hong: ' + hong_secret.toString('hex'));
+    ```
+
+  * RSA
+
+    ```javascript
+    const fs = require('fs');
+
+    // 从文件加载key
+    function loadKey(file) {
+        // key实际上就是PEM编码的字符串
+        return fs.readFileSync(file, 'utf8');
+    }
+
+    let
+        prvKey = loadKey('rsa-prv.pem'),
+        pubKey = loadKey('rsa-pub.pem'),
+        message = 'Hello, world';
+
+    // 使用私钥加密
+    let enc_by_prv = crypto.privateEncrypt(prvKey, Buffer.from(message, 'utf8'));
+    console.log('encrypted by private key: ' + enc_by_prv.toString('hex'));
+    let dec_by_pub = crypto.publicDecrypt(pubKey, enc_by_prv);
+    console.log('decrypted by public key: ' + dec_by_pub.toString('utf8'));
+
+    // 使用公钥加密
+    let enc_by_pub = crypto.publicEncrypt(pubKey, Buffer.from(message, 'utf8'));
+    console.log('encrypted by public key: ' + enc_by_pub.toString('hex'));
+    let dec_by_prv = crypto.privateDecrypt(prvKey, enc_by_pub);
+    console.log('decrypted by private key: ' + dec_by_prv.toString('utf8'));
+    ```
+
+    如果把message字符串长度增加到很长，如1M，RSA加密会报错：`data too large for key size`，这是因为RSA加密的原始信息必须小于Key的长度。
+    
+    RSA并不适合加密大数据，而是先成一个随机的AES密码，用AES密码加密原始信息，然后用RSA加密AES口令。这样实际使用RSA时，给对方传的密文分两部分，一部分是AES加密的密文，另一部分是RSA加密的AES口令。对方用RSA先解密出AES口令，再用AES解密密文，即可获得明文
+
+  * 证书
 
 ## Web开发
 
