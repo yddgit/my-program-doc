@@ -175,6 +175,105 @@ greet(s); // Hello, Alex!
 
 * fs
 
+  Node.js内置的`fs`模块就是文件系统模块，负责读写文件。它同时提供了异步和同步的方法
+
+  ```javascript
+  'use strict';
+
+  var fs = require('fs');
+
+  // 异步读取文本文件
+  fs.readFile('sample.txt', 'utf-8', function(err, data) {
+    // 正常读取时，err参数为null，data为读取到的String
+    // 读取错误时，err参数为一个错误对象，data为undefined
+    // 这也是Node.js标准的回调函数：第一个参数代表错误信息，第二个参数代表结果
+    if(err) {
+        console.log(err);
+    } else {
+        console.log(data);
+    }
+  });
+
+  // 异步读取二进制文件
+  fs.readFile('sample.jpg', function(err, data) {
+    if(err) {
+        console.log(err);
+    } else {
+        // 读取二进制文件不传入编码时，回调函数的data参数将返回一个Buffer对象
+        // 在Node.js中，Buffer对象就是一个包含零个或任意个字节的数组（但和Array不同）
+        console.log(data);
+        console.log(data.length + ' bytes');
+    }
+  });
+  ```
+
+  `Buffer`对象可以和String作转换
+
+  ```javascript
+  // Buffer --> String
+  var text = data.toString('utf-8');
+  console.log(text);
+  // String --> Buffer
+  var buf = Buffer.from(text, 'utf-8');
+  console.log(buf);
+  ```
+
+  同步读取函数与异步函数相比，多了一个`Sync`后缀，并且不接收回调函数，直接返回结果
+
+  ```javascript
+  var data = fs.readFileSync('sample.txt', 'utf-8');
+  // 如果发生错误需要用try...catch...捕获
+  try {
+    fs.readFileSync('no-file.txt', 'utf-8');
+  } catch(err) {
+    console.log(err);
+  }
+  ```
+
+  写文件同样分同步和异步两种情况
+
+  ```javascript
+  // 异步写文件
+  var data = 'Hello, Node.js'
+  // 如果data是String，默认按UTF-8编码写入，如果是Buffer，则写入的是二进制文件
+  fs.writeFile('output.txt', data, function(err) {
+    console.log('=============异步写文本文件=============');
+    if(err) {
+      console.log(err);
+    } else {
+      console.log('ok');
+    }
+  });
+
+  // 同步写文件
+  fs.writeFileSync('output.txt', data);
+  ```
+
+  `stat`获取文件大小、创建时间等基本信息
+
+  ```javascript
+  // 异步
+  fs.stat('sample.txt', function(err, stat) {
+    console.log('=============异步查看文件信息=============');
+    if(err) {
+      console.log(err);
+    } else {
+      console.log('isFile: ' + stat.isFile());
+      console.log('isDirectory: ' + stat.isDirectory());
+      if(stat.isFile()) {
+        console.log('size: ' + stat.size);
+        console.log('birth time: ' + stat.birthtime);
+        console.log('modified time: ' + stat.mtime);
+      }
+    }
+  });
+
+  // 同步
+  var stat = fs.statSync('sample.txt');
+  ```
+
+  除了服务器启动时读取配置文件、结束时写入状态文件时可以使用同步代码，其他情况下必须使用异步代码。因为JavaScript只有一个执行线程，同步代码执行期间，服务器将停止响应
+
 * stream
 
 * http
