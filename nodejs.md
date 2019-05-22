@@ -276,6 +276,54 @@ greet(s); // Hello, Alex!
 
 * stream
 
+  流也是一个对象，我们只需要响应流的事件就可以了：`data`事件表示流的数据已经可以读取了，`end`事件表示这个流已经到末尾了，没有数据可以读取了，`error`事件表示出错了
+
+  ```javascript
+  'use strict'
+  
+  var fs = require('fs');
+  
+  // 创建read流
+  var rs = fs.createReadStream('sample.txt', 'utf-8');
+  
+  // 响应流事件
+  rs.on('data', function(chunk) {
+      console.log('DATA');
+      console.log(chunk);
+  });
+  rs.on('end', function() {
+      console.log('END');
+  });
+  rs.on('error', function(err) {
+      console.log('ERROR' + err)
+  });
+  ```
+
+  以流的形式写入文件，只需要不断调用`write()`方法，最后以`end()`结束
+
+  ```javascript
+  // 创建write流
+  var ws1 = fs.createWriteStream('output1.txt', 'utf-8');
+  ws1.write('使用Stream写入文本数据...\n');
+  ws1.write('END');
+  ws1.end();
+  var ws2 = fs.createWriteStream('output2.txt');
+  ws2.write(new Buffer('使用Stream写入二进制数据...\n', 'utf-8'));
+  ws2.write(new Buffer('END', 'utf-8'));
+  ws2.end();
+  ```
+
+  所有读取数据的流都继承自`stream.Readable`，所有可以写入的流都继承自`stream.Writable`。两个流可以串起来，数据自动从Readable流进入Writable流，这个操作可以用Readable中的`pipe()`方法实现
+
+  ```javascript
+  // 如：复制一个文件
+  var rs = fs.createReadStream('sample.txt');
+  var ws = fs.createWriteStream('copied.txt');
+  rs.pipe(ws);
+  ```
+
+  默认情况下，当Readable流的数据读取完毕，`end`事件触发后，将自动关闭Writable流。如果不希望自动关闭Writable流，需要传入参数：`rs.pipe(ws, {end: false});`
+
 * http
 
 * crypto
