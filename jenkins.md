@@ -250,3 +250,41 @@
    ```
 
 8. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
+
+9. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
+
+   首先在Windows上开启maven本地仓库目录的共享：`在目录上右键`-->`属性`-->`共享`-->`共享(S)...`
+
+   在Linux机器上挂载共享目录到`/root/.m2`
+
+   ```bash
+   # 安装依赖工具
+   yum install cifs-utils
+   # 创建.m2目录
+   mkdir /root/.m2
+   # 挂载Windows共享目录，执行以下命令会提示用户输入Windows系统用户的密码
+   mount.cifs //windows-host-name/share-folder /root/.m2 -o user=windows-user-name
+   # 挂载成功，查看状态
+   df -h
+   ls /root/.m2
+   ```
+
+   配置自动挂载。首先创建文件`/root/.cifs`，文件内容如下
+
+   ```txt
+   username=windows-user-name
+   password=windows-user-password
+   ```
+
+   然后修改`/etc/fstab`，添加如下内容
+
+   ```txt
+   //windows-host-name/share-folder /root/.m2 cifs credentials=/root/.cifs 0 0
+   ```
+
+   最后，重启Linux机器，查看挂载状态
+
+   ```bash
+   df -h
+   ls /root/.m2
+   ```
