@@ -269,8 +269,9 @@
    修改`pom.xml`
 
    ```xml
-   <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://   www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://   maven.apache.org/maven-v4_0_0.xsd">
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    
        <modelVersion>4.0.0</modelVersion>
    
@@ -328,42 +329,42 @@
                        <target>1.8</target>
                    </configuration>
                </plugin>
-   			<plugin>
-   				<groupId>org.apache.maven.plugins</groupId>
+               <plugin>
+                   <groupId>org.apache.maven.plugins</groupId>
                    <artifactId>maven-jar-plugin</artifactId>
                    <version>2.4</version>
-   				<configuration>
-   					<archive>
-   						<addMavenDescriptor>false</addMavenDescriptor>
-   						<manifest>
-   							<addClasspath>true</addClasspath>
-   							<classpathPrefix>lib</classpathPrefix>
-   							<mainClass>com.my.project.Main</mainClass>
-   						</manifest>
-   						<manifestEntries>
-   							<Class-Path>.</Class-Path>
-   						</manifestEntries>
-   					</archive>
-   				</configuration>
-   			</plugin>
-   			<plugin>
-   				<groupId>org.apache.maven.plugins</groupId>
+                   <configuration>
+                       <archive>
+                           <addMavenDescriptor>false</addMavenDescriptor>
+                           <manifest>
+                               <addClasspath>true</addClasspath>
+                               <classpathPrefix>lib</classpathPrefix>
+                               <mainClass>com.my.project.Main</mainClass>
+                           </manifest>
+                           <manifestEntries>
+                               <Class-Path>.</Class-Path>
+                           </manifestEntries>
+                       </archive>
+                   </configuration>
+               </plugin>
+               <plugin>
+                   <groupId>org.apache.maven.plugins</groupId>
                    <artifactId>maven-dependency-plugin</artifactId>
                    <version>3.1.1</version>
-   				<executions>
-   					<execution>
-   						<id>copy-dependencies</id>
-   						<phase>package</phase>
-   						<goals>
-   							<goal>copy-dependencies</goal>
-   						</goals>
-   						<configuration>
-   							<includeScope>runtime</includeScope>
-   							<outputDirectory>${project.build.directory}/lib</outputDirectory>
-   						</configuration>
-   					</execution>
-   				</executions>
-   			</plugin>
+                   <executions>
+                       <execution>
+                           <id>copy-dependencies</id>
+                           <phase>package</phase>
+                           <goals>
+                               <goal>copy-dependencies</goal>
+                           </goals>
+                           <configuration>
+                               <includeScope>runtime</includeScope>
+                               <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                           </configuration>
+                       </execution>
+                   </executions>
+               </plugin>
            </plugins>
        </build>
    
