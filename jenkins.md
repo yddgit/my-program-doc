@@ -251,6 +251,235 @@
 
 8. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
 
+   在GitBucket上创建Git仓库示例: `hello-jenkins`
+
+   使用如下命令生成代码:
+
+   ```bash
+   mvn archetype:generate \
+     -DarchetypeArtifactId=jersey-quickstart-grizzly2 \
+     -DarchetypeGroupId=org.glassfish.jersey.archetypes \
+     -DinteractiveMode=false \
+     -DgroupId=com.my.project \
+     -DartifactId=hello-jenkins \
+     -Dpackage=com.my.project \
+     -DarchetypeVersion=2.29.1
+   ```
+
+   修改`pom.xml`
+
+   ```xml
+   <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://   www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://   maven.apache.org/maven-v4_0_0.xsd">
+   
+       <modelVersion>4.0.0</modelVersion>
+   
+       <groupId>com.my.project</groupId>
+       <artifactId>hello-jenkins</artifactId>
+       <packaging>jar</packaging>
+       <version>1.0-SNAPSHOT</version>
+       <name>hello-jenkins</name>
+   
+       <dependencyManagement>
+           <dependencies>
+               <dependency>
+                   <groupId>org.glassfish.jersey</groupId>
+                   <artifactId>jersey-bom</artifactId>
+                   <version>${jersey.version}</version>
+                   <type>pom</type>
+                   <scope>import</scope>
+               </dependency>
+           </dependencies>
+       </dependencyManagement>
+   
+       <dependencies>
+           <dependency>
+               <groupId>org.glassfish.jersey.containers</groupId>
+               <artifactId>jersey-container-grizzly2-http</artifactId>
+           </dependency>
+           <dependency>
+               <groupId>org.glassfish.jersey.inject</groupId>
+               <artifactId>jersey-hk2</artifactId>
+           </dependency>
+   
+           <!-- uncomment this to get JSON support:
+            <dependency>
+               <groupId>org.glassfish.jersey.media</groupId>
+               <artifactId>jersey-media-json-binding</artifactId>
+           </dependency>
+           -->
+           <dependency>
+               <groupId>junit</groupId>
+               <artifactId>junit</artifactId>
+               <version>4.12</version>
+               <scope>test</scope>
+           </dependency>
+       </dependencies>
+   
+       <build>
+           <plugins>
+               <plugin>
+                   <groupId>org.apache.maven.plugins</groupId>
+                   <artifactId>maven-compiler-plugin</artifactId>
+                   <version>2.5.1</version>
+                   <inherited>true</inherited>
+                   <configuration>
+                       <source>1.8</source>
+                       <target>1.8</target>
+                   </configuration>
+               </plugin>
+   			<plugin>
+   				<groupId>org.apache.maven.plugins</groupId>
+                   <artifactId>maven-jar-plugin</artifactId>
+                   <version>2.4</version>
+   				<configuration>
+   					<archive>
+   						<addMavenDescriptor>false</addMavenDescriptor>
+   						<manifest>
+   							<addClasspath>true</addClasspath>
+   							<classpathPrefix>lib</classpathPrefix>
+   							<mainClass>com.my.project.Main</mainClass>
+   						</manifest>
+   						<manifestEntries>
+   							<Class-Path>.</Class-Path>
+   						</manifestEntries>
+   					</archive>
+   				</configuration>
+   			</plugin>
+   			<plugin>
+   				<groupId>org.apache.maven.plugins</groupId>
+                   <artifactId>maven-dependency-plugin</artifactId>
+                   <version>3.1.1</version>
+   				<executions>
+   					<execution>
+   						<id>copy-dependencies</id>
+   						<phase>package</phase>
+   						<goals>
+   							<goal>copy-dependencies</goal>
+   						</goals>
+   						<configuration>
+   							<includeScope>runtime</includeScope>
+   							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+   						</configuration>
+   					</execution>
+   				</executions>
+   			</plugin>
+           </plugins>
+       </build>
+   
+       <properties>
+           <jersey.version>2.29.1</jersey.version>
+           <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+       </properties>
+   </project>
+   ```
+
+   创建`Dockerfile`
+
+   ```dockerfile
+   FROM openjdk:8u222-jdk
+   LABEL Author="Aquaman"
+   VOLUME [ "/tmp" ]
+   WORKDIR /opt/app/
+   COPY target/lib lib
+   COPY target/*.jar ./app.jar
+   ENTRYPOINT ["java", "-jar", "app.jar"]
+   ```
+
+   创建`Jenkinsfile`
+
+   ```groovy
+   pipeline {
+   
+       // 所有stage都将在这个maven容器中执行
+       agent {
+           docker {
+               image 'maven:3.6.2-jdk-8'
+               // 挂载maven本地仓库、docker命令、docker套接字
+               // 挂载docker是为了在maven容器内构建docker镜像或启停docker容器
+               args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/   docker.sock -v /usr/bin/docker:/usr/bin/docker'
+           }
+       }
+   
+       // 全局环境变量
+       environment {
+           // docker image name，使用pom.xml中的artifactId
+           IMAGE_NAME = "docker.local/${readMavenPom().getArtifactId()}"
+           // docker image tag，使用pom.xml中的version
+           VERSION = readMavenPom().getVersion()
+           // docker container name，使用pom.xml中的artifactId
+           CONTAINER_NAME = readMavenPom().getArtifactId()
+           // docker container expose port
+           PORT = 8081
+       }
+   
+       stages {
+           stage('Build') {
+               steps {
+                   sh 'mvn -B -DskipTests clean package'
+               }
+           }
+           stage('Test') {
+               steps {
+                   sh 'mvn test'
+               }
+               post {
+                   always {
+                       junit 'target/surefire-reports/*.xml'
+                   }
+               }
+           }
+           stage('Docker Image') {
+               steps {
+                   // 首先停止并删除正在运行的容器、镜像，然后build镜像并push
+                   sh '''
+                   if [ "$(docker ps -a | grep ${CONTAINER_NAME})" ]; then
+                       docker stop ${CONTAINER_NAME}
+                   fi
+                   if [ "$(docker ps -aq -f status=exited -f name=$   {CONTAINER_NAME})" ]; then
+                       docker rm ${CONTAINER_NAME}
+                   fi
+                   if [ ! -z $(docker images -q ${IMAGE_NAME}:${VERSION}) ];    then
+                       docker rmi ${IMAGE_NAME}:${VERSION}
+                   fi
+                   echo 'Build Docker Image'
+                   docker build -t ${IMAGE_NAME}:${VERSION} .
+                   echo 'Push Docker Image'
+                   docker push ${IMAGE_NAME}:${VERSION}
+                   '''
+               }
+           }
+           stage('Deploy') {
+               steps {
+                   // 直接启动容器
+                   sh '''
+                   echo 'Start Application with Docker'
+                   docker run -d -p ${PORT}:8080 --name ${CONTAINER_NAME} $   {IMAGE_NAME}:${VERSION}
+                   '''
+               }
+           }
+       }
+   }
+   
+   ```
+
+   为了方便测试，需要修改`Main.java`
+   
+   * 去掉`main`方法中的如下内容:
+
+     ```java
+     System.in.read();
+     server.stop();
+     ```
+
+   * 修改变量`BASE_URI`的值为：`http://0.0.0.0:8080/myapp/`
+
+   基于以上示例代码构建的pipeline执行成功后，如下请求应该可以正常返回：`Got it!`
+
+   ```
+   GET http://hostname:8081/myapp/myresource
+   ```
+
 9. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
 
    首先在Windows上开启maven本地仓库目录的共享：`在目录上右键`-->`属性`-->`共享`-->`共享(S)...`
