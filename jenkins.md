@@ -272,15 +272,15 @@
    <project xmlns="http://maven.apache.org/POM/4.0.0"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-   
+
        <modelVersion>4.0.0</modelVersion>
-   
+
        <groupId>com.my.project</groupId>
        <artifactId>hello-jenkins</artifactId>
        <packaging>jar</packaging>
        <version>1.0-SNAPSHOT</version>
        <name>hello-jenkins</name>
-   
+
        <dependencyManagement>
            <dependencies>
                <dependency>
@@ -292,7 +292,7 @@
                </dependency>
            </dependencies>
        </dependencyManagement>
-   
+
        <dependencies>
            <dependency>
                <groupId>org.glassfish.jersey.containers</groupId>
@@ -302,7 +302,7 @@
                <groupId>org.glassfish.jersey.inject</groupId>
                <artifactId>jersey-hk2</artifactId>
            </dependency>
-   
+
            <!-- uncomment this to get JSON support:
             <dependency>
                <groupId>org.glassfish.jersey.media</groupId>
@@ -316,7 +316,7 @@
                <scope>test</scope>
            </dependency>
        </dependencies>
-   
+
        <build>
            <plugins>
                <plugin>
@@ -367,7 +367,7 @@
                </plugin>
            </plugins>
        </build>
-   
+
        <properties>
            <jersey.version>2.29.1</jersey.version>
            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -391,17 +391,17 @@
 
    ```groovy
    pipeline {
-   
+
        // 所有stage都将在这个maven容器中执行
        agent {
            docker {
                image 'maven:3.6.2-jdk-8'
                // 挂载maven本地仓库、docker命令、docker套接字
                // 挂载docker是为了在maven容器内构建docker镜像或启停docker容器
-               args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/   docker.sock -v /usr/bin/docker:/usr/bin/docker'
+               args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
            }
        }
-   
+
        // 全局环境变量
        environment {
            // docker image name，使用pom.xml中的artifactId
@@ -413,7 +413,7 @@
            // docker container expose port
            PORT = 8081
        }
-   
+
        stages {
            stage('Build') {
                steps {
@@ -437,10 +437,10 @@
                    if [ "$(docker ps -a | grep ${CONTAINER_NAME})" ]; then
                        docker stop ${CONTAINER_NAME}
                    fi
-                   if [ "$(docker ps -aq -f status=exited -f name=$   {CONTAINER_NAME})" ]; then
+                   if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
                        docker rm ${CONTAINER_NAME}
                    fi
-                   if [ ! -z $(docker images -q ${IMAGE_NAME}:${VERSION}) ];    then
+                   if [ ! -z $(docker images -q ${IMAGE_NAME}:${VERSION}) ]; then
                        docker rmi ${IMAGE_NAME}:${VERSION}
                    fi
                    echo 'Build Docker Image'
@@ -455,29 +455,29 @@
                    // 直接启动容器
                    sh '''
                    echo 'Start Application with Docker'
-                   docker run -d -p ${PORT}:8080 --name ${CONTAINER_NAME} $   {IMAGE_NAME}:${VERSION}
+                   docker run -d -p ${PORT}:8080 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${VERSION}
                    '''
                }
            }
        }
    }
-   
+
    ```
 
    为了方便测试，需要修改`Main.java`
-   
-   * 去掉`main`方法中的如下内容:
+
+   - 去掉`main`方法中的如下内容:
 
      ```java
      System.in.read();
      server.stop();
      ```
 
-   * 修改变量`BASE_URI`的值为：`http://0.0.0.0:8080/myapp/`
+   - 修改变量`BASE_URI`的值为：`http://0.0.0.0:8080/myapp/`
 
    基于以上示例代码构建的pipeline执行成功后，如下请求应该可以正常返回：`Got it!`
 
-   ```
+   ```txt
    GET http://hostname:8081/myapp/myresource
    ```
 
