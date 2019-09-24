@@ -251,6 +251,10 @@
 
 8. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
 
+   **注意**: 在开始下面的操作之前请先为Jenkins安装以下两个插件
+   * 用于获取maven pom.xml文件中的信息: `Pipeline Utility Steps`
+   * 用于自动运行tag构建: `Basic Branch Build Strategies`
+
    在GitBucket上创建Git仓库示例: `hello-jenkins`
 
    使用如下命令生成代码:
@@ -461,7 +465,6 @@
            }
        }
    }
-
    ```
 
    为了方便测试，需要修改`Main.java`
@@ -479,6 +482,138 @@
 
    ```txt
    GET http://hostname:8081/myapp/myresource
+   ```
+
+   如下，是一个多分支构建的`Jenkinsfile`的示例。在创建多分支pipeline时，注意配置：
+   * `Branch Sources`-->`Behaviours`，添加`Discover tags`以启用tag构建
+   * `Branch Sources`-->`Build strategies`，添加`Tags`，使用默认配置
+   * `Scan Multibranch Pipeline Triggers`，勾选`Periodically if not otherwise run`，选择时间间隔`Interval`为`5 minutes`
+
+   ```groovy
+   pipeline {
+   
+       agent {
+           docker {
+               image 'maven:3.6.2-jdk-8'
+               args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
+           }
+       }
+   
+       environment {
+           IMAGE_NAME = "docker.local/${readMavenPom().getArtifactId()}"
+           IMAGE_TAG = getImageTag()
+           CONTAINER_NAME = readMavenPom().getArtifactId()
+           PORT = 8080
+           JMX_PORT = 18080
+           JAVA_OPTS="-server -Xms128m -Xmx128m -Djava.rmi.server.hostname=10.0.76.10 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote.rmi.port=${JMX_PORT} -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+       }
+   
+       stages {
+   
+           stage('Debug') {
+               steps {
+                   sh 'printenv'
+               }
+           }
+   
+           stage('Build') {
+               steps {
+                   sh 'mvn -B -DskipTests clean package'
+               }
+           }
+   
+           stage('Test') {
+               steps {
+                   sh 'mvn test'
+               }
+               post {
+                   always {
+                       junit 'target/surefire-reports/*.xml'
+                   }
+               }
+           }
+   
+           stage('Docker Image') {
+               steps {
+                   sh '''
+                   # save old image id
+                   oldImageId=`docker images -q ${IMAGE_NAME}:${IMAGE_TAG}`
+   
+                   # build new image
+                   echo 'Build Docker Image'
+                   docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                   echo 'Push Docker Image'
+                   docker push ${IMAGE_NAME}:${IMAGE_TAG}
+   
+                   # remove old image
+                   if [ ! -z ${oldImageId} ]; then
+                       if [ ! -z $(docker ps -aq -f ancestor=${oldImageId}) ]; then
+                           docker rm -f `docker ps -aq -f ancestor=${oldImageId}`
+                       fi
+                       docker rmi ${oldImageId}
+                   fi
+                   '''
+               }
+           }
+   
+           stage('Deliver Development') {
+               when {
+                   allOf {
+                       not { branch 'master' };
+                       not { buildingTag() }
+                   }
+               }
+               steps {
+                   sh '''
+                   echo 'Deliver Development'
+                   if [ "$(docker ps -a | grep ${CONTAINER_NAME})" ]; then
+                       docker rm -f ${CONTAINER_NAME}
+                   fi
+                   docker run -d -p ${PORT}:8080 -p ${JMX_PORT}:${JMX_PORT} --name ${CONTAINER_NAME} -e JAVA_OPTS="${JAVA_OPTS}" ${IMAGE_NAME}:${IMAGE_TAG}
+                   '''
+               }
+           }
+   
+           stage('Deploy Production') {
+               when {
+                   buildingTag()
+               }
+               steps {
+                   input message: 'Deploy to Production? (Click "Proceed" to continue)'
+                   sh '''
+                   echo 'Depoly Production'
+                   if [ "$(docker ps -a | grep ${CONTAINER_NAME})" ]; then
+                       docker rm -f ${CONTAINER_NAME}
+                   fi
+                   docker run -d -p ${PORT}:8080 -p ${JMX_PORT}:${JMX_PORT} --name ${CONTAINER_NAME} -e JAVA_OPTS="${JAVA_OPTS}" ${IMAGE_NAME}:${IMAGE_TAG}
+                   '''
+               }
+           }
+   
+       }
+   
+   }
+   
+   /* Get Docker Image Tag */
+   def getImageTag() {
+       if(env.TAG_NAME) {
+           return env.TAG_NAME
+       } else if(env.BRANCH_NAME) {
+           if(env.BRANCH_NAME == "master") {
+               return "latest"
+           } else {
+               return env.BRANCH_NAME
+           }
+       } else {
+           return env.GIT_COMMIT
+       }
+   }
+   ```
+
+   ```bash
+   # 提交tag触发构建
+   git tag 1.0
+   git push origin --tags
    ```
 
 9. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
