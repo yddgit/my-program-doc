@@ -173,6 +173,50 @@ systemctl enable docker.service
 
 https://docs.docker.com/engine/articles/systemd/
 
+* 配置docker服务重启容器不重启
+
+  ```bash
+  vi /etc/docker/daemon.json
+  ```
+
+  在daemon.json中加入配置
+  
+  ```json
+  {
+     "live-restore": true
+  }
+  ```
+
+  重启docker服务使配置生效
+
+  ```bash
+  systemctl reload docker
+  systemctl restart docker
+  systemctl status docker
+  ```
+
+* 配置docker监听TCP端口允许远程连接
+
+  ```bash
+  systemctl edit docker.service
+  ```
+
+  在打开的文件中添加如下内容
+
+  ```ini
+  [Service]
+  ExecStart=
+  ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375
+  ```
+
+  重启docker服务查看结果
+
+  ```bash
+  systemctl daemon-reload
+  systemctl restart docker.service
+  netstat -ant | grep 2375
+  ```
+
 # 4. 删除docker
 
  1. 列出docker包的具体名字
