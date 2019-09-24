@@ -697,6 +697,7 @@ FROM image-name
      image: registry:2
      environment:
        REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+       REGISTRY_STORAGE_DELETE_ENABLED: "true"
      ports:
        - 127.0.0.1:5000:5000
      volumes:
@@ -709,11 +710,19 @@ FROM image-name
    # 对应的docker命令
    docker run -d \
      -e REGISTRY_HTTP_ADDR=0.0.0.0:5000 \
+     -e REGISTRY_STORAGE_DELETE_ENABLED=true \
      -p 127.0.0.1:5000:5000 \
      --restart=always \
      --name registry \
      -v /opt/docker/registry:/var/lib/registry \
      registry:2
+   ```
+
+   ```bash
+   # 删除registry中的镜像
+   curl -v --silent -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X GET http://127.0.0.1:5000/v2/<name>/manifests/<tag> 2>&1 | grep Docker-Content-Digest | awk '{print ($3)}'
+   curl -v --silent -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X DELETE http://127.0.0.1:5000/v2/<name>/manifests/<digest_hash>
+   docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
    ```
 
 5. 如果是使用主机名和默认80端口访问registry, 则需要修改`/etc/docker/daemon.json`, 在`insecure-registries`中添加registry的地址
