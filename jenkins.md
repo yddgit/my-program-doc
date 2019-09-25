@@ -249,7 +249,63 @@
      jenkins:2.176.3-custom
    ```
 
-8. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
+8. 如果是在Linux下，可以直接使用如下docker-compose文件来启动jenkins和相关服务，**无需定制Docker镜像**
+
+   ```yaml
+   # docker-compose.yml
+   version: '3'
+   services:
+     registry:
+       container_name: registry
+       restart: always
+       image: registry:2
+       environment:
+         REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+         REGISTRY_STORAGE_DELETE_ENABLED: "true"
+       ports:
+         - 80:5000
+       volumes:
+         - /opt/registry:/var/lib/registry
+
+     gitbucket:
+       container_name: gitbucket
+       restart: always
+       image: gitbucket:4
+       environment:
+         MAX_FILE_SIZE: 10485760
+         COMPOSE_PROJECT_NAME: gitbucket
+       ports:
+         - 8888:8080
+         - 29418:29418
+       volumes:
+         - /opt/gitbucket:/gitbucket
+
+     jenkins:
+       container_name: jenkins
+       restart: always
+       image: jenkins:2.176.3
+       privileged: true
+       user: root
+       environment:
+         http_proxy: proxy.host.name:port
+         https_proxy: proxy.host.name:port
+         JAVA_OPTS: -Djavax.net.ssl.trustStore=/var/jenkins_home/keystore/cacerts -Dhttp.proxyHost=proxy.host.name -Dhttp.proxyPort=port -Dhttp.nonProxyHosts=localhost|127.0.0.1 -Dhttps.proxyHost=proxy.host.name -Dhttps.proxyPort=port
+         COMPOSE_PROJECT_NAME: jenkins
+       ports:
+         - 9999:8080
+         - 50000:50000
+       volumes:
+         - /opt/jenkins:/var/jenkins_home
+         - /var/run/docker.sock:/var/run/docker.sock
+   ```
+
+   使用如下命令启动容器
+
+   ```bash
+   docker-compose up -d
+   ```
+
+9. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
 
    **注意**: 在开始下面的操作之前请先为Jenkins安装以下两个插件
    * 用于获取maven pom.xml文件中的信息: `Pipeline Utility Steps`
@@ -491,14 +547,14 @@
 
    ```groovy
    pipeline {
-   
+
        agent {
            docker {
                image 'maven:3.6.2-jdk-8'
                args '-v /root/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
            }
        }
-   
+
        environment {
            IMAGE_NAME = "docker.local/${readMavenPom().getArtifactId()}"
            IMAGE_TAG = getImageTag()
@@ -507,21 +563,21 @@
            JMX_PORT = 18080
            JAVA_OPTS="-server -Xms128m -Xmx128m -Djava.rmi.server.hostname=10.0.76.10 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote.rmi.port=${JMX_PORT} -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
        }
-   
+
        stages {
-   
+
            stage('Debug') {
                steps {
                    sh 'printenv'
                }
            }
-   
+
            stage('Build') {
                steps {
                    sh 'mvn -B -DskipTests clean package'
                }
            }
-   
+
            stage('Test') {
                steps {
                    sh 'mvn test'
@@ -532,19 +588,19 @@
                    }
                }
            }
-   
+
            stage('Docker Image') {
                steps {
                    sh '''
                    # save old image id
                    oldImageId=`docker images -q ${IMAGE_NAME}:${IMAGE_TAG}`
-   
+
                    # build new image
                    echo 'Build Docker Image'
                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                    echo 'Push Docker Image'
                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-   
+
                    # remove old image
                    if [ ! -z ${oldImageId} ]; then
                        if [ ! -z $(docker ps -aq -f ancestor=${oldImageId}) ]; then
@@ -555,7 +611,7 @@
                    '''
                }
            }
-   
+
            stage('Deliver Development') {
                when {
                    allOf {
@@ -573,7 +629,7 @@
                    '''
                }
            }
-   
+
            stage('Deploy Production') {
                when {
                    buildingTag()
@@ -589,11 +645,11 @@
                    '''
                }
            }
-   
+
        }
-   
+
    }
-   
+
    /* Get Docker Image Tag */
    def getImageTag() {
        if(env.TAG_NAME) {
@@ -616,7 +672,7 @@
    git push origin --tags
    ```
 
-9. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
+10. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
 
    首先在Windows上开启maven本地仓库目录的共享：`在目录上右键`-->`属性`-->`共享`-->`共享(S)...`
 
