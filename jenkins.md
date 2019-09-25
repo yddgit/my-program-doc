@@ -307,9 +307,10 @@
 
 9. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
 
-   **注意**: 在开始下面的操作之前请先为Jenkins安装以下两个插件
+   **注意**: 在开始下面的操作之前请先为Jenkins安装以下几个插件
    * 用于获取maven pom.xml文件中的信息: `Pipeline Utility Steps`
    * 用于自动运行tag构建: `Basic Branch Build Strategies`
+   * 用于在Readme中添加Jenkins Build Status Icon: `Embeddable Build Status`
 
    在GitBucket上创建Git仓库示例: `hello-jenkins`
 
