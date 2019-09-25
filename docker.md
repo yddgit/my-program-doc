@@ -764,6 +764,7 @@ FROM image-name
 
    ```bash
    # 删除registry中的镜像
+   curl -X GET http://127.0.0.1:5000/v2/<name>/tags/list
    curl -v --silent -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X GET http://127.0.0.1:5000/v2/<name>/manifests/<tag> 2>&1 | grep Docker-Content-Digest | awk '{print ($3)}'
    curl -v --silent -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X DELETE http://127.0.0.1:5000/v2/<name>/manifests/<digest_hash>
    docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
