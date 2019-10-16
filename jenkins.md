@@ -109,7 +109,13 @@
    cp $JAVA_HOME/jre/lib/security/cacerts $JENKINS_HOME/keystore/
    cd $JENKINS_HOME/keystore/
    chmod u+w cacerts
-   # save cacerts from browser: ca-internal.cer
+   # Save cacerts from browser: ca-internal.cer
+   # 1. Open "Certificate" dialog
+   # 2. Choose the internal certificate in "Certification Path" tab
+   # 3. Press "View Certificate" button, click "Details" tab in new dialog
+   # 4. Press "Copy to File..." button to export certificate
+   # 5. Choose "DER encoded binary X.509(.CER)" format in wizard
+   # 6. The default password of "cacert" is "changeit"
    keytool -import -alias cacerts -keystore ./cacerts -file ./ca-internal.cer
    ```
 
