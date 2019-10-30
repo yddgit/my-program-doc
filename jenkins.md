@@ -551,6 +551,7 @@
    如下，是一个多分支构建的`Jenkinsfile`的示例。在创建多分支pipeline时，注意配置：
    * `Branch Sources`-->`Behaviours`，添加`Discover tags`以启用tag构建
    * `Branch Sources`-->`Build strategies`，添加`Tags`，使用默认配置
+   * `Branch Sources`-->`Property strategy`，添加Property `Suppress automatic SCM triggering`，可以防止扫描分支和Tag的时候自动触发构建
    * `Scan Multibranch Pipeline Triggers`，勾选`Periodically if not otherwise run`，选择时间间隔`Interval`为`5 minutes`
 
    ```groovy
