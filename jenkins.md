@@ -234,7 +234,7 @@
    }
    ```
 
-   以上，args配置就是将本地maven仓库映射到容器中，这样每次maven构建就可以使用缓存的jar包。提交Jenkinsfile，push到远程仓库
+   以上，`args`配置就是将本地maven仓库映射到容器中，这样每次maven构建就可以使用缓存的jar包。提交Jenkinsfile，push到远程仓库
 
 7. 以上操作执行完成后，可以将jenkins容器保存为新的镜像
 
@@ -255,7 +255,11 @@
      jenkins:2.176.3-custom
    ```
 
-8. 如果是在Linux下，可以直接使用如下docker-compose文件来启动jenkins和相关服务，**无需定制Docker镜像**
+8. 最后参考Jenkins官方教程（[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")）测试hello-jenkins示例
+
+# 基于Docker(on Linux)搭建Jenkins
+
+1. 如果是在Linux下，可以直接使用如下docker-compose文件来启动jenkins和相关服务，**无需定制Docker镜像**
 
    ```yaml
    # docker-compose.yml
@@ -311,7 +315,7 @@
    docker-compose up -d
    ```
 
-9. 根据jenkins官方的教程构造pipeline示例：[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")
+2. 下面参考jenkins官方教程（[使用Maven构建Java应用程序](https://jenkins.io/zh/doc/tutorials/build-a-java-app-with-maven/ "使用Maven构建Java应用程序")）构造pipeline示例
 
    **注意**: 在开始下面的操作之前请先为Jenkins安装以下几个插件
    * 用于获取maven的pom.xml文件中的信息: `Pipeline Utility Steps`
@@ -319,7 +323,7 @@
    * 用于在Readme中添加Jenkins Build Status Icon: `Embeddable Build Status`
    * 用于发送HTTP请求: `Http Request`
 
-   在GitBucket上创建Git仓库示例: `hello-jenkins`
+3. 在GitBucket上创建Git仓库示例: `hello-jenkins`
 
    使用如下命令生成代码:
 
@@ -548,7 +552,8 @@
    GET http://hostname:8081/myapp/myresource
    ```
 
-   如下，是一个多分支构建的`Jenkinsfile`的示例。在创建多分支pipeline时，注意配置：
+4. 如下，是一个多分支构建的`Jenkinsfile`的示例。在创建多分支pipeline时，注意配置：
+
    * `Branch Sources`-->`Behaviours`，添加`Discover tags`以启用tag构建
    * `Branch Sources`-->`Build strategies`，添加`Tags`，使用默认配置
    * `Branch Sources`-->`Property strategy`，添加Property `Suppress automatic SCM triggering`，可以防止扫描分支和Tag的时候自动触发构建
@@ -681,7 +686,7 @@
    git push origin --tags
    ```
 
-10. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
+5. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
 
    首先在Windows上开启maven本地仓库目录的共享：`在目录上右键`-->`属性`-->`共享`-->`共享(S)...`
 
