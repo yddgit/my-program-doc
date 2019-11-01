@@ -273,6 +273,12 @@ https://docs.docker.com/engine/articles/systemd/
 
     # 显示一个镜像的历史（--no-trunc=false Don't truncate output; -q, --quiet=false Only show numeric IDs）
     docker history image-name
+
+    # 查看untagged镜像（<none>镜像）
+    docker images -f dangling=true -q
+
+    # 删除untagged镜像（<none>镜像）
+    docker image prune
     ```
 
  3. 启动容器（`run`）
