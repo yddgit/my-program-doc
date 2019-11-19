@@ -620,7 +620,7 @@
                        if [ ! -z $(docker ps -aq -f ancestor=${oldImageId}) ]; then
                            docker rm -f `docker ps -aq -f ancestor=${oldImageId}`
                        fi
-                       docker rmi ${oldImageId}
+                       docker rmi -f ${oldImageId}
                    fi
                    '''
                }
@@ -686,7 +686,26 @@
    git push origin --tags
    ```
 
-5. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
+5. 如果需要在pipeline中同时构建前台代码，可以在上例中的Build阶段之前加入如下stage，实现前台代码编译，并在后续构建docker镜像时将编译好的文件复制到镜像中
+
+   ```groovy
+   // reuseNode参数指定该agent与pipeline顶层agent使用相同的workspace
+   // https://jenkins.io/doc/book/pipeline/syntax/#agent
+   stage('Build Portal') {
+       agent {
+           docker {
+               image 'node:12.13.0-alpine'
+               args '-u root -p 3000:3000'
+               reuseNode true
+           }
+       }
+       steps {
+           sh 'cd ./portal/ && npm install && npm run build'
+       }
+   }
+   ```
+
+6. 对于maven本地仓库的共享，可能会需要将Windows机器的目录共享给Linux，可通过如下方式实现
 
    首先在Windows上开启maven本地仓库目录的共享：`在目录上右键`-->`属性`-->`共享`-->`共享(S)...`
 
