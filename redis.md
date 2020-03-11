@@ -110,5 +110,12 @@ HINCRBY user:1000 visits 1 // 自增操作时若属性不存在则自动创建
 # Hashes的其他命令: http://redis.io/commands#hash
 
 # Redis数据类型: https://redis.io/topics/data-types-intro
+
+# 查看所有keys: https://redis.io/commands/keys
+KEYS *
+# 查看指定模式的key
+KEYS *name*
+# 清空所有数据: https://redis.io/commands/flushall
+FLUSHALL
 ```
 
