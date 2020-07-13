@@ -2268,6 +2268,16 @@ xiaoming.__proto__ === Student; // true
   });
   ```
 
+* `async`和`await`关键字(**ES7**)
+
+  `async`和`await`关键字可以轻松地把一个function变为异步模式
+
+  ```javascript
+  async function() {
+    var data = await fs.read('/file1');
+  }
+  ```
+
 * Canvas
 
   HTML5新增的组件，可以用JavaScript在页面上绘制各种图表、动画。由于浏览器对HTML5标准支持不一致，通常在`<canvas>`内部添加一些说明性HTML代码。如果浏览器支持Canvas将忽略内部的HTML代码，如果不支持，将显示`canvas`内部的HTML：
