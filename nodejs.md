@@ -545,6 +545,57 @@ greet(s); // Hello, Alex!
 
 * WebSocket
 
+  WebSocket是HTML5新增的协议，它的目的是在浏览器和服务器之间建立一个不受限的双向通信的通道。WebSocket不是全新的协议，而是利用了HTTP协议来建立连接。
+
+  WebSocket连接必须由浏览器发起
+
+  ```
+  GET ws://localhost:3000/ws/chat HTTP/1.1
+  Host: localhost
+  Upgrade: websocket
+  Connection: Upgrade
+  Origin: http://localhost:3000
+  Sec-WebSocket-Key: client-random-string
+  Sec-WebSocket-Version: 13
+  ```
+
+  这个请求和普通的HTTP请求有几点不同：
+
+  1. GET请求的地址不是类似`/path/`，而是以`ws://`开头的地址
+  2. 请求头`Upgrade: websocket`和`Connection: Upgrade`表示这个连接将要被转换为WebSocket连接
+  3. `Sec-WebSocket-key`是用于标识这个连接并非用于加密数据
+  4. `Sec-WebSocket-Version`指定了WebSocket的协议版本
+
+  随后，服务器如果接受该请求，就会返回如下响应：
+
+  ```
+  HTTP/1.1 101 Switching Protocols
+  Upgrade: websocket
+  Connection: Upgrade
+  Sec-WebSocket-Accept: server-random-string
+  ```
+
+  响应代码`101`表示本次连接的HTTP协议即将被更改，更改后的协议就是`Upgrade: websocket`指定的WebSocket协议
+
+  版本号和子协议规定了双方能理解的数据格式、是否支持压缩等。如果仅使用WebSocket的API，就不需要关心这些
+
+  现在，一个WebSocket连接就建立成功了，浏览器和服务器可以随时主动发送消息给对方。消息有两种，一种是文本，一种是二进制数据。通常，我们可以发送JSON格式的文本，这样，在浏览器端处理比较方便
+
+  **安全的WebSocket连接**机制和HTTPS类似，首先，浏览器用`wss://xxx`创建WebSocket连接时，会先通过HTTPS创建安全的连接，然后，该HTTPS连接升级为WebSocket连接，底层通信走的仍然是安全的SSL/TLS协议
+
+  目前支持WebSocket的主流浏览器如下：
+
+  * Chrome
+  * Firefox
+  * IE >= 10
+  * Safari >= 6
+  * Android >= 4.4
+  * iOS >= 8
+
+  同源策略：WebSocket协议本身不要求同源策略，但是浏览器会发送`Origin`的HTTP头给服务器，服务器可以根据`Origin`拒绝这个WebSocket请求。所以，是否要求同源要看服务器端如何检查
+
+  https://github.com/yddgit/hello-websocket.git
+
 * REST
 
 * MVVM
