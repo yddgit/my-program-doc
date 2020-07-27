@@ -531,7 +531,17 @@ greet(s); // Hello, Alex!
 
 * mysql
 
+  https://github.com/yddgit/hello-sequelize.git
+
 * mocha
+
+  mocha是javascript的一种单元测试框架，既可以在浏览器环境下运行，也可以在Node.js环境下运行
+
+  * 既可以测试简单的函数，又可以测试异步代码
+  * 可以自动运行所有测试，也可以只运行特定的测试
+  * 可以支持before、after、beforeEach和afterEach来编写初始化代码
+
+  https://github.com/yddgit/hello-mocha.git
 
 * WebSocket
 
