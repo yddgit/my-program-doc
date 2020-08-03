@@ -594,6 +594,47 @@ greet(s); // Hello, Alex!
 
   同源策略：WebSocket协议本身不要求同源策略，但是浏览器会发送`Origin`的HTTP头给服务器，服务器可以根据`Origin`拒绝这个WebSocket请求。所以，是否要求同源要看服务器端如何检查
 
+  如果网站配置了反向代理，如Nginx，则HTTP和WebSocket都必须通过反向代理连接Node服务器。HTTP的反向代理非常简单。但是要正常连接WebSocket，代理服务器必须支持WebSocket协议，以Nginx为例，可以参考Nginx的官方博客：[NGINX as a WebSocket Proxy](https://www.nginx.com/blog/websocket-nginx/ "NGINX as a WebSocket Proxy")
+
+  首先要保证Nginx版本>=`1.3`，然后通过`proxy_set_header`指令，设定：
+
+  ```nginx
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+  ```
+
+  Nginx即可理解该连接将使用WebSocket协议。
+
+  一个示例配置文件如下：
+
+  ```nginx
+  server {
+    listen      80;
+    server_name localhost;
+
+    # 处理静态资源文件:
+    location ^~ /static/ {
+        root /path/to/ws-with-koa;
+    }
+
+    # 处理WebSocket连接:
+    location ^~ /ws/ {
+        proxy_pass         http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection "upgrade";
+    }
+
+    # 其他所有请求:
+    location / {
+        proxy_pass       http://127.0.0.1:3000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+  }
+  ```
+
   https://github.com/yddgit/hello-websocket.git
 
 * REST
