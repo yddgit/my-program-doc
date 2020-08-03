@@ -655,4 +655,6 @@ greet(s); // Hello, Alex!
   * 资源还可以按层次组织，如获取某个Product的所有评论：`GET /api/products/123/reviews`
   * 当只需要获取部分数据时，可通过参数限制返回的结果集，如返回第2页评论，每页10项，按时间排序：`GET /api/products/123/reviews?page=2&size=10&sort=time`
 
+  https://github.com/yddgit/hello-rest.git
+
 * MVVM
