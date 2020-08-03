@@ -639,4 +639,20 @@ greet(s); // Hello, Alex!
 
 * REST
 
+  编写REST API，实例就是编写处理HTTP请求的async函数，不过REST请求和普通的HTTP请求相比有几个特殊的地方：
+
+  1. REST请求仍然是标准的HTTP请求，但是，除了GET请求外，POST、PUT等请求的body是JSON数据格式，请求的`Content-Type`为`application/json`；
+
+  2. REST响应返回的结果是JSON数据格式，因此，响应的`Content-Type`也是`application/json`。
+
+  REST规范定义了资源的通用访问格式，虽然它不是一个强制要求，但遵守该规范可以让人易于理解。例如：商品Product是一种资源：
+
+  * 获取所有Product：`GET /api/products`
+  * 获取`id`为`123`的Product：`GET /api/products/123`
+  * 新建一个Product使用POST请求，JSON数据包含在body中：`POST /api/products`
+  * 更新一个Product使用PUT请求，如更新`id`为`123`的Product：`PUT /api/products/123`
+  * 删除一个Product使用DELETE请求，如删除`id`为`123`的Product：`DELETE /api/products/123`
+  * 资源还可以按层次组织，如获取某个Product的所有评论：`GET /api/products/123/reviews`
+  * 当只需要获取部分数据时，可通过参数限制返回的结果集，如返回第2页评论，每页10项，按时间排序：`GET /api/products/123/reviews?page=2&size=10&sort=time`
+
 * MVVM
