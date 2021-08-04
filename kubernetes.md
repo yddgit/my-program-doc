@@ -5,6 +5,8 @@
 * Docker Desktop for Windows: [k8s-for-docker-desktop](https://github.com/AliyunContainerService/k8s-for-docker-desktop "k8s-for-docker-desktop")
 * Minikube: [minikube start](https://minikube.sigs.k8s.io/docs/start/ "minikube start")
 
+> [Kubernetes的版本支持策略](https://kubernetes.io/zh/docs/setup/release/version-skew-policy/ "Kubernetes的版本支持策略")，版本号格式遵循 [Semantic Versioning](https://semver.org/ "Semantic Versioning") 规则
+
 ## 概念
 
 Kubernetes是一个生产级别的容器编排系统，集群包含两种类型的资源
