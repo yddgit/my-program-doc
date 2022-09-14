@@ -410,3 +410,107 @@ gcloud compute forwarding-rules create http-content-rule \
   --target-http-proxy=http-lb-proxy \
   --ports=80
 ```
+
+# Google Cloud Platform Overview
+
+## Introduce
+
+- Cloud Computing
+- IaaS/Paas/SaaS
+- Network/Region/Zone
+- Environment impact
+- Security: Intrusion detection/Reducing insider risk/Employee Universal Second Factor(U2F) use/Software development practices
+- Opensource ecosystems: TensorFlow/Kubernetes/Operations Suite
+- Pricing and billing: Kubernetes/Dataproc/App Engine/Compute Engine/Budgets-Alerts-Reports-Quotas
+
+## Resources
+
+- Resources
+- Project
+- Folder
+- Org
+
+## IAM
+
+- Basic Role: Owner/Editor/Viewer/Billing Admin
+- Predefined Role: Instance Admin Role(Compute Engine)
+- Custom Role: Can't apply to folder level
+
+## Service Account
+
+Give permission to a vm rather than a person
+
+## Cloud Identity
+
+Integrated with AD or LDAP
+
+## Interacting with Google Cloud
+
+- Google Cloud Console
+- gcloud: Command line interface for Google Cloud products and services
+- gsutil: Command line access to Cloud Storage
+- bq: Command line tool for BigQuery
+- Google Cloud Shell: 5GB home directory/debian based/utilities up to date and fully authenticated
+- API: client/libraries/Java,Python,PHP,C#,Go,Node.js
+- Cloud Console Mobile App
+
+## Virtual Private Cloud
+
+- Segment networks/Firewall rule to restrict/Static routes to forward traffic
+- Network is global and can have subnets in any regions
+- VPC belongs to projects, VPC talk to each other: VPC Peering / Shared VPC
+
+## Compute Engine
+
+- VM: Linux or Windows
+- Cloud Marketplace
+- Bills by seconds
+- Preemptible VMs: Compute Engine has permission to terminate a job if its resources are needed elsewhere. It can only run for up to 24 hours at a time.
+- Spot VMs
+- Scaling VMs: scale out not up.
+
+## Cloud Load Balancing
+
+- Distributed/Software define/managed service
+- Can put in front of: HTTP(s)/TCP/SSL/UDP
+- Cross region, automatic multi-region failover
+
+## Cloud DNS and Cloud CDN
+
+- Cloud DNS is programmable
+- Cloud CDN can be enabled with a checkbox after HTTP load balancing is set up
+
+## Storage
+
+- Cloud Storage: Object storage. Video/Image/Audio, Unique keys in form of URL. Versioned, Life cycle management
+- Cloud SQL: MySQL/PostgreSQL/SQL Server. Can scale up to 64c+400GB+30TB
+- Cloud Spanner: SQL releational database/HA/consistency/DB size exceed 2TB/High numbers of operations per second
+- Firestore: NoSQL, document/collection/filtering/sorting/indexed. Can write/read/query offline, upload if device online. Free quota: 10GB free egress per month, 50000 document reads per day, 20000 document writes per day, 20000 document deletes per day, 1GB of stored data
+- Cloud Bigtable: NoSQL, bigdata database service
+
+
+## Container
+
+- Compute Engine(IaaS)
+- App Engine(PaaS)
+- GKE: Google Kubernetes Engine
+  - Load balancing for compute engine instances
+  - Node pools
+  - Auto scale node instance count
+  - Auto upgrade node software
+  - Auto repair maintain node health and availability
+  - Logging and monitoring with Google operations suite
+- Hybird and multi-cloud: Anthos
+
+
+## Application develop
+
+- App Engine: Standard(Container)/Flexible(Custom by Dockerfile/Image)
+- Cloud Endpoints
+- Apigee Edge
+- Cloud Run: Only pay for handling web requests. Cloud Run does this using Buildpacks - an open source project.
+
+## Deployment in cloud
+
+- Cloud Functions
+- Infrastructure as Code: Terraform
