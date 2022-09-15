@@ -488,7 +488,6 @@ Integrated with AD or LDAP
 - Firestore: NoSQL, document/collection/filtering/sorting/indexed. Can write/read/query offline, upload if device online. Free quota: 10GB free egress per month, 50000 document reads per day, 20000 document writes per day, 20000 document deletes per day, 1GB of stored data
 - Cloud Bigtable: NoSQL, bigdata database service
 
-
 ## Container
 
 - Compute Engine(IaaS)
@@ -502,7 +501,6 @@ Integrated with AD or LDAP
   - Logging and monitoring with Google operations suite
 - Hybird and multi-cloud: Anthos
 
-
 ## Application develop
 
 - App Engine: Standard(Container)/Flexible(Custom by Dockerfile/Image)
@@ -514,3 +512,319 @@ Integrated with AD or LDAP
 
 - Cloud Functions
 - Infrastructure as Code: Terraform
+
+# Foundational Infrastructure Tasks
+
+## Cloud Storage - Cloud Console / CLI / SDK
+
+### Cloud Console
+
+- Navigation menu > Cloud Storage > Browser
+- Create Bucket
+- Name: Use Project ID, it always be unique.
+- Continue
+- Region: us-east1
+- Default storage class: Standard
+- Access control: Uniform
+- Create
+- Upload file: Click bucket name created > Object tab > Upload
+- Allow public access: Permssions > Principals > Add > Add principals > New principals: allUsers > Role: Cloud Storage - Storage Object Viewer > Save > Allow public access
+- Verify public access: https://storage.googleapis.com/`YOUR_BUCKET_NAME`/kitten.png
+- Create folder: Objects tab > Create folder > Name: folder1 > Create
+- Click folder1 > Create folder > Name: folder2 > Create > Click folder2 > Upload files
+- Bucket details > Click bucket name > Select folder1 > Delete > Confirm
+
+### CLI / SDK
+
+```sh
+# active cloud shell
+gcloud auth list
+# list project id
+gcloud config list project
+
+# create a bucket on cloud console as before steps
+# Choose: multi-region > us
+# Uncheck: Enforce public access prevention on this bucket under Prevent public access
+# Select: Fine-grained under Access Control
+
+# download image: ada.jpg
+curl https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/800px-Ada_Lovelace_portrait.jpg --output ada.jpg
+# upload image to bucket
+gsutil cp ada.jpg gs://YOUR-BUCKET-NAME
+# remove downloaded image
+rm ada.jpg
+
+# download image from bucket
+gsutil cp -r gs://YOUR-BUCKET-NAME/ada.jpg .
+# copy image to a folder
+gsutil cp gs://YOUR-BUCKET-NAME/ada.jpg gs://YOUR-BUCKET-NAME/image-folder/
+
+# list content
+gsutil ls gs://YOUR-BUCKET-NAME
+# list detail
+gsutil ls -l gs://YOUR-BUCKET-NAME/ada.jpg
+
+# make object publicly accessible
+gsutil acl ch -u AllUsers:R gs://YOUR-BUCKET-NAME/ada.jpg
+# validate on cloud console: Copy URL in Public link box
+# remove public access
+gsutil acl ch -d AllUsers gs://YOUR-BUCKET-NAME/ada.jpg
+
+# delete object
+gsutil rm gs://YOUR-BUCKET-NAME/ada.jpg
+```
+
+## Cloud IAM
+
+Navigation menu > IAM & Admin > IAM
+
+|Role Name|Permissions|
+|-|-|
+|viewer|Permissions for read-only actions that do not affect state, such as viewing (but not modifying) existing resources or data.|
+|editor|All viewer permissions, plus permissions for actions that modify state, such as changing existing resources.|
+|owner|All editor permissions and permissions for the following actions: ① Manage roles and permissions for a project and all resources within the project. ② Set up billing for a project.|
+|browser|Read access to browse the hierarchy for a project, including the folder, organization, and Cloud IAM policy. This role doesn't include permission to view resources in the project.|
+
+## Cloud Monitoring
+
+- Compute Engine > VM instances > Create instance
+  - Name: lamp-1-vm
+  - Region: us-central1
+  - Zone: us-central1-a
+  - Series: N1
+  - Machine type: n1-standard-2
+  - Book disk: Debian GNU/Linux 10(buster)
+  - Firewall: Allow HTTP traffic
+- SSH to VM
+
+  ```sh
+  sudo apt-get update
+  sudo apt-get install apache2 php7.0
+  sudo service apache2 start
+  ```
+
+- Verify: http://EXTERNAL-IP/
+- Navigation menu > Monitoring
+- Install Ops agents
+
+  ```sh
+  curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+  sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+  sudo systemctl status google-cloud-ops-agent"*"
+  ```
+
+- Create an uptime check: Monitoring > Uptime checks > + CREATE UPTIME CHECK
+  - Title: Lamp Uptime Check
+  - Protocol: HTTP
+  - Resource Type: Instance
+  - Applies to: Single, lamp-1-vm
+  - Path: leave at default
+  - Check Frequency: 1 min
+  - Leave the other details to default
+  - Click Test to verify
+  - Create
+- Create an alerting policy: Monitoring > Alerting > + CREATE POLICY
+  - Select a metric: Disable the `Show only active resources & metrics`
+  - VM instance > interface > Network traffic > Apply
+  - Threshold position: Above threshold
+  - Threshold value: 500
+  - Advanced Options > Retest window: 1min
+  - Notification Channels > Manage Notification Channels
+    - ADD NEW for Email
+    - Enter emaill address
+    - Save
+  - Notification Channels > Select email created above
+  - Add a message in documentation
+  - Alert name: Inbound Traffic Alert
+  - Create Policy
+- Create a dashboard and chart: Monitoring > Dashboards > + CREATE DASHBOARD
+  - Name: Monitoring LAMP Qwik Start Dashboard
+  - Add Chart1: Line > Name: CPU Load > Resource & Metric > Disable `Show only active resources & metrics`
+    - VM instance > CPu > CPU load (1m) > Apply
+  - Add Chart2: Line > Name: Received Packets > Resource & Metric > Disable `Show only active resources & metrics`
+    - VM instance > Instance > Received packets > Apply
+- View logs: Navigation menu > Logging > Logs Explorer
+  - Resource > VM instance > lamp-1-vm > Apply > Stream logs
+- Check what happens when the VM started or stopped
+  - Stop the VM, watch the Logs View tab
+  - Start the VM, watch the log messages
+  - Check uptime check: Monitoring > Uptime checks
+  - Check if alerts triggered: Monitoring > Alerting > Check email account added above, a alert email should be received.
+
+## Cloud Functions - Console / Command Line
+
+Cloud Functions是一种用于构建和连接云端服务的serverless执行环境，它以Javascript编写，在Node.js环境中执行。可将Cloud Functions和云基础架构和服务发生的事件进行关联，当事件发生时，函数就会被触发。
+
+|使用场景|说明|
+|-|-|
+|数据处理/ETL|侦听诸如创建文件、更改文件或移除文件等 Cloud Storage 事件并做出响应。通过您的 Cloud Functions 函数处理图像、执行视频转码、验证和转换数据，以及调用互联网上的任何服务。|
+|Webhook|通过简单的 HTTP 触发器，对源自 GitHub、Slack、Stripe 等第三方系统或可发送 HTTP 请求的任意位置的事件进行响应。|
+|轻量级 API|从轻量级、松散耦合的小型逻辑开始，编写可迅速构建并可即时扩展的应用。您的函数可以由事件驱动，也可以直接通过 HTTP/S 调用。|
+|移动后端|使用 Google 面向应用开发者的移动平台 Firebase，在 Cloud Functions 中编写您的移动后端。侦听 Firebase Analytics、Realtime Database、Authentication 和 Storage 中的事件并做出响应。|
+|IoT|想象一下，成千上万的设备向 Cloud Pub/Sub 流式传输数据，并由此启动 Cloud Functions 函数来处理、转换和存储数据。Cloud Functions 能够让您通过一种完全不需要服务器的方式做到这一点。|
+
+### Cloud Console
+
+- Create Function: Navigation menu > Cloud Functions > CREATE FUNCTION
+  - Name: GCFunction
+  - Trigger: HTTP
+  - Memory allocated: default
+  - Autoscaling: Maximum number of instances to 5
+- Deploy Function:
+  - Use default helloWorld function implementation
+  - Deploy
+- Test Function:
+  - Cloud Functions Overview > Test function
+  - Triggering event: `{"message":"Hello World!"}`
+  - TEST THE FUNCTION
+  - Output: Hello World!
+  - Logs: status code is 200
+- View logs
+  - Cloud Function Overview > View logs
+  - View log in Query results
+
+### Command Line
+
+```sh
+# active cloud shell
+gcloud auth list
+gcloud config list project
+# prepare function code
+mkdir gcf_hello_world
+cd gcf_hello_world
+vim index.js
+# create cloud storage bucket
+gsutil mb -p [PROJECT_ID] gs://[BUCKET_NAME]
+# deploy function to a pub/sub topic named hello_world
+gcloud functions deploy helloWorld \
+  --stage-bucket [BUCKET_NAME] \
+  --trigger-topic hello_world \
+  --runtime nodejs8
+# verify function
+gcloud functions describe helloWorld
+# test function
+DATA=$(printf 'Hello World!'|base64) && gcloud functions call helloWorld --data '{"data":"'$DATA'"}'
+# view logs
+gcloud functions logs read helloWorld
+```
+
+index.js
+
+```js
+/**
+* Background Cloud Function to be triggered by Pub/Sub.
+* This function is exported by index.js, and executed when
+* the trigger topic receives a message.
+*
+* @param {object} data The event payload.
+* @param {object} context The event metadata.
+*/
+exports.helloWorld = (data, context) => {
+const pubSubMessage = data;
+const name = pubSubMessage.data
+    ? Buffer.from(pubSubMessage.data, 'base64').toString() : "Hello World";
+console.log(`My Cloud Function: ${name}`);
+};
+```
+
+## Cloud Pub/Sub - Console / Command Line / Python
+
+A message service for exchanging event data among applications and services.
+
+- Producer: publishes messages to a Cloud Pub/Sub topic
+- Consumer: creates a subscription to that topic. Subscriber either pull messages from a subscription or are configured as webhooks for push subscriptions. Every subscriber must acknowledge each message within a configrable window of time.
+
+### Cloud Console
+
+- Setup Pub/Sub: Navigation menu > Pub/Sub > Topics > CREATE TOPIC
+  - Name: MyTopic
+  - CREATE TOPIC
+- Add subscription: Topic > Create subscription
+  - Name: MySub
+  - Delivery type: Pull
+  - Create
+- Publish a message
+  - Topics details page > Messages tab > Publish Message
+  - Message: Hello World
+  - Publish
+- View the message
+
+  ```sh
+  gcloud pubsub subscriptions pull --auto-ack MySub
+  ```
+
+### Command Line
+
+```sh
+# active cloud shell
+gcloud auth list
+# create topic
+gcloud pubsub topics create myTopic
+gcloud pubsub topics create Test1
+gcloud pubsub topics create Test2
+# list topic
+gcloud pubsub topics list
+# delete topic
+gcloud pubsub topics delete Test1
+gcloud pubsub topics delete Test2
+# list topic
+gcloud pubsub topics list
+# create subscription
+gcloud  pubsub subscriptions create --topic myTopic mySubscription
+gcloud  pubsub subscriptions create --topic myTopic Test1
+gcloud  pubsub subscriptions create --topic myTopic Test2
+# list subscriptions
+gcloud pubsub topics list-subscriptions myTopic
+# delete subscription
+gcloud pubsub subscriptions delete Test1
+gcloud pubsub subscriptions delete Test2
+# list subscriptions
+gcloud pubsub topics list-subscriptions myTopic
+# publish a single message
+gcloud pubsub topics publish myTopic --message "Hello"
+gcloud pubsub topics publish myTopic --message "Publisher's name is <YOUR NAME>"
+gcloud pubsub topics publish myTopic --message "Publisher likes to eat <FOOD>"
+gcloud pubsub topics publish myTopic --message "Publisher thinks Pub/Sub is awesome"
+# pull the messages
+gcloud pubsub subscriptions pull mySubscription --auto-ack
+gcloud pubsub subscriptions pull mySubscription --auto-ack
+gcloud pubsub subscriptions pull mySubscription --auto-ack
+gcloud pubsub subscriptions pull mySubscription --auto-ack
+# no more messages
+gcloud pubsub subscriptions pull mySubscription --auto-ack
+# publish more messages
+gcloud pubsub topics publish myTopic --message "Publisher is starting to get the hang of Pub/Sub"
+gcloud pubsub topics publish myTopic --message "Publisher wonders if all messages will be pulled"
+gcloud pubsub topics publish myTopic --message "Publisher will have to test to find out"
+# pull all messages
+gcloud pubsub subscriptions pull mySubscription --auto-ack --limit=3
+```
+
+### Python
+
+```sh
+# create a virtual environment
+apt-get install -y virtualenv
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade google-cloud-pubsub
+git clone https://github.com/googleapis/python-pubsub.git
+cd python-pubsub/samples/snippets
+# create topic
+echo $GOOGLE_CLOUD_PROJECT
+cat publisher.py
+python publisher.py -h
+python publisher.py $GOOGLE_CLOUD_PROJECT create MyTopic
+python publisher.py $GOOGLE_CLOUD_PROJECT list
+python subscriber.py $GOOGLE_CLOUD_PROJECT create MyTopic MySub
+python subscriber.py $GOOGLE_CLOUD_PROJECT list-in-project
+python subscriber.py -h
+# publish messages
+gcloud pubsub topics publish MyTopic --message "Hello"
+gcloud pubsub topics publish MyTopic --message "Publisher's name is <YOUR NAME>"
+gcloud pubsub topics publish MyTopic --message "Publisher likes to eat <FOOD>"
+gcloud pubsub topics publish MyTopic --message "Publisher thinks Pub/Sub is awesome"
+# view messages
+python subscriber.py $GOOGLE_CLOUD_PROJECT receive MySub
+# Ctrl+C to stop listening
+```
