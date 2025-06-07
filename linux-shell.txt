@@ -41,7 +41,7 @@
               $HOME/.bashrc(用自定义的别名)
         alias ls='ls --color=auto'
         alias ll='ls -l --color=auto'
-        alias l.='ls -ld .* --color=auto'
+        alias l.='ls -ld --color=auto .*'
 
       + 管道: ls -l|sort
 
