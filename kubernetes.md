@@ -315,17 +315,27 @@ export https_proxy="http://192.168.80.1:10808"
 export http_proxy="http://192.168.80.1:10808"
 EOF
 ```
-启用 IPv4 数据包转发
+启用 IPv4 数据包转发，加载相关系统模块
 ```sh
+# 设置模块自动加载
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+# 立即加载
+sudo systemctl restart systemd-modules-load.service
+
 # 设置所需的 sysctl 参数，参数在重新启动后保持不变
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-ip6tables = 1
 EOF
-
 # 应用 sysctl 参数而不重新启动
 sudo sysctl --system
 # 验证
 sysctl net.ipv4.ip_forward
+sysctl net.bridge.bridge-nf-call-iptables
+sysctl net.bridge.bridge-nf-call-ip6tables
 ```
 因为使用Docker Engine作为容器运行时，所以需要[安装cri-dockerd](https://mirantis.github.io/cri-dockerd/usage/install-manually/ "Install Manually")
 ```sh
@@ -358,7 +368,7 @@ sudo cat /sys/class/dmi/id/product_uuid
 sudo swapoff -a
 sudo sed -ri 's/.*swap.*/#&/' /etc/fstab
 ```
-检查网络适配器和所需端口
+检查网络适配器和所需端口（确保端口**没有**被占用）
 ```sh
 nc 127.0.0.1 6443 -zv -w 2
 ```
@@ -375,13 +385,19 @@ sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
-配置keepalived和haproxy(仅限3个master节点)
+配置keepalived和haproxy。这里选择部署在k8s集群的3个master节点，生产环境应该在单独的机器上部署。为了防止端口冲突，haproxy的端口指定8443。如果是单独机器部署，haproxy的端口就可以指定6443。
 ```sh
 sudo apt-get install -y keepalived haproxy
 # 配置keepalived
 cd /etc/keepalived/
 sudo cp keepalived.conf.sample keepalived.conf
-# k8sm1
+cat <<EOF | sudo tee /etc/keepalived/notify-master.sh
+#!/bin/bash
+logger "[Keepalived] VIP acquired on $(hostname), restarting haproxy..."
+systemctl restart haproxy
+EOF
+sudo chmod +x /etc/keepalived/notify-master.sh
+# 仅在k8sm1执行（节点之间state和priority不同）
 cat <<EOF | sudo tee /etc/keepalived/keepalived.conf
 ! Configuration File for keepalived
 
@@ -407,9 +423,10 @@ vrrp_instance VI_1 {
     track_script {
         chk_haproxy
     }
+    notify_master "/etc/keepalived/notify-master.sh"
 }
 EOF
-# k8sm2
+# 仅在k8sm2执行（节点之间state和priority不同）
 cat <<EOF | sudo tee /etc/keepalived/keepalived.conf
 ! Configuration File for keepalived
 
@@ -435,9 +452,10 @@ vrrp_instance VI_1 {
     track_script {
         chk_haproxy
     }
+    notify_master "/etc/keepalived/notify-master.sh"
 }
 EOF
-# k8sm3
+# 仅在k8sm3执行（节点之间state和priority不同）
 cat <<EOF | sudo tee /etc/keepalived/keepalived.conf
 ! Configuration File for keepalived
 
@@ -463,8 +481,10 @@ vrrp_instance VI_1 {
     track_script {
         chk_haproxy
     }
+    notify_master "/etc/keepalived/notify-master.sh"
 }
 EOF
+# 启动keepalived
 sudo systemctl enable keepalived
 sudo systemctl start keepalived
 # 配置haproxy
@@ -486,7 +506,7 @@ defaults
     timeout server  1m
 
 frontend k8s-api
-    bind 192.168.80.100:6443
+    bind 192.168.80.100:8443
     mode tcp
     default_backend k8s-api-backend
 
@@ -498,10 +518,10 @@ backend k8s-api-backend
     server k8sm2 192.168.80.20:6443 check
     server k8sm3 192.168.80.30:6443 check
 EOF
-sudo systemctl enable haproxy
+# 仅在k8sm1执行（因为当前VIP在k8sm1上，之后随着VIP飘移，keepalived的notify_master脚本会自动把haproxy拉起来）
 sudo systemctl start haproxy
 ```
-初始化集群(k8sm1)
+初始化集群（k8sm1）
 ```sh
 # 查看镜像
 kubeadm config images list
@@ -530,7 +550,7 @@ docker rmi k8s.m.daocloud.io/coredns/coredns:v1.12.0
 docker rmi registry.aliyuncs.com/google_containers/pause:3.10
 docker rmi registry.aliyuncs.com/google_containers/etcd:3.5.21-0
 # 初始化集群
-sudo kubeadm init --control-plane-endpoint "192.168.80.100:6443" --upload-certs --pod-network-cidr=10.244.0.0/16 --cri-socket unix:///var/run/cri-dockerd.sock
+sudo kubeadm init --control-plane-endpoint "192.168.80.100:8443" --upload-certs --pod-network-cidr=10.244.0.0/16 --cri-socket unix:///var/run/cri-dockerd.sock
 # 使用集群：非root用户
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -549,31 +569,31 @@ docker rmi ghcr.nju.edu.cn/flannel-io/flannel-cni-plugin:v1.7.1-flannel1
 
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 ```
-添加k8sm2和k8sm3
+添加k8sm2和k8sm3（先参考k8sm1拉取镜像）
 ```sh
 # 注意--cri-socket参数需要手动添加
 # 如果kubeadm init的时候忘记添加--upload-certs参数，可以用如下命令手动upload（两小时内有效），然后把结果添加到--certificate-key中
 # sudo kubeadm init phase upload-certs --upload-certs
-sudo kubeadm join 192.168.80.100:6443 --token 8tlvsd.xcpob30p9ae6k692 \
-  --discovery-token-ca-cert-hash sha256:e2dcf850a7e6daa2df6eb202771da6975220a431528091609f639e08071297e4 \
+sudo kubeadm join 192.168.80.100:8443 --token nxpzz3.ubnl4hs5oin0q23k \
+  --discovery-token-ca-cert-hash sha256:02e21504b6c425c2d95bd4532c495cb9beca16b66d9dd4a4a7e54d3b7bb84f12 \
   --control-plane \
-  --certificate-key b0503923333649db0b2f02f3b4ef48f72b813d68e6a08cb6c11e5d65eb9c55ca \
+  --certificate-key 64ac8cce8d883d916759f1c8c4ef933a5d39c6f89502d8887b4a43ebba54cc49 \
   --cri-socket unix:///var/run/cri-dockerd.sock
 # 使用集群：非root用户
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
-添加k8sn1
+添加k8sn1（先参考k8sm1拉取镜像）
 ```sh
 # 注意--cri-socket参数需要手动添加
-sudo kubeadm join 192.168.80.100:6443 --token 8tlvsd.xcpob30p9ae6k692 \
-  --discovery-token-ca-cert-hash sha256:e2dcf850a7e6daa2df6eb202771da6975220a431528091609f639e08071297e4 \
+sudo kubeadm join 192.168.80.100:8443 --token nxpzz3.ubnl4hs5oin0q23k \
+  --discovery-token-ca-cert-hash sha256:02e21504b6c425c2d95bd4532c495cb9beca16b66d9dd4a4a7e54d3b7bb84f12 \
   --cri-socket unix:///var/run/cri-dockerd.sock
 ```
 在本地电脑管理集群
 ```sh
-# ================在WSL里================
+# ================在WSL里安装kubectl================
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 # 如果 `/etc/apt/keyrings` 目录不存在，则应在 curl 命令之前创建它，请阅读下面的注释。
@@ -595,4 +615,46 @@ chmod 644 $HOME/.kube/config
 kubectl get nodes
 # 启动代理API服务器
 kubectl proxy
+```
+问题诊断可能会用到的命令（查看是否有异常Exited的容器）
+```sh
+# 查看网络插件是否正常启动
+kubectl get pods -n kube-flannel -o wide
+# 查看pod控制台日志
+kubectl logs -n kube-flannel <pod-name>
+# 查看pod详情
+kubectl describe pod -n kube-flannel <pod-name>
+# 修复系统参数后重启网络插件
+kubectl delete pod -n kube-flannel -l app=flannel
+# 查看apiserver是否正常启动（etcd集群异常会导致apiserver启动异常或自动重启，所以如果不是单独的etcd集群，那添加master节点时，间隔时间最好久一点）
+kubectl -n kube-system get pods -o wide | grep apiserver
+```
+
+## 卸载集群
+
+移除worker节点
+```sh
+# 在k8sm1上执行
+kubectl drain k8sn1 --delete-emptydir-data --force --ignore-daemonsets
+# 在k8sn1上执行
+sudo kubeadm reset --cri-socket unix:///var/run/cri-dockerd.sock
+# 在k8sm1上执行
+kubectl delete node k8sn1
+```
+移除其他master节点
+```sh
+# 在k8sm1上执行
+kubectl drain k8sm3 --delete-emptydir-data --force --ignore-daemonsets
+kubectl drain k8sm2 --delete-emptydir-data --force --ignore-daemonsets
+# 在k8sm3和k8sm2上分别执行
+sudo kubeadm reset --cri-socket unix:///var/run/cri-dockerd.sock
+# 在k8sm1上执行
+kubectl delete node k8sm3
+kubectl delete node k8sm2
+```
+重置集群最后一个master节点
+```sh
+# 在k8sm1上执行
+kubectl drain k8sm1 --delete-emptydir-data --force --ignore-daemonsets
+sudo kubeadm reset --cri-socket unix:///var/run/cri-dockerd.sock
 ```
