@@ -280,14 +280,25 @@ curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --de
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 # Step 3: 写入软件源信息
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \
   "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # Step 4: 安装Docker
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Step 4.1: 配置Docker服务重启容器不中止、容器日志大小限制
+cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "live-restore": true,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+EOF
 
 # Step 5: Docker开机启动
 sudo systemctl enable docker
