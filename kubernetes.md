@@ -722,7 +722,7 @@ helm uninstall kubernetes-dashboard --namespace kubernetes-dashboard
 kubectl get pods --namespace kubernetes-dashboard
 # 查看启动的service
 kubectl get svc --namespace kubernetes-dashboard
-# 创建登录token
+# 创建ServiceAccount
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: ServiceAccount
@@ -757,7 +757,6 @@ kubectl -n kubernetes-dashboard create token admin-user
 # 获取永久Token
 kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath="{.data.token}" | base64 -d
 # 执行命令
-sudo apt-get install socat
 kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
 # 在浏览器访问https://localhost:8443/，填入Token即可登录，注意是https，不是http
 # 如果报"socat not found"，需要为k8s集群的master和worker节点安装socat
