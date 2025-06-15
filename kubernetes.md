@@ -219,7 +219,7 @@ sudo sed -i "s@http://archive.ubuntu.com@https://mirrors.aliyun.com@g" /etc/apt/
 sudo sed -i "s@http://security.ubuntu.com@https://mirrors.aliyun.com@g" /etc/apt/sources.list.d/ubuntu.sources
 # 安装ping/telnet/vim
 sudo apt-get update
-sudo apt-get install -y iputils-ping telnet vim openssh-server netcat-openbsd
+sudo apt-get install -y iputils-ping telnet vim openssh-server netcat-openbsd socat
 sudo systemctl status ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
@@ -602,6 +602,10 @@ sudo kubeadm join 192.168.80.100:8443 --token nxpzz3.ubnl4hs5oin0q23k \
   --discovery-token-ca-cert-hash sha256:02e21504b6c425c2d95bd4532c495cb9beca16b66d9dd4a4a7e54d3b7bb84f12 \
   --cri-socket unix:///var/run/cri-dockerd.sock
 ```
+允许在master节点上调度pod（开发测试环境，注意命令输出中worker节点会报一个error，可以忽略，因为worker节点上没有对应的taint）
+```sh
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+```
 在本地电脑管理集群
 ```sh
 # ================在WSL里安装kubectl================
@@ -668,4 +672,94 @@ kubectl delete node k8sm2
 # 在k8sm1上执行
 kubectl drain k8sm1 --delete-emptydir-data --force --ignore-daemonsets
 sudo kubeadm reset --cri-socket unix:///var/run/cri-dockerd.sock
+```
+
+## 安装Dashboard
+
+安装helm（Kubernetes包管理器）
+```sh
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+# 添加仓库
+helm repo add bitnami https://charts.bitnami.com/bitnami
+# 查看仓库中的charts
+helm search repo bitnami
+# 更新仓库
+helm repo update
+# 查看chart基本信息
+helm show chart bitnami/mysql
+# 查看chart详细信息
+helm show all bitnami/mysql
+# 安装chart（可以多次安装，每次会创建一个新的版本）
+helm install bitnami/mysql --generate-name
+# 查看已经安装的chart
+helm list
+helm ls
+# 查看版本状态
+helm status mysql-1612624192
+# 卸载某个版本
+helm uninstall mysql-1612624192
+# 卸载某个版本（保留历史，可以用helm rollback回滚）
+helm uninstall --keep-history mysql-1612624192
+```
+安装Dashboard（安装过程会拉取docker镜像，需要提前为docker配置好镜像仓库地址）
+```sh
+# 添加kubernetes-dashboard仓库
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+# 查看仓库中的chart
+helm search repo kubernetes-dashboard
+# 查看chart的信息
+helm show chart kubernetes-dashboard/kubernetes-dashboard
+# 部署kubernetes-dashboard chart
+helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
+# 查看安装结果
+helm ls -A
+# 卸载kubernetes-dashboard
+helm uninstall kubernetes-dashboard --namespace kubernetes-dashboard
+```
+临时访问验证是否安装成功
+```sh
+# 查看启动的pod
+kubectl get pods --namespace kubernetes-dashboard
+# 查看启动的service
+kubectl get svc --namespace kubernetes-dashboard
+# 创建登录token
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/service-account.name: "admin-user"   
+type: kubernetes.io/service-account-token
+EOF
+# 生成临时Token
+kubectl -n kubernetes-dashboard create token admin-user
+# 获取永久Token
+kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath="{.data.token}" | base64 -d
+# 执行命令
+sudo apt-get install socat
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
+# 在浏览器访问https://localhost:8443/，填入Token即可登录，注意是https，不是http
+# 如果报"socat not found"，需要为k8s集群的master和worker节点安装socat
+sudo apt-get install -y socat
 ```
